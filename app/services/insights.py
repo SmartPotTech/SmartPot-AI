@@ -1,7 +1,7 @@
 """Orquesta el análisis: diagnóstico → modelos → sistema experto → lógica difusa → agente."""
 
 from app.engine import agent
-from app.engine.diagnosis import diagnose
+from app.engine.diagnosis import diagnose, is_rest_hour
 from app.engine.expert_system import InferenceEngine, WorkingMemory
 from app.engine.fuzzy import health_index
 from app.engine.models import ModelRegistry, normalize
@@ -23,7 +23,7 @@ ENGINE = InferenceEngine(RULES)
 def analyze(request: InsightRequest, models: ModelRegistry) -> InsightResponse:
     profile = get_profile(request.crop_type)
     measures = request.measures.as_dict()
-    diagnosis = diagnose(profile, measures)
+    diagnosis = diagnose(profile, measures, request.local_hour)
 
     positions = normalize(profile, measures)
     history = [normalize(profile, item.as_dict()) for item in request.history]
@@ -43,7 +43,8 @@ def analyze(request: InsightRequest, models: ModelRegistry) -> InsightResponse:
     firings = ENGINE.run(memory)
 
     health = health_index({item.parameter: item.deviation for item in diagnosis})
-    actions = agent.decide(diagnosis, predictions, memory.facts, {a.upper() for a in request.actuators})
+    actions = agent.decide(diagnosis, predictions, memory.facts, {a.upper() for a in request.actuators},
+                           resting=is_rest_hour(request.local_hour))
 
     return InsightResponse(
         crop_type=profile.type,
@@ -70,7 +71,8 @@ def _predictions(values: dict[str, float | None]) -> list[Prediction]:
 
 
 def _summary(profile: CropProfile, index: float, label: str, diagnosis, action_count: int) -> str:
-    issues = sorted((d for d in diagnosis if d.status != "OPTIMAL"), key=lambda d: d.deviation, reverse=True)
+    issues = sorted((d for d in diagnosis if d.status not in ("OPTIMAL", "REST")), key=lambda d: d.deviation,
+                    reverse=True)
     text = f"Tu {profile.name.lower()} está en estado «{label}» ({index:.0f}/100)."
     if not issues:
         return text + " Todas las variables medidas están en su rango ideal."

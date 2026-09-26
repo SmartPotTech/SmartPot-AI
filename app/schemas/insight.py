@@ -26,6 +26,7 @@ class InsightRequest(CamelModel):
     measures: Measures
     history: list[Measures] = Field(default_factory=list, max_length=500)
     actuators: list[str] = Field(default_factory=list, max_length=20)
+    local_hour: int | None = Field(None, ge=0, le=23)
 
     @field_validator("crop_type")
     @classmethod
