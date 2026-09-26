@@ -50,11 +50,11 @@ Una variable fuera de rango se mide en **tolerancias** (5 °C, 15 %, 300 lux, 0.
 
 ## Cómo razona
 
-1. **Diagnóstico:** cada variable queda `LOW`, `OPTIMAL` o `HIGH`, con severidad `WARNING` o `CRITICAL` y una recomendación en español.
+1. **Diagnóstico:** cada variable queda `LOW`, `OPTIMAL` o `HIGH`, con severidad `WARNING` o `CRITICAL` y una recomendación en español. Entre las 22:00 y las 6:00 (hora local enviada en `localHour`) la luz baja queda como `REST`: es el periodo de oscuridad de la planta y no resta salud.
 2. **Modelos:** las variables se normalizan respecto al perfil (0 = mínimo ideal, 1 = máximo ideal), así un mismo modelo sirve para todas las especies. Se entrenan al arrancar con 4000 muestras sintéticas y semilla fija, por lo que los resultados son reproducibles. `GET /v1/models` informa su exactitud.
 3. **Sistema experto:** un motor de encadenamiento hacia adelante dispara reglas por prioridad (cada regla una sola vez). Las conclusiones de primer nivel —por ejemplo `heat_stress` o `nutrient_lockout`— alimentan reglas de segundo nivel como `compound_stress` o `critical_state`. Si el Isolation Forest y el historial indican una lectura imposible, `sensor_fault` bloquea las acciones.
 4. **Lógica difusa:** cada desviación pertenece en distinto grado a los conjuntos «ideal», «aceptable», «desviada» y «crítica». La inferencia Sugeno de orden cero da la salud de cada variable, el índice global las pondera (el pH y la temperatura pesan más) y una regla de peor caso limita la salud cuando algo es crítico.
-5. **Agente:** propone acciones solo para los actuadores del cultivo: riego si el sustrato está seco, luz si falta, ventilación si hay calor, humedad alta o el modelo lo predice, humidificador, dosificador de pH y de nutrientes. La API aplica el enfriamiento y solo ejecuta con el modo automático activo.
+5. **Agente:** propone acciones solo para los actuadores del cultivo: riego si el sustrato está seco, luz si falta de día (y apagarla de noche), ventilación si hay calor, humedad alta o el modelo lo predice, humidificador, dosificador de pH y de nutrientes. La API aplica el enfriamiento y solo ejecuta con el modo automático activo.
 
 ## Contrato
 
@@ -72,7 +72,8 @@ Todas las rutas `/v1` exigen `Authorization: Bearer <SMARTPOT_AI_TOKEN>`.
   "cropType": "TOMATO",
   "measures": {"temperature": 31, "humidity": 55, "ph": 6.1, "tds": 1600, "soilMoisture": 45, "brightness": 700},
   "history": [],
-  "actuators": ["WATER_PUMP", "FAN", "UV_LIGHT"]
+  "actuators": ["WATER_PUMP", "FAN", "UV_LIGHT"],
+  "localHour": 14
 }
 ```
 
