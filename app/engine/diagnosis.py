@@ -1,10 +1,15 @@
-"""Diagnóstico por variable: compara cada lectura con el perfil del cultivo."""
+"""Diagnóstico por variable: compara cada lectura con el perfil del cultivo.
+
+Entre las 22:00 y las 6:00 (hora local) la planta descansa: la luz baja es normal y se marca como REST.
+"""
 
 from dataclasses import dataclass
 
 from app.knowledge.profiles import PARAMETERS, CropProfile
 
 CRITICAL_DEVIATION = 1.0
+REST_START_HOUR = 22
+REST_END_HOUR = 6
 
 RECOMMENDATIONS = {
     ("temperature", "LOW"): "Aleja la maceta de corrientes frías o usa una fuente de calor suave.",
@@ -33,7 +38,13 @@ class ParameterDiagnosis:
     recommendation: str | None
 
 
-def diagnose(profile: CropProfile, measures: dict[str, float | None]) -> list[ParameterDiagnosis]:
+def is_rest_hour(hour: int | None) -> bool:
+    return hour is not None and (hour >= REST_START_HOUR or hour < REST_END_HOUR)
+
+
+def diagnose(profile: CropProfile, measures: dict[str, float | None],
+             local_hour: int | None = None) -> list[ParameterDiagnosis]:
+    resting = is_rest_hour(local_hour)
     results = []
     for parameter in PARAMETERS:
         value = measures.get(parameter)
@@ -41,7 +52,11 @@ def diagnose(profile: CropProfile, measures: dict[str, float | None]) -> list[Pa
             continue
         rng = profile.ranges[parameter]
         deviation = rng.deviation(value)
-        if deviation == 0:
+        if resting and parameter == "brightness" and value < rng.min:
+            status, severity, deviation = "REST", "OK", 0.0
+            message = (f"Es de noche: la planta descansa y la luz baja ({_fmt(value)} {rng.unit}) es normal "
+                       f"entre las {REST_START_HOUR}:00 y las {REST_END_HOUR}:00.")
+        elif deviation == 0:
             status, severity = "OPTIMAL", "OK"
             message = f"{_capitalize(rng.label)} está en el rango ideal ({_fmt(rng.min)}–{_fmt(rng.max)} {rng.unit})."
         else:
