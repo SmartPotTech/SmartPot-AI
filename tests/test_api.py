@@ -74,3 +74,20 @@ def test_model_metrics_are_reported(client, auth):
 def test_docs_are_hidden_by_default(client):
     assert client.get("/docs").status_code == 404
     assert client.get("/openapi.json").status_code == 404
+
+
+def test_the_local_hour_enables_the_night_rest(client, auth):
+    payload = {"cropType": "TOMATO", "localHour": 23, "actuators": ["UV_LIGHT"],
+               "measures": {"temperature": 21, "humidity": 70, "brightness": 20, "ph": 6.2, "tds": 2000,
+                            "soilMoisture": 65}}
+    body = client.post("/v1/insights", json=payload, headers=auth).json()
+
+    assert next(d for d in body["diagnosis"] if d["parameter"] == "brightness")["status"] == "REST"
+    assert body["health"]["index"] >= 85
+    assert body["actions"] == []
+    assert "night_rest" in {c["rule"] for c in body["conclusions"]}
+
+
+def test_the_local_hour_must_be_a_valid_hour(client, auth):
+    payload = {"cropType": "TOMATO", "localHour": 24, "measures": {"brightness": 20}}
+    assert client.post("/v1/insights", json=payload, headers=auth).status_code == 422
