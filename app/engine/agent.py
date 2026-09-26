@@ -18,7 +18,7 @@ class Action:
 
 
 def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | None], facts: dict,
-           actuators: set[str]) -> list[Action]:
+           actuators: set[str], resting: bool = False) -> list[Action]:
     by_parameter = {item.parameter: item for item in diagnosis}
     actions: list[Action] = []
 
@@ -35,7 +35,10 @@ def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | N
                 "El sustrato está seco: riego automático.")
 
     light = by_parameter.get("brightness")
-    if light and light.status == "LOW":
+    if resting and light and light.status in ("OPTIMAL", "HIGH"):
+        propose("UV_LIGHT", "DEACTIVATE", None, "Es de noche: se apaga la luz de cultivo para respetar el "
+                                             "descanso de la planta.")
+    elif light and light.status == "LOW":
         propose("UV_LIGHT", "ACTIVATE", 900, "Luz insuficiente: se enciende la luz de cultivo 15 minutos.")
     elif light and light.status == "HIGH":
         propose("UV_LIGHT", "DEACTIVATE", None, "Exceso de luz: se apaga la luz de cultivo.")
