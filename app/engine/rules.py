@@ -130,9 +130,19 @@ RULES: list[Rule] = [
         salience=-5,
     ),
     Rule(
+        name="night_rest",
+        title="Descanso nocturno",
+        condition=lambda m: _status(m, "brightness") == "REST",
+        message=lambda m: "La planta está en su periodo de oscuridad: no hace falta encender la luz de cultivo "
+                          "hasta la mañana.",
+        certainty=1.0,
+        salience=-10,
+    ),
+    Rule(
         name="ideal_conditions",
         title="Condiciones ideales",
-        condition=lambda m: all(value == "OPTIMAL" for name, value in m.facts.items() if name.startswith("status:"))
+        condition=lambda m: all(value in ("OPTIMAL", "REST") for name, value in m.facts.items()
+                                if name.startswith("status:"))
         and any(name.startswith("status:") for name in m.facts),
         message=lambda m: "Todas las variables medidas están en su rango ideal. ¡Buen trabajo!",
         certainty=1.0,
