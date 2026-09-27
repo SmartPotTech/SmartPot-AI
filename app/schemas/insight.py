@@ -74,7 +74,8 @@ class Forecast(CamelModel):
     parameter: str
     current: float
     slope_per_hour: float
-    expected_in_3h: float
+    # Alias explícito: el generador camelCase produciría «expectedIn3H».
+    expected_in_3h: float = Field(alias="expectedIn3h")
     trend: str
     hours_to_limit: float | None = None
     limit: str | None = None

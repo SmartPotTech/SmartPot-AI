@@ -103,6 +103,7 @@ def test_timed_history_produces_forecasts_and_explanations(client, auth):
 
     soil = next(f for f in body["forecasts"] if f["parameter"] == "soilMoisture")
     assert soil["trend"] == "FALLING" and soil["limit"] == "MIN"
+    assert set(soil) >= {"slopePerHour", "expectedIn3h", "hoursToLimit", "confidence"}
     assert "drying_trend" in {c["rule"] for c in body["conclusions"]}
     assert body["actions"][0]["reason"].startswith("Riego preventivo")
     assert set(body["health"]["byParameter"]) >= {"temperature", "soilMoisture"}
