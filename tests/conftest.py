@@ -1,8 +1,12 @@
 import os
+import tempfile
 
 import pytest
 
 os.environ.setdefault("SMARTPOT_AI_TOKEN", "test-token-for-smartpot-ai-service")
+os.environ.setdefault("DATA_DIR", tempfile.mkdtemp(prefix="smartpot-ai-"))
+os.environ.setdefault("LEARNING_CHECK_SECONDS", "0")
+os.environ.setdefault("LEARNING_SEPARATE_PROCESS", "false")
 
 from fastapi.testclient import TestClient  # noqa: E402
 
