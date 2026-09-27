@@ -224,7 +224,7 @@ class LearningService:
         name = profile.name.lower()
         if state is None or not state.usable:
             return {"source": "BASE", "readings": readings, "trained_at": None,
-                    "message": f"Aún aprendo de las macetas de {name}: hay {readings} lecturas reales y el primer "
+                    "message": f"Aún aprendo de los cultivos de {name}: hay {readings} lecturas reales y el primer "
                                f"entrenamiento empieza con {self.config.min_samples}."}
 
         result: dict[str, Any] = {"source": "LEARNED", "readings": readings, "trained_at": state.trained_at,

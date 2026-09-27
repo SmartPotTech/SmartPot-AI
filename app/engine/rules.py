@@ -165,7 +165,7 @@ RULES: list[Rule] = [
         condition=lambda m: _status(m, "temperature") == "OPTIMAL"
         and _approaching(m, "temperature", "MAX") is not None,
         message=lambda m: f"La temperatura sube y pasará el máximo en {_approaching(m, 'temperature', 'MAX'):.1f} h: "
-                          "ventila o aleja la maceta del sol antes de que llegue.",
+                          "ventila o aleja el cultivo del sol antes de que llegue.",
         certainty=0.7,
         salience=12,
         conclude=lambda m: {"trend": "heating"},
@@ -175,7 +175,7 @@ RULES: list[Rule] = [
         title="Riego probable en la próxima hora",
         condition=lambda m: _status(m, "soilMoisture") == "OPTIMAL" and _learned(m, "needs_water") >= LEARNED_CERTAINTY
         and not m.has("rule:drying_trend"),
-        message=lambda m: f"Lo aprendido de las macetas de esta especie da {_learned(m, 'needs_water'):.0%} de "
+        message=lambda m: f"Lo aprendido de los cultivos de esta especie da {_learned(m, 'needs_water'):.0%} de "
                           "probabilidad de que el sustrato baje del mínimo en la próxima hora.",
         certainty=0.7,
         salience=11,
@@ -186,7 +186,7 @@ RULES: list[Rule] = [
         title="Calor probable en la próxima hora",
         condition=lambda m: _status(m, "temperature") == "OPTIMAL" and _learned(m, "overheat") >= LEARNED_CERTAINTY
         and not m.has("rule:heat_building"),
-        message=lambda m: f"Lo aprendido de las macetas de esta especie da {_learned(m, 'overheat'):.0%} de "
+        message=lambda m: f"Lo aprendido de los cultivos de esta especie da {_learned(m, 'overheat'):.0%} de "
                           "probabilidad de que la temperatura pase del máximo en la próxima hora.",
         certainty=0.65,
         salience=11,
@@ -196,7 +196,7 @@ RULES: list[Rule] = [
         name="unusual_pattern",
         title="Combinación poco habitual",
         condition=lambda m: m.has("learned:unusual") and not m.has("sensor_fault"),
-        message=lambda m: "Esta combinación de valores casi nunca se ha visto en las macetas de la especie. "
+        message=lambda m: "Esta combinación de valores casi nunca se ha visto en los cultivos de la especie. "
                           "Si nada cambió en el cultivo, revisa los sensores.",
         certainty=0.6,
         salience=4,
