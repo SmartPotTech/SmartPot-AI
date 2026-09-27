@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, Request
 
 from app.core.security import require_service_token
 from app.knowledge.profiles import PROFILES
+from app.schemas.fleet import FleetRequest, FleetResponse
 from app.schemas.insight import InsightRequest, InsightResponse
 from app.schemas.profiles import CropProfileOut
+from app.services import fleet
 from app.services.insights import analyze
 
 router = APIRouter(prefix="/v1", tags=["Asistente"], dependencies=[Depends(require_service_token)])
@@ -14,6 +16,13 @@ router = APIRouter(prefix="/v1", tags=["Asistente"], dependencies=[Depends(requi
                          "predicciones de los modelos y acciones del agente.")
 def insights(payload: InsightRequest, request: Request) -> InsightResponse:
     return analyze(payload, request.app.state.models)
+
+
+@router.post("/fleet", response_model=FleetResponse, summary="Analizar todos los cultivos",
+             description="Ranking por salud, problemas compartidos del entorno, grupos por condiciones similares "
+                         "(K-Means) y acciones agregadas por actuador para aplicarlas en bloque.")
+def fleet_analysis(payload: FleetRequest) -> FleetResponse:
+    return fleet.analyze(payload)
 
 
 @router.get("/crop-profiles", response_model=list[CropProfileOut], summary="Base de conocimiento por especie")
