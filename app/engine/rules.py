@@ -16,6 +16,14 @@ def _critical(memory: WorkingMemory, parameter: str) -> bool:
     return memory.get(f"severity:{parameter}") == "CRITICAL"
 
 
+def _approaching(memory: WorkingMemory, parameter: str, limit: str, hours: float = 3.0) -> float | None:
+    """Horas hasta que el pronóstico cruce el límite indicado, si ocurre dentro de la ventana."""
+    forecast = memory.get(f"forecast:{parameter}")
+    if forecast and forecast.get("limit") == limit and forecast.get("hours") is not None and forecast["hours"] <= hours:
+        return forecast["hours"]
+    return None
+
+
 def _critical_count(memory: WorkingMemory) -> int:
     return sum(1 for name, value in memory.facts.items() if name.startswith("severity:") and value == "CRITICAL")
 
@@ -128,6 +136,29 @@ RULES: list[Rule] = [
                           "y observa la respuesta.",
         certainty=0.8,
         salience=-5,
+    ),
+    Rule(
+        name="drying_trend",
+        title="Secado acelerado",
+        condition=lambda m: _status(m, "soilMoisture") == "OPTIMAL"
+        and _approaching(m, "soilMoisture", "MIN") is not None,
+        message=lambda m: "El sustrato se seca rápido: llegará al mínimo en "
+                          f"{_approaching(m, 'soilMoisture', 'MIN'):.1f} h si sigue la tendencia. "
+                          "Conviene regar pronto.",
+        certainty=0.75,
+        salience=12,
+        conclude=lambda m: {"trend": "drying"},
+    ),
+    Rule(
+        name="heat_building",
+        title="Calor en aumento",
+        condition=lambda m: _status(m, "temperature") == "OPTIMAL"
+        and _approaching(m, "temperature", "MAX") is not None,
+        message=lambda m: f"La temperatura sube y pasará el máximo en {_approaching(m, 'temperature', 'MAX'):.1f} h: "
+                          "ventila o aleja la maceta del sol antes de que llegue.",
+        certainty=0.7,
+        salience=12,
+        conclude=lambda m: {"trend": "heating"},
     ),
     Rule(
         name="night_rest",
