@@ -78,9 +78,12 @@ def _describe(profile: CropProfile, parameter: str, current: float, slope: float
     if abs(slope) * HORIZON_HOURS >= STABLE_SHARE * width:
         trend = "RISING" if slope > 0 else "FALLING"
 
+    # Las horas al límite parten del nivel ajustado (no de la última lectura, que trae ruido),
+    # igual que el valor esperado en 3 h: así ambos datos son coherentes entre sí.
+    level = intercept
     hours_to_limit, limit = None, None
-    if trend != "STABLE" and rng.min <= current <= rng.max:
-        hours = (rng.max - current) / slope if slope > 0 else (current - rng.min) / -slope
+    if trend != "STABLE" and rng.min <= level <= rng.max:
+        hours = (rng.max - level) / slope if slope > 0 else (level - rng.min) / -slope
         if hours <= MAX_HOURS_TO_LIMIT:
             hours_to_limit, limit = round(hours, 2), "MAX" if slope > 0 else "MIN"
 

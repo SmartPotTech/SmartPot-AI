@@ -72,3 +72,13 @@ def test_agent_ventilates_before_it_gets_too_hot():
     diagnosis = diagnose(profile, {"temperature": 21.5})
     actions = decide(diagnosis, {}, {}, {"FAN"}, forecasts=forecasts)
     assert actions and actions[0].reason.startswith("Ventilación preventiva")
+
+
+def test_expected_value_and_hours_to_limit_agree_despite_noise():
+    points = series(soilMoisture=(75, -0.2))
+    points[-1][1]["soilMoisture"] = 70  # la última lectura sale alta por ruido
+    result = by_parameter(forecast(get_profile("TOMATO"), points))["soilMoisture"]
+    hours = result.hours_to_limit
+    assert result.trend == "FALLING" and hours is not None
+    reaches_limit_within_3h = result.expected_in_3h <= 55
+    assert reaches_limit_within_3h == (hours <= 3)
