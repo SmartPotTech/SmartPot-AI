@@ -1,7 +1,7 @@
-"""Base de conocimiento: rangos óptimos por especie en la escala de los sensores de la maceta.
+"""Base de conocimiento: rangos óptimos por especie en la escala de los sensores del dispositivo.
 
 La conductividad se expresa en ppm con factor 700 (EC × 700) y la luz en lux relativos del
-sensor de la maceta (0 a 2000).
+sensor del dispositivo (0 a 2000).
 """
 
 from dataclasses import dataclass, field

@@ -1,4 +1,4 @@
-"""Series sintéticas con la física de una maceta: el sustrato se seca más rápido con calor y se riega al bajar
+"""Series sintéticas con la física de un cultivo: el sustrato se seca más rápido con calor y se riega al bajar
 del mínimo; la temperatura y la luz siguen el ciclo del día."""
 
 import math
