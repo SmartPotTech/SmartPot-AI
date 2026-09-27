@@ -1,7 +1,9 @@
 """Reglas del sistema experto de SmartPot.
 
 La memoria de trabajo arranca con los hechos del diagnóstico por variable
-(status:<variable> y severity:<variable>) y, si existen, con las predicciones de los modelos.
+(status:<variable> y severity:<variable>) y, si existen, con las predicciones de los modelos base
+(prediction:<nombre>), los pronósticos (forecast:<variable>) y lo aprendido de las lecturas reales
+(learned:<tarea>).
 Las reglas de salience alta combinan variables; las de salience baja encadenan conclusiones.
 """
 
@@ -22,6 +24,14 @@ def _approaching(memory: WorkingMemory, parameter: str, limit: str, hours: float
     if forecast and forecast.get("limit") == limit and forecast.get("hours") is not None and forecast["hours"] <= hours:
         return forecast["hours"]
     return None
+
+
+# Probabilidad desde la que una predicción aprendida se convierte en conclusión.
+LEARNED_CERTAINTY = 0.7
+
+
+def _learned(memory: WorkingMemory, task: str) -> float:
+    return float(memory.get(f"learned:{task}", 0.0))
 
 
 def _critical_count(memory: WorkingMemory) -> int:
@@ -159,6 +169,37 @@ RULES: list[Rule] = [
         certainty=0.7,
         salience=12,
         conclude=lambda m: {"trend": "heating"},
+    ),
+    Rule(
+        name="learned_drying",
+        title="Riego probable en la próxima hora",
+        condition=lambda m: _status(m, "soilMoisture") == "OPTIMAL" and _learned(m, "needs_water") >= LEARNED_CERTAINTY
+        and not m.has("rule:drying_trend"),
+        message=lambda m: f"Lo aprendido de las macetas de esta especie da {_learned(m, 'needs_water'):.0%} de "
+                          "probabilidad de que el sustrato baje del mínimo en la próxima hora.",
+        certainty=0.7,
+        salience=11,
+        conclude=lambda m: {"trend": "drying"},
+    ),
+    Rule(
+        name="learned_heat",
+        title="Calor probable en la próxima hora",
+        condition=lambda m: _status(m, "temperature") == "OPTIMAL" and _learned(m, "overheat") >= LEARNED_CERTAINTY
+        and not m.has("rule:heat_building"),
+        message=lambda m: f"Lo aprendido de las macetas de esta especie da {_learned(m, 'overheat'):.0%} de "
+                          "probabilidad de que la temperatura pase del máximo en la próxima hora.",
+        certainty=0.65,
+        salience=11,
+        conclude=lambda m: {"trend": "heating"},
+    ),
+    Rule(
+        name="unusual_pattern",
+        title="Combinación poco habitual",
+        condition=lambda m: m.has("learned:unusual") and not m.has("sensor_fault"),
+        message=lambda m: "Esta combinación de valores casi nunca se ha visto en las macetas de la especie. "
+                          "Si nada cambió en el cultivo, revisa los sensores.",
+        certainty=0.6,
+        salience=4,
     ),
     Rule(
         name="night_rest",
