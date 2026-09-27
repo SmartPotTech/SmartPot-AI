@@ -12,11 +12,11 @@ REST_START_HOUR = 22
 REST_END_HOUR = 6
 
 RECOMMENDATIONS = {
-    ("temperature", "LOW"): "Aleja la maceta de corrientes frías o usa una fuente de calor suave.",
+    ("temperature", "LOW"): "Aleja el cultivo de corrientes frías o usa una fuente de calor suave.",
     ("temperature", "HIGH"): "Ventila el espacio y evita la luz directa en las horas de más calor.",
     ("humidity", "LOW"): "Aumenta la humedad del ambiente con un humidificador o agrupando plantas.",
     ("humidity", "HIGH"): "Mejora la circulación de aire para prevenir hongos.",
-    ("brightness", "LOW"): "Enciende la luz de cultivo o acerca la maceta a una fuente de luz.",
+    ("brightness", "LOW"): "Enciende la luz de cultivo o acerca el cultivo a una fuente de luz.",
     ("brightness", "HIGH"): "Reduce las horas de luz o aleja la lámpara para evitar quemaduras.",
     ("ph", "LOW"): "Agrega solución para subir el pH (pH Up) en dosis pequeñas.",
     ("ph", "HIGH"): "Agrega solución para bajar el pH (pH Down) en dosis pequeñas.",

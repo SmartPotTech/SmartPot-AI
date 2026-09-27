@@ -2,7 +2,7 @@
 
 - Ranking por índice de salud (lógica difusa de cada cultivo).
 - Problemas compartidos: la misma variable fuera de rango en la mitad o más de los cultivos
-  suele ser un problema del entorno (la habitación, el agua, la solución nutritiva) y no de una maceta.
+  suele ser un problema del entorno (la habitación, el agua, la solución nutritiva) y no de un cultivo.
 - Grupos por condiciones similares: K-Means sobre las variables normalizadas respecto a cada perfil,
   así una lechuga y un tomate son comparables. La cantidad de grupos se elige por silueta.
 - Acciones agregadas: las que el agente propone para cada cultivo, reunidas por actuador para
@@ -123,7 +123,7 @@ def _shared_issues(results: list[CropResult]) -> list[SharedIssue]:
             if len(ids) >= 2 and share >= SHARED_SHARE:
                 text = phrase(parameter, status)
                 message = (f"{text[:1].upper() + text[1:]} en {len(ids)} de {len(results)} cultivos: "
-                           "probablemente es el entorno y no una maceta en particular.")
+                           "probablemente es el entorno y no un cultivo en particular.")
                 issues.append(SharedIssue(parameter, status, ids, round(share, 2), message))
     return sorted(issues, key=lambda issue: issue.share, reverse=True)
 
