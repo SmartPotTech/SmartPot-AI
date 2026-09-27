@@ -1,1 +1,1 @@
-"""Aprendizaje continuo con las lecturas reales de las macetas."""
+"""Aprendizaje continuo con las lecturas de los cultivos reales."""

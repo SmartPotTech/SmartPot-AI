@@ -1,7 +1,7 @@
 """Almacén de lecturas reales para el aprendizaje (SQLite en el volumen del servicio).
 
 El id del cultivo se guarda seudonimizado (hash SHA-256): el servicio aprende de la serie de cada
-maceta sin conocer a qué cultivo ni a qué persona pertenece. Si la carpeta de datos no se puede
+cultivo sin saber cuál es ni a qué persona pertenece. Si la carpeta de datos no se puede
 escribir, el almacén trabaja en memoria y el aprendizaje se pierde al reiniciar.
 """
 
@@ -47,7 +47,7 @@ class StoredReading:
 
 @dataclass
 class Series:
-    """Lecturas de una especie ordenadas por maceta y hora; los valores ausentes son NaN."""
+    """Lecturas de una especie ordenadas por cultivo y hora; los valores ausentes son NaN."""
 
     crops: np.ndarray
     times: np.ndarray
@@ -89,7 +89,7 @@ class ReadingStore:
             return None
 
     def add(self, readings: list[StoredReading]) -> int:
-        """Guarda las lecturas nuevas; las repetidas (misma maceta y hora) se ignoran."""
+        """Guarda las lecturas nuevas; las repetidas (mismo cultivo y hora) se ignoran."""
         now = time.time()
         rows = [(crop_key(r.crop_id), r.crop_type, r.measured_at, r.local_hour,
                  *(r.values.get(column) for column in COLUMNS), now) for r in readings]
@@ -112,7 +112,7 @@ class ReadingStore:
             return int(self._connection.execute("SELECT COUNT(*) FROM readings").fetchone()[0])
 
     def load(self, crop_type: str, limit: int) -> Series:
-        """Las `limit` lecturas más recientes de la especie, ordenadas por maceta y hora."""
+        """Las `limit` lecturas más recientes de la especie, ordenadas por cultivo y hora."""
         columns = ", ".join(COLUMNS)
         with self._lock:
             rows = self._connection.execute(
