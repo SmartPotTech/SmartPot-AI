@@ -159,11 +159,11 @@ Cada cambio en `main` pasa por el CI, publica la imagen en GHCR (y en Docker Hub
 
 ## Documentación
 
-El asistente es un servicio interno: la API le pregunta y aplica sus respuestas. La [documentación técnica](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Technical_Documentation.md) explica la base de conocimiento, las 19 reglas, el índice difuso, el pronóstico, el análisis de flota y el aprendizaje continuo. Los superdiagramas muestran la plataforma completa en una sola imagen ampliable:
+El asistente es un servicio interno: la API le pregunta y aplica sus respuestas. La [documentación técnica](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Technical_Documentation.md) explica la base de conocimiento, las 19 reglas, el índice difuso, el pronóstico, el análisis de flota y el aprendizaje continuo. Los diagramas generales muestran la plataforma completa en una sola imagen ampliable:
 
-- [Decisión de la IA](https://github.com/SmartPotTech/.github/blob/main/docs/images/superdiagrams/SmartPot_Super_08_AI_Decision.svg): de la lectura a la orden: diagnóstico, pronóstico, modelos, reglas, índice difuso y agente
-- [Linaje de los datos](https://github.com/SmartPotTech/.github/blob/main/docs/images/superdiagrams/SmartPot_Super_04_Data_Lineage.svg): cómo llegan las lecturas reales al aprendizaje y qué se guarda
-- [Máquinas de estado](https://github.com/SmartPotTech/.github/blob/main/docs/images/superdiagrams/SmartPot_Super_05_State_Machines.svg): los estados del aprendizaje de cada especie
+- [Decisión de la IA](https://github.com/SmartPotTech/.github/blob/main/docs/diagrams/SmartPot_Global_08_AI_Decision.svg): de la lectura a la orden: diagnóstico, pronóstico, modelos, reglas, índice difuso y agente
+- [Linaje de los datos](https://github.com/SmartPotTech/.github/blob/main/docs/diagrams/SmartPot_Global_04_Data_Lineage.svg): cómo llegan las lecturas reales al aprendizaje y qué se guarda
+- [Máquinas de estado](https://github.com/SmartPotTech/.github/blob/main/docs/diagrams/SmartPot_Global_05_State_Machines.svg): los estados del aprendizaje de cada especie
 
 ## Licencia
 
