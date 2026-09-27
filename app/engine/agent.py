@@ -17,8 +17,12 @@ class Action:
     reason: str
 
 
+# Umbral de las acciones preventivas: la variable saldrá de su rango en menos de esta cantidad de horas.
+PREVENTIVE_HOURS = 1.0
+
+
 def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | None], facts: dict,
-           actuators: set[str], resting: bool = False) -> list[Action]:
+           actuators: set[str], resting: bool = False, forecasts: list | None = None) -> list[Action]:
     by_parameter = {item.parameter: item for item in diagnosis}
     actions: list[Action] = []
 
@@ -29,10 +33,15 @@ def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | N
     if facts.get("sensor_fault"):
         return []
 
+    upcoming = {f.parameter: f for f in forecasts or [] if f.hours_to_limit is not None
+                and f.hours_to_limit <= PREVENTIVE_HOURS}
+
     soil = by_parameter.get("soilMoisture")
     if soil and soil.status == "LOW":
         propose("WATER_PUMP", "ACTIVATE", 30 if soil.severity == "CRITICAL" else 15,
                 "El sustrato está seco: riego automático.")
+    elif soil and soil.status == "OPTIMAL" and getattr(upcoming.get("soilMoisture"), "limit", None) == "MIN":
+        propose("WATER_PUMP", "ACTIVATE", 10, "Riego preventivo: el sustrato llegará al mínimo en menos de 1 h.")
 
     light = by_parameter.get("brightness")
     if resting and light and light.status in ("OPTIMAL", "HIGH"):
@@ -48,6 +57,9 @@ def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | N
     hot_or_humid = (temperature and temperature.status == "HIGH") or (humidity and humidity.status == "HIGH")
     if hot_or_humid or (predictions.get("ventilation") or 0) >= 0.7:
         propose("FAN", "ACTIVATE", 600, "Calor o humedad alta: ventilación por 10 minutos.")
+    elif (temperature and temperature.status == "OPTIMAL"
+          and getattr(upcoming.get("temperature"), "limit", None) == "MAX"):
+        propose("FAN", "ACTIVATE", 600, "Ventilación preventiva: la temperatura pasará el máximo en menos de 1 h.")
     elif temperature and temperature.status == "LOW":
         propose("FAN", "DEACTIVATE", None, "Temperatura baja: se apaga la ventilación.")
 
