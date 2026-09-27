@@ -8,7 +8,7 @@
 
 ## Descripción
 
-SmartPot-AI es el **asistente inteligente** de SmartPot. Recibe la última lectura de una maceta, su historial reciente y los actuadores disponibles, y devuelve un diagnóstico completo que combina cuatro técnicas de inteligencia artificial:
+SmartPot-AI es el **asistente inteligente** de SmartPot. Recibe la última lectura de una maceta, su historial reciente y los actuadores disponibles, y devuelve un diagnóstico completo que combina estas técnicas de inteligencia artificial:
 
 | Técnica | Qué resuelve | Dónde vive |
 | --- | --- | --- |
@@ -154,6 +154,16 @@ docker pull ghcr.io/smartpottech/smartpot-ai:latest
 ```
 
 La imagen instala las dependencias con uv en una etapa aparte, corre como el usuario `1000` y admite sistema de archivos de solo lectura. Monta un volumen en `/data` para conservar lo aprendido; sin él, el aprendizaje funciona en memoria y se pierde al reiniciar.
+
+Cada cambio en `main` pasa por el CI, publica la imagen en GHCR (y en Docker Hub como réplica cuando el repositorio tiene credenciales) y pide el despliegue al workflow central de [SmartPotTech/.github](https://github.com/SmartPotTech/.github), que actualiza producción de a uno y verifica `/health`.
+
+## Documentación
+
+El asistente es un servicio interno: la API le pregunta y aplica sus respuestas. La [documentación técnica](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Technical_Documentation.md) explica la base de conocimiento, las 19 reglas, el índice difuso, el pronóstico, el análisis de flota y el aprendizaje continuo. Los superdiagramas muestran la plataforma completa en una sola imagen ampliable:
+
+- [Decisión de la IA](https://github.com/SmartPotTech/.github/blob/main/docs/images/superdiagrams/SmartPot_Super_08_AI_Decision.svg): de la lectura a la orden: diagnóstico, pronóstico, modelos, reglas, índice difuso y agente
+- [Linaje de los datos](https://github.com/SmartPotTech/.github/blob/main/docs/images/superdiagrams/SmartPot_Super_04_Data_Lineage.svg): cómo llegan las lecturas reales al aprendizaje y qué se guarda
+- [Máquinas de estado](https://github.com/SmartPotTech/.github/blob/main/docs/images/superdiagrams/SmartPot_Super_05_State_Machines.svg): los estados del aprendizaje de cada especie
 
 ## Licencia
 
