@@ -1,6 +1,8 @@
-"""Orquesta el análisis: diagnóstico → pronóstico → modelos → sistema experto → lógica difusa → agente."""
+"""Orquesta el análisis: diagnóstico → pronóstico → modelos base y aprendidos → sistema experto → lógica difusa
+→ agente."""
 
-from datetime import UTC
+import time
+from datetime import UTC, datetime
 
 from app.engine import agent
 from app.engine.diagnosis import diagnose, is_rest_hour
@@ -10,6 +12,7 @@ from app.engine.fuzzy import health_index
 from app.engine.models import ModelRegistry, normalize
 from app.engine.rules import RULES
 from app.knowledge.profiles import CropProfile, get_profile
+from app.learning.service import LearningService
 from app.schemas.insight import (
     Action,
     Conclusion,
@@ -18,19 +21,21 @@ from app.schemas.insight import (
     Health,
     InsightRequest,
     InsightResponse,
+    Learning,
     Prediction,
 )
 
 ENGINE = InferenceEngine(RULES)
 
 
-def analyze(request: InsightRequest, models: ModelRegistry) -> InsightResponse:
+def analyze(request: InsightRequest, models: ModelRegistry, learning: LearningService | None = None) -> InsightResponse:
     profile = get_profile(request.crop_type)
     measures = request.measures.as_dict()
     diagnosis = diagnose(profile, measures, request.local_hour)
 
     timed = [(_utc(item.measured_at), item.as_dict()) for item in request.history if item.measured_at]
     forecasts = forecast(profile, timed)
+    learned = _learned(learning, request, measures, timed)
 
     positions = normalize(profile, measures)
     history = [normalize(profile, item.as_dict()) for item in request.history]
@@ -50,6 +55,11 @@ def analyze(request: InsightRequest, models: ModelRegistry) -> InsightResponse:
     for item in forecasts:
         memory.assert_fact(f"forecast:{item.parameter}", {"trend": item.trend, "limit": item.limit,
                                                           "hours": item.hours_to_limit})
+    if learned:
+        for item in learned.predictions:
+            memory.assert_fact(f"learned:{item.name}", item.probability)
+        if learned.anomaly and learned.anomaly.unusual:
+            memory.assert_fact("learned:unusual", learned.anomaly.score)
     firings = ENGINE.run(memory)
 
     health = health_index({item.parameter: item.deviation for item in diagnosis})
@@ -69,8 +79,27 @@ def analyze(request: InsightRequest, models: ModelRegistry) -> InsightResponse:
         forecasts=[Forecast(parameter=f.parameter, current=f.current, slope_per_hour=f.slope_per_hour,
                             expected_in_3h=f.expected_in_3h, trend=f.trend, hours_to_limit=f.hours_to_limit,
                             limit=f.limit, confidence=f.confidence, message=f.message) for f in forecasts],
+        learning=learned,
         summary=_summary(profile, health.index, health.label, diagnosis, len(actions)),
     )
+
+
+def _learned(learning: LearningService | None, request: InsightRequest, measures: dict,
+             timed: list) -> Learning | None:
+    """Lo aprendido de las lecturas reales de la especie; nunca impide la evaluación."""
+    if learning is None:
+        return None
+    moment = _utc(request.measures.measured_at).timestamp() if request.measures.measured_at else time.time()
+    history = [(when.timestamp(), values) for when, values in timed]
+    data = learning.infer(request.crop_type, measures, request.local_hour, moment, history)
+    trained_at = data.get("trained_at")
+    moisture = data.get("moisture")
+    return Learning.model_validate({
+        **data,
+        "trained_at": datetime.fromtimestamp(trained_at, UTC) if trained_at else None,
+        "moisture": {"expectedIn1h": moisture["expected"], "model": moisture["model"], "mae": moisture["mae"]}
+        if moisture else None,
+    })
 
 
 def _utc(moment):
