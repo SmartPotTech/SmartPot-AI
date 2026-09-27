@@ -15,7 +15,7 @@ router = APIRouter(prefix="/v1", tags=["Asistente"], dependencies=[Depends(requi
              description="Diagnóstico por variable, conclusiones del sistema experto, índice difuso de salud, "
                          "predicciones de los modelos y acciones del agente.")
 def insights(payload: InsightRequest, request: Request) -> InsightResponse:
-    return analyze(payload, request.app.state.models)
+    return analyze(payload, request.app.state.models, getattr(request.app.state, "learning", None))
 
 
 @router.post("/fleet", response_model=FleetResponse, summary="Analizar todos los cultivos",

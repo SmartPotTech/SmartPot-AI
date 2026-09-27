@@ -90,6 +90,44 @@ class Action(CamelModel):
     reason: str
 
 
+class LearnedPrediction(CamelModel):
+    name: str
+    label: str
+    probability: float
+    model: str
+    metric: str
+    score: float | None = None
+
+
+class LearnedMoisture(CamelModel):
+    # Alias explícito por la misma razón que expectedIn3h.
+    expected_in_1h: float = Field(alias="expectedIn1h")
+    model: str
+    mae: float | None = None
+
+
+class OperatingState(CamelModel):
+    label: str
+    description: str
+    share: float
+
+
+class LearnedAnomaly(CamelModel):
+    score: float
+    unusual: bool
+
+
+class Learning(CamelModel):
+    source: str = Field(description="LEARNED si hay modelos entrenados con lecturas reales; BASE si aún no")
+    readings: int
+    trained_at: datetime | None = None
+    message: str
+    predictions: list[LearnedPrediction] = Field(default_factory=list)
+    moisture: LearnedMoisture | None = None
+    state: OperatingState | None = None
+    anomaly: LearnedAnomaly | None = None
+
+
 class InsightResponse(CamelModel):
     crop_type: str
     health: Health
@@ -98,4 +136,5 @@ class InsightResponse(CamelModel):
     predictions: list[Prediction]
     actions: list[Action]
     forecasts: list[Forecast] = Field(default_factory=list)
+    learning: Learning | None = None
     summary: str
