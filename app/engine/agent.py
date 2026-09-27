@@ -19,6 +19,8 @@ class Action:
 
 # Umbral de las acciones preventivas: la variable saldrá de su rango en menos de esta cantidad de horas.
 PREVENTIVE_HOURS = 1.0
+# Probabilidad aprendida desde la que el agente actúa de forma preventiva (más exigente que la conclusión).
+LEARNED_ACTION = 0.85
 
 
 def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | None], facts: dict,
@@ -42,6 +44,9 @@ def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | N
                 "El sustrato está seco: riego automático.")
     elif soil and soil.status == "OPTIMAL" and getattr(upcoming.get("soilMoisture"), "limit", None) == "MIN":
         propose("WATER_PUMP", "ACTIVATE", 10, "Riego preventivo: el sustrato llegará al mínimo en menos de 1 h.")
+    elif soil and soil.status == "OPTIMAL" and not resting and facts.get("learned:needs_water", 0) >= LEARNED_ACTION:
+        propose("WATER_PUMP", "ACTIVATE", 10, "Riego preventivo: lo aprendido de esta especie anticipa que el "
+                                              "sustrato se secará en la próxima hora.")
 
     light = by_parameter.get("brightness")
     if resting and light and light.status in ("OPTIMAL", "HIGH"):
@@ -60,6 +65,9 @@ def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | N
     elif (temperature and temperature.status == "OPTIMAL"
           and getattr(upcoming.get("temperature"), "limit", None) == "MAX"):
         propose("FAN", "ACTIVATE", 600, "Ventilación preventiva: la temperatura pasará el máximo en menos de 1 h.")
+    elif temperature and temperature.status == "OPTIMAL" and facts.get("learned:overheat", 0) >= LEARNED_ACTION:
+        propose("FAN", "ACTIVATE", 600, "Ventilación preventiva: lo aprendido de esta especie anticipa calor "
+                                        "en la próxima hora.")
     elif temperature and temperature.status == "LOW":
         propose("FAN", "DEACTIVATE", None, "Temperatura baja: se apaga la ventilación.")
 
