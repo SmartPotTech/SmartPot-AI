@@ -2,10 +2,10 @@
 
 Cada lectura se expresa como su posición dentro del rango ideal de la especie (0 = mínimo, 1 = máximo),
 la hora del día en forma circular y la tendencia reciente del sustrato y de la temperatura. Así un modelo
-sirve para todas las macetas de la misma especie.
+sirve para todos los cultivos de la misma especie.
 
 Las etiquetas salen de los propios datos (aprendizaje autosupervisado): lo que pasó en la hora siguiente
-a cada lectura dice si esa maceta llegó a necesitar riego o ventilación.
+a cada lectura dice si ese cultivo llegó a necesitar riego o ventilación.
 """
 
 import math

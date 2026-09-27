@@ -13,7 +13,7 @@ def _service(request: Request) -> LearningService:
 
 
 @router.post("/readings", response_model=IngestResult, summary="Recibir lecturas reales",
-             description="La API envía por lotes las lecturas que llegan de las macetas. Se guardan con el id "
+             description="La API envía por lotes las lecturas que llegan de los cultivos reales. Se guardan con el id "
                          "del cultivo seudonimizado y alimentan el próximo entrenamiento.")
 def ingest(batch: LearningBatch, request: Request) -> IngestResult:
     service = _service(request)
