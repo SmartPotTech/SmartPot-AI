@@ -91,3 +91,38 @@ def test_the_local_hour_enables_the_night_rest(client, auth):
 def test_the_local_hour_must_be_a_valid_hour(client, auth):
     payload = {"cropType": "TOMATO", "localHour": 24, "measures": {"brightness": 20}}
     assert client.post("/v1/insights", json=payload, headers=auth).status_code == 422
+
+
+def test_timed_history_produces_forecasts_and_explanations(client, auth):
+    history = [{"soilMoisture": 75 - step, "temperature": 19.0, "measuredAt": f"2026-09-26T12:{step * 5:02d}:00Z"}
+               for step in range(12)]
+    payload = {"cropType": "LETTUCE", "localHour": 12, "actuators": ["WATER_PUMP"], "history": history,
+               "measures": {"temperature": 19, "humidity": 60, "brightness": 900, "ph": 6.0, "tds": 700,
+                            "soilMoisture": 64}}
+    body = client.post("/v1/insights", json=payload, headers=auth).json()
+
+    soil = next(f for f in body["forecasts"] if f["parameter"] == "soilMoisture")
+    assert soil["trend"] == "FALLING" and soil["limit"] == "MIN"
+    assert "drying_trend" in {c["rule"] for c in body["conclusions"]}
+    assert body["actions"][0]["reason"].startswith("Riego preventivo")
+    assert set(body["health"]["byParameter"]) >= {"temperature", "soilMoisture"}
+
+
+def test_fleet_analysis_compares_all_crops(client, auth):
+    ideal = {"temperature": 18, "humidity": 60, "brightness": 900, "ph": 6.0, "tds": 700, "soilMoisture": 70}
+    payload = {"localHour": 12, "crops": [
+        {"id": "a", "name": "Lechuga 1", "cropType": "LETTUCE", "measures": {**ideal, "temperature": 28},
+         "actuators": ["FAN"]},
+        {"id": "b", "name": "Lechuga 2", "cropType": "LETTUCE", "measures": {**ideal, "temperature": 29},
+         "actuators": ["FAN"]},
+        {"id": "c", "name": "Tomate", "cropType": "tomato"},
+    ]}
+    response = client.post("/v1/fleet", json=payload, headers=auth)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["crops"][2]["health"] is None
+    assert body["sharedIssues"][0]["parameter"] == "temperature"
+    assert body["actions"][0]["actuator"] == "FAN" and sorted(body["actions"][0]["cropIds"]) == ["a", "b"]
+    assert body["crops"][0]["issues"] == ["Temperatura alta"]
+    assert client.post("/v1/fleet", json={"crops": []}, headers=auth).status_code == 422
