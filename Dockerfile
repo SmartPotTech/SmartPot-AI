@@ -23,11 +23,15 @@ LABEL org.opencontainers.image.title="SmartPot AI" \
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8000
+    PORT=8000 \
+    DATA_DIR=/data
 
 WORKDIR /app
 
 COPY --from=build /app /app
+
+# Lecturas y modelos aprendidos: aquí se monta un volumen.
+RUN mkdir -p /data && chown 1000:1000 /data
 
 USER 1000:1000
 
