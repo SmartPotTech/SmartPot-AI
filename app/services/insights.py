@@ -1,8 +1,11 @@
-"""Orquesta el análisis: diagnóstico → modelos → sistema experto → lógica difusa → agente."""
+"""Orquesta el análisis: diagnóstico → pronóstico → modelos → sistema experto → lógica difusa → agente."""
+
+from datetime import UTC
 
 from app.engine import agent
 from app.engine.diagnosis import diagnose, is_rest_hour
 from app.engine.expert_system import InferenceEngine, WorkingMemory
+from app.engine.forecast import forecast
 from app.engine.fuzzy import health_index
 from app.engine.models import ModelRegistry, normalize
 from app.engine.rules import RULES
@@ -11,6 +14,7 @@ from app.schemas.insight import (
     Action,
     Conclusion,
     Diagnosis,
+    Forecast,
     Health,
     InsightRequest,
     InsightResponse,
@@ -24,6 +28,9 @@ def analyze(request: InsightRequest, models: ModelRegistry) -> InsightResponse:
     profile = get_profile(request.crop_type)
     measures = request.measures.as_dict()
     diagnosis = diagnose(profile, measures, request.local_hour)
+
+    timed = [(_utc(item.measured_at), item.as_dict()) for item in request.history if item.measured_at]
+    forecasts = forecast(profile, timed)
 
     positions = normalize(profile, measures)
     history = [normalize(profile, item.as_dict()) for item in request.history]
@@ -40,15 +47,18 @@ def analyze(request: InsightRequest, models: ModelRegistry) -> InsightResponse:
     for name, probability in predictions.items():
         if probability is not None:
             memory.assert_fact(f"prediction:{name}", probability)
+    for item in forecasts:
+        memory.assert_fact(f"forecast:{item.parameter}", {"trend": item.trend, "limit": item.limit,
+                                                          "hours": item.hours_to_limit})
     firings = ENGINE.run(memory)
 
     health = health_index({item.parameter: item.deviation for item in diagnosis})
     actions = agent.decide(diagnosis, predictions, memory.facts, {a.upper() for a in request.actuators},
-                           resting=is_rest_hour(request.local_hour))
+                           resting=is_rest_hour(request.local_hour), forecasts=forecasts)
 
     return InsightResponse(
         crop_type=profile.type,
-        health=Health(index=health.index, level=health.level, label=health.label),
+        health=Health(index=health.index, level=health.level, label=health.label, by_parameter=health.by_parameter),
         diagnosis=[Diagnosis(parameter=d.parameter, value=d.value, status=d.status, severity=d.severity,
                              message=d.message, recommendation=d.recommendation) for d in diagnosis],
         conclusions=[Conclusion(rule=f.rule, title=f.title, message=f.message, certainty=f.certainty)
@@ -56,8 +66,15 @@ def analyze(request: InsightRequest, models: ModelRegistry) -> InsightResponse:
         predictions=_predictions(predictions),
         actions=[Action(actuator=a.actuator, action=a.action, duration_seconds=a.duration_seconds, reason=a.reason)
                  for a in actions],
+        forecasts=[Forecast(parameter=f.parameter, current=f.current, slope_per_hour=f.slope_per_hour,
+                            expected_in_3h=f.expected_in_3h, trend=f.trend, hours_to_limit=f.hours_to_limit,
+                            limit=f.limit, confidence=f.confidence, message=f.message) for f in forecasts],
         summary=_summary(profile, health.index, health.label, diagnosis, len(actions)),
     )
+
+
+def _utc(moment):
+    return moment if moment.tzinfo else moment.replace(tzinfo=UTC)
 
 
 def _predictions(values: dict[str, float | None]) -> list[Prediction]:

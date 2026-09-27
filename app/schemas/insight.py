@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
@@ -16,9 +18,10 @@ class Measures(CamelModel):
     tds: float | None = Field(None, ge=0, le=10_000)
     atmosphere: float | None = Field(None, ge=300, le=1_100)
     soil_moisture: float | None = Field(None, ge=0, le=100)
+    measured_at: datetime | None = None
 
     def as_dict(self) -> dict[str, float | None]:
-        return self.model_dump(by_alias=True)
+        return self.model_dump(by_alias=True, exclude={"measured_at"})
 
 
 class InsightRequest(CamelModel):
@@ -40,6 +43,8 @@ class Health(CamelModel):
     index: float
     level: str
     label: str
+    by_parameter: dict[str, float] = Field(default_factory=dict,
+                                           description="Salud de 0 a 100 de cada variable: explica el índice")
 
 
 class Diagnosis(CamelModel):
@@ -65,6 +70,18 @@ class Prediction(CamelModel):
     model: str
 
 
+class Forecast(CamelModel):
+    parameter: str
+    current: float
+    slope_per_hour: float
+    expected_in_3h: float
+    trend: str
+    hours_to_limit: float | None = None
+    limit: str | None = None
+    confidence: float
+    message: str
+
+
 class Action(CamelModel):
     actuator: str
     action: str
@@ -79,4 +96,5 @@ class InsightResponse(CamelModel):
     conclusions: list[Conclusion]
     predictions: list[Prediction]
     actions: list[Action]
+    forecasts: list[Forecast] = Field(default_factory=list)
     summary: str
