@@ -8,14 +8,14 @@
 
 ## Descripción
 
-SmartPot-AI es el **asistente inteligente** de SmartPot. Recibe la última lectura de una maceta, su historial reciente y los actuadores disponibles, y devuelve un diagnóstico completo que combina estas técnicas de inteligencia artificial:
+SmartPot-AI es el **asistente inteligente** de SmartPot. Recibe la última lectura de un cultivo, su historial reciente y los actuadores disponibles, y devuelve un diagnóstico completo que combina estas técnicas de inteligencia artificial:
 
 | Técnica | Qué resuelve | Dónde vive |
 | --- | --- | --- |
 | **Sistema experto** | Diagnóstico por variable y conclusiones encadenadas (estrés térmico, riesgo de hongos, bloqueo de nutrientes, falla de sensor…) con su explicación | `app/engine/diagnosis.py`, `expert_system.py`, `rules.py` |
 | **Lógica difusa** | Índice de salud de 0 a 100 que tolera la incertidumbre de los sensores | `app/engine/fuzzy.py` |
 | **Aprendizaje automático** | Regresión logística (ventilación), red neuronal MLP (corrección de pH) e Isolation Forest (lecturas atípicas) | `app/engine/models.py` |
-| **Agente reactivo** | Convierte el diagnóstico en acciones sobre los actuadores que la maceta sí tiene | `app/engine/agent.py` |
+| **Agente reactivo** | Convierte el diagnóstico en acciones sobre los actuadores que el cultivo sí tiene | `app/engine/agent.py` |
 | **Pronóstico** | Tendencia de cada variable (Theil-Sen) y horas hasta salir del rango ideal | `app/engine/forecast.py` |
 | **Análisis de flota** | Ranking, problemas compartidos del entorno, grupos K-Means y acciones en bloque | `app/engine/fleet.py` |
 | **Aprendizaje continuo** | Aprende de las lecturas reales: supervisado (¿se secará?, ¿habrá calor?, humedad en 1 h) y no supervisado (estados de operación y lecturas atípicas), con reentrenamiento cuando llegan datos nuevos | `app/learning/` |
@@ -42,7 +42,7 @@ flowchart LR
 
 ## Base de Conocimiento
 
-`app/knowledge/profiles.py` guarda los rangos ideales de seis especies en la escala de los sensores de la maceta: temperatura (°C), humedad del aire (%), luz (lux relativos, 0 a 2000), pH, nutrientes (ppm, EC × 700) y humedad del sustrato (%).
+`app/knowledge/profiles.py` guarda los rangos ideales de seis especies en la escala de los sensores del dispositivo: temperatura (°C), humedad del aire (%), luz (lux relativos, 0 a 2000), pH, nutrientes (ppm, EC × 700) y humedad del sustrato (%).
 
 | Especie | Temperatura | Humedad | pH | TDS (ppm) | Sustrato |
 | --- | --- | --- | --- | --- | --- |
@@ -68,7 +68,7 @@ Una variable fuera de rango se mide en **tolerancias** (5 °C, 15 %, 300 lux, 0.
 
 ## Aprendizaje Continuo
 
-Los modelos base se entrenan con datos sintéticos; el aprendizaje continuo los complementa con lo que de verdad pasa en las macetas. La API envía por lotes cada lectura que llega por MQTT (`POST /v1/learning/readings`) y el servicio las guarda en SQLite dentro del volumen `/data`, con el id del cultivo **seudonimizado** (SHA-256): aprende de la serie de cada maceta sin saber a quién pertenece.
+Los modelos base se entrenan con datos sintéticos; el aprendizaje continuo los complementa con lo que de verdad pasa en los cultivos reales. La API envía por lotes cada lectura de un cultivo real que llega por MQTT (las de los cultivos virtuales son sintéticas y no se envían) (`POST /v1/learning/readings`) y el servicio las guarda en SQLite dentro del volumen `/data`, con el id del cultivo **seudonimizado** (SHA-256): aprende de la serie de cada cultivo sin saber a quién pertenece.
 
 | Paso | Qué hace | Dónde |
 | --- | --- | --- |
@@ -80,7 +80,7 @@ Los modelos base se entrenan con datos sintéticos; el aprendizaje continuo los 
 | 6. Campeón y retador | Se evalúa en el 20 % de lecturas más recientes; el modelo nuevo reemplaza al vigente solo si lo mejora y si supera a la línea base | `trainer.py` |
 | 7. No supervisado | Estados de operación con K-Means (k de 2 a 6 por silueta, con nombre legible) e Isolation Forest entrenado con lecturas reales | `trainer.py` |
 
-Cada especie se entrena por separado desde 200 lecturas etiquetadas y se reentrena cada 300 lecturas nuevas, en un proceso aparte para no frenar las evaluaciones. Los modelos se guardan con joblib en `/data/models` y se cargan al arrancar. Una tarea queda pendiente, con su razón, mientras falten datos o casos (por ejemplo, si una maceta nunca ha tenido calor no se puede aprender a anticiparlo).
+Cada especie se entrena por separado desde 200 lecturas etiquetadas y se reentrena cada 300 lecturas nuevas, en un proceso aparte para no frenar las evaluaciones. Los modelos se guardan con joblib en `/data/models` y se cargan al arrancar. Una tarea queda pendiente, con su razón, mientras falten datos o casos (por ejemplo, si ningún cultivo de la especie ha tenido calor no se puede aprender a anticiparlo).
 
 `POST /v1/insights` responde además `learning`: el estado de operación actual, si la lectura es atípica para la especie, la probabilidad de necesitar riego o ventilación en la próxima hora y la humedad esperada del sustrato en 1 h, cada una con el modelo y su puntaje.
 
@@ -159,10 +159,10 @@ Cada cambio en `main` pasa por el CI, publica la imagen en GHCR (y en Docker Hub
 
 ## Documentación
 
-El asistente es un servicio interno: la API le pregunta y aplica sus respuestas. La [documentación técnica](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Technical_Documentation.md) explica la base de conocimiento, las 19 reglas, el índice difuso, el pronóstico, el análisis de flota y el aprendizaje continuo. Los diagramas generales muestran la plataforma completa en una sola imagen ampliable:
+El asistente es un servicio interno: la API le pregunta y aplica sus respuestas. Su documentación propia está en [`docs/`](docs/SmartPot_AI_Documentation.md) (también en [DOCX](docs/SmartPot_AI_Documentation.docx) y [PDF](docs/SmartPot_AI_Documentation.pdf)), con sus diagramas en [`docs/diagrams`](docs/diagrams): el general del componente y los de la evaluación, el aprendizaje continuo y el análisis de flota. La [documentación técnica](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Technical_Documentation.md) explica la base de conocimiento, las 19 reglas, el índice difuso, el pronóstico, el análisis de flota y el aprendizaje continuo. Los diagramas generales muestran la plataforma completa en una sola imagen ampliable:
 
 - [Decisión de la IA](https://github.com/SmartPotTech/.github/blob/main/docs/diagrams/SmartPot_Global_08_AI_Decision.svg): de la lectura a la orden: diagnóstico, pronóstico, modelos, reglas, índice difuso y agente
-- [Linaje de los datos](https://github.com/SmartPotTech/.github/blob/main/docs/diagrams/SmartPot_Global_04_Data_Lineage.svg): cómo llegan las lecturas reales al aprendizaje y qué se guarda
+- [Linaje de los datos](https://github.com/SmartPotTech/.github/blob/main/docs/diagrams/SmartPot_Global_04_Data_Lineage.svg): cómo llegan las lecturas de los cultivos reales al aprendizaje y qué se guarda
 - [Máquinas de estado](https://github.com/SmartPotTech/.github/blob/main/docs/diagrams/SmartPot_Global_05_State_Machines.svg): los estados del aprendizaje de cada especie
 
 ## Licencia
