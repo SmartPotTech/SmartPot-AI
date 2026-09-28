@@ -1,0 +1,19 @@
+%%{init: {"theme": "base", "fontFamily": "Segoe UI, Arial, sans-serif", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "15px", "primaryColor": "#DDF5EA", "primaryTextColor": "#17261F", "primaryBorderColor": "#067A52", "secondaryColor": "#E3F2FB", "secondaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "tertiaryBorderColor": "#D5E3DC", "lineColor": "#5B6B63", "textColor": "#17261F", "mainBkg": "#DDF5EA", "nodeBorder": "#067A52", "clusterBkg": "#F7FAF8", "clusterBorder": "#D5E3DC", "edgeLabelBackground": "#FFFFFF", "actorBkg": "#067A52", "actorBorder": "#0B3D2B", "actorTextColor": "#FFFFFF", "actorLineColor": "#5B6B63", "signalColor": "#17261F", "signalTextColor": "#17261F", "labelBoxBkgColor": "#0B3D2B", "labelBoxBorderColor": "#0B3D2B", "labelTextColor": "#FFFFFF", "loopTextColor": "#0B3D2B", "noteBkgColor": "#FDF4DD", "noteBorderColor": "#C98D12", "noteTextColor": "#17261F", "activationBkgColor": "#DDF5EA", "activationBorderColor": "#067A52", "attributeBackgroundColorOdd": "#FFFFFF", "attributeBackgroundColorEven": "#F2F7F4"}}}%%
+flowchart TB
+  req(["POST /v1/insights<br/>especie · medidas · historial · actuadores · hora local"])
+  req --> diag["1 · Diagnóstico por variable<br/>LOW · OPTIMAL · HIGH · REST de noche<br/>severidad en tolerancias"]
+  diag --> fc["2 · Pronóstico Theil-Sen<br/>pendiente por hora · valor en 3 h<br/>horas hasta salir del rango"]
+  fc --> ml["3 · Modelos<br/>base sintéticos: logística, MLP, Isolation Forest<br/>aprendidos de cultivos reales si existen"]
+  ml --> es["4 · Sistema experto<br/>encadenamiento hacia adelante<br/>primer y segundo nivel · sensor_fault bloquea"]
+  es --> fz["5 · Lógica difusa<br/>salud por variable · índice ponderado<br/>peor caso si algo es crítico"]
+  fz --> ag["6 · Agente reactivo<br/>solo actuadores del cultivo<br/>preventivo si el pronóstico o lo aprendido lo anticipa"]
+  ag --> out(["Respuesta<br/>health · diagnosis · conclusions · predictions<br/>forecasts · learning · actions · summary"])
+  classDef leaf fill:#DDF5EA,stroke:#067A52,color:#17261F
+  classDef water fill:#E3F2FB,stroke:#1F6FA0,color:#17261F
+  classDef sun fill:#FDF4DD,stroke:#C98D12,color:#17261F
+  classDef clay fill:#FBE9E1,stroke:#B85A38,color:#17261F
+  classDef core fill:#067A52,stroke:#0B3D2B,color:#FFFFFF
+  classDef deep fill:#0B3D2B,stroke:#06281C,color:#FFFFFF
+  classDef muted fill:#F2F7F4,stroke:#5B6B63,color:#17261F
+  class req,out core
+  class diag,fc,ml,es,fz,ag leaf
