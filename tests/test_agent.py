@@ -51,3 +51,11 @@ def test_grow_light_stays_off_during_the_night():
 def test_grow_light_is_switched_off_at_night():
     actions = actions_for({"brightness": 900}, local_hour=1)
     assert [(a.actuator, a.action) for a in actions] == [("UV_LIGHT", "DEACTIVATE")]
+
+
+def test_no_irrigation_while_it_rains_outside():
+    assert actions_for({"soilMoisture": 30}, facts={"raining": True}) == []
+
+
+def test_the_grow_light_is_called_ultraviolet():
+    assert "ultravioleta" in actions_for({"brightness": 100})[0].reason

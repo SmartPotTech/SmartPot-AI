@@ -39,7 +39,9 @@ def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | N
                 and f.hours_to_limit <= PREVENTIVE_HOURS}
 
     soil = by_parameter.get("soilMoisture")
-    if soil and soil.status == "LOW":
+    if facts.get("raining"):
+        pass  # Llueve sobre un cultivo al aire libre: la lluvia riega.
+    elif soil and soil.status == "LOW":
         propose("WATER_PUMP", "ACTIVATE", 30 if soil.severity == "CRITICAL" else 15,
                 "El sustrato está seco: riego automático.")
     elif soil and soil.status == "OPTIMAL" and getattr(upcoming.get("soilMoisture"), "limit", None) == "MIN":
@@ -50,12 +52,12 @@ def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | N
 
     light = by_parameter.get("brightness")
     if resting and light and light.status in ("OPTIMAL", "HIGH"):
-        propose("UV_LIGHT", "DEACTIVATE", None, "Es de noche: se apaga la luz de cultivo para respetar el "
+        propose("UV_LIGHT", "DEACTIVATE", None, "Es de noche: se apaga la luz ultravioleta para respetar el "
                                              "descanso de la planta.")
     elif light and light.status == "LOW":
-        propose("UV_LIGHT", "ACTIVATE", 900, "Luz insuficiente: se enciende la luz de cultivo 15 minutos.")
+        propose("UV_LIGHT", "ACTIVATE", 900, "Luz insuficiente: se enciende la luz ultravioleta 15 minutos.")
     elif light and light.status == "HIGH":
-        propose("UV_LIGHT", "DEACTIVATE", None, "Exceso de luz: se apaga la luz de cultivo.")
+        propose("UV_LIGHT", "DEACTIVATE", None, "Exceso de luz: se apaga la luz ultravioleta.")
 
     temperature = by_parameter.get("temperature")
     humidity = by_parameter.get("humidity")
