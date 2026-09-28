@@ -127,3 +127,32 @@ def test_fleet_analysis_compares_all_crops(client, auth):
     assert body["actions"][0]["actuator"] == "FAN" and sorted(body["actions"][0]["cropIds"]) == ["a", "b"]
     assert body["crops"][0]["issues"] == ["Temperatura alta"]
     assert client.post("/v1/fleet", json={"crops": []}, headers=auth).status_code == 422
+
+
+def test_the_place_and_the_weather_shape_the_advice(client, auth):
+    payload = {**PAYLOAD, "placement": {"setting": "OUTDOOR", "exposure": "FULL_SUN"},
+               "weather": {"temperature": 17, "humidity": 90, "precipitation": 3.2, "radiation": 150, "isDay": True,
+                           "condition": "RAIN"}}
+    body = client.post("/v1/insights", json=payload, headers=auth).json()
+
+    assert body["placement"]["level"] == "MOVE"
+    assert body["placement"]["idealExposure"] == "PARTIAL_SUN"
+    rules = {c["rule"] for c in body["conclusions"]}
+    assert {"rain_outside", "sensor_vs_outside"} <= rules
+    assert all(a["actuator"] != "WATER_PUMP" for a in body["actions"])
+    assert body["summary"].endswith("cambiar el cultivo de lugar.")
+
+
+def test_indoor_crops_ignore_the_rain_outside(client, auth):
+    payload = {**PAYLOAD, "placement": {"setting": "INDOOR", "exposure": "FULL_SUN"},
+               "weather": {"temperature": 17, "humidity": 90, "precipitation": 3.2, "radiation": 150}}
+    body = client.post("/v1/insights", json=payload, headers=auth).json()
+
+    assert "rain_outside" not in {c["rule"] for c in body["conclusions"]}
+    assert any(a["actuator"] == "WATER_PUMP" for a in body["actions"])
+    assert body["placement"]["level"] in ("OK", "TIP", "MOVE")
+
+
+def test_an_unknown_place_is_rejected(client, auth):
+    payload = {**PAYLOAD, "placement": {"setting": "ROOF"}}
+    assert client.post("/v1/insights", json=payload, headers=auth).status_code == 422

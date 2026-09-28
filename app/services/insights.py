@@ -4,7 +4,7 @@
 import time
 from datetime import UTC, datetime
 
-from app.engine import agent
+from app.engine import agent, placement
 from app.engine.diagnosis import diagnose, is_rest_hour
 from app.engine.expert_system import InferenceEngine, WorkingMemory
 from app.engine.forecast import forecast
@@ -22,6 +22,7 @@ from app.schemas.insight import (
     InsightRequest,
     InsightResponse,
     Learning,
+    PlacementAdvice,
     Prediction,
 )
 
@@ -48,6 +49,7 @@ def analyze(request: InsightRequest, models: ModelRegistry, learning: LearningSe
     memory = WorkingMemory()
     for item in diagnosis:
         memory.assert_fact(f"status:{item.parameter}", item.status)
+        memory.assert_fact(f"value:{item.parameter}", item.value)
         memory.assert_fact(f"severity:{item.parameter}", item.severity)
     for name, probability in predictions.items():
         if probability is not None:
@@ -55,6 +57,13 @@ def analyze(request: InsightRequest, models: ModelRegistry, learning: LearningSe
     for item in forecasts:
         memory.assert_fact(f"forecast:{item.parameter}", {"trend": item.trend, "limit": item.limit,
                                                           "hours": item.hours_to_limit})
+    place = request.placement
+    if place and place.setting:
+        memory.assert_fact("placement:setting", place.setting)
+    if place and place.exposure:
+        memory.assert_fact("placement:exposure", place.exposure)
+    if request.weather:
+        memory.assert_fact("outside", request.weather.model_dump())
     if learned:
         for item in learned.predictions:
             memory.assert_fact(f"learned:{item.name}", item.probability)
@@ -65,6 +74,9 @@ def analyze(request: InsightRequest, models: ModelRegistry, learning: LearningSe
     health = health_index({item.parameter: item.deviation for item in diagnosis})
     actions = agent.decide(diagnosis, predictions, memory.facts, {a.upper() for a in request.actuators},
                            resting=is_rest_hour(request.local_hour), forecasts=forecasts)
+    sunny = bool(request.weather and request.weather.is_day and request.weather.radiation >= 300)
+    advice = placement.advise(profile, place.setting if place else None, place.exposure if place else None,
+                              diagnosis, sunny_outside=sunny)
 
     return InsightResponse(
         crop_type=profile.type,
@@ -80,7 +92,10 @@ def analyze(request: InsightRequest, models: ModelRegistry, learning: LearningSe
                             expected_in_3h=f.expected_in_3h, trend=f.trend, hours_to_limit=f.hours_to_limit,
                             limit=f.limit, confidence=f.confidence, message=f.message) for f in forecasts],
         learning=learned,
-        summary=_summary(profile, health.index, health.label, diagnosis, len(actions)),
+        placement=PlacementAdvice(level=advice.level, title=advice.title, message=advice.message,
+                                  light_need=advice.light_need, ideal_setting=advice.ideal_setting,
+                                  ideal_exposure=advice.ideal_exposure),
+        summary=_summary(profile, health.index, health.label, diagnosis, len(actions), advice.level == "MOVE"),
     )
 
 
@@ -116,7 +131,8 @@ def _predictions(values: dict[str, float | None]) -> list[Prediction]:
             for name, value in values.items() if value is not None]
 
 
-def _summary(profile: CropProfile, index: float, label: str, diagnosis, action_count: int) -> str:
+def _summary(profile: CropProfile, index: float, label: str, diagnosis, action_count: int,
+             move: bool = False) -> str:
     issues = sorted((d for d in diagnosis if d.status not in ("OPTIMAL", "REST")), key=lambda d: d.deviation,
                     reverse=True)
     text = f"Tu {profile.name.lower()} está en estado «{label}» ({index:.0f}/100)."
@@ -126,4 +142,6 @@ def _summary(profile: CropProfile, index: float, label: str, diagnosis, action_c
     text += " Revisa " + " y ".join(names) + "."
     if action_count:
         text += f" El asistente propone {action_count} {'acción' if action_count == 1 else 'acciones'}."
+    if move:
+        text += " También conviene cambiar el cultivo de lugar."
     return text
