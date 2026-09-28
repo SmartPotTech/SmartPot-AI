@@ -178,7 +178,7 @@ RULES: list[Rule] = [
         name="drying_trend",
         title="Secado acelerado",
         condition=lambda m: _status(m, "soilMoisture") == "OPTIMAL"
-        and _approaching(m, "soilMoisture", "MIN") is not None,
+                            and _approaching(m, "soilMoisture", "MIN") is not None,
         message=lambda m: "El sustrato se seca rápido: llegará al mínimo en "
                           f"{_approaching(m, 'soilMoisture', 'MIN'):.1f} h si sigue la tendencia. "
                           "Conviene regar pronto.",
@@ -190,7 +190,7 @@ RULES: list[Rule] = [
         name="heat_building",
         title="Calor en aumento",
         condition=lambda m: _status(m, "temperature") == "OPTIMAL"
-        and _approaching(m, "temperature", "MAX") is not None,
+                            and _approaching(m, "temperature", "MAX") is not None,
         message=lambda m: f"La temperatura sube y pasará el máximo en {_approaching(m, 'temperature', 'MAX'):.1f} h: "
                           "ventila o aleja el cultivo del sol antes de que llegue.",
         certainty=0.7,
@@ -201,7 +201,7 @@ RULES: list[Rule] = [
         name="learned_drying",
         title="Riego probable en la próxima hora",
         condition=lambda m: _status(m, "soilMoisture") == "OPTIMAL" and _learned(m, "needs_water") >= LEARNED_CERTAINTY
-        and not m.has("rule:drying_trend"),
+                            and not m.has("rule:drying_trend"),
         message=lambda m: f"Lo aprendido de los cultivos de esta especie da {_learned(m, 'needs_water'):.0%} de "
                           "probabilidad de que el sustrato baje del mínimo en la próxima hora.",
         certainty=0.7,
@@ -212,7 +212,7 @@ RULES: list[Rule] = [
         name="learned_heat",
         title="Calor probable en la próxima hora",
         condition=lambda m: _status(m, "temperature") == "OPTIMAL" and _learned(m, "overheat") >= LEARNED_CERTAINTY
-        and not m.has("rule:heat_building"),
+                            and not m.has("rule:heat_building"),
         message=lambda m: f"Lo aprendido de los cultivos de esta especie da {_learned(m, 'overheat'):.0%} de "
                           "probabilidad de que la temperatura pase del máximo en la próxima hora.",
         certainty=0.65,
@@ -264,7 +264,7 @@ RULES: list[Rule] = [
         title="Condiciones ideales",
         condition=lambda m: all(value in ("OPTIMAL", "REST") for name, value in m.facts.items()
                                 if name.startswith("status:"))
-        and any(name.startswith("status:") for name in m.facts),
+                            and any(name.startswith("status:") for name in m.facts),
         message=lambda m: "Todas las variables medidas están en su rango ideal. ¡Buen trabajo!",
         certainty=1.0,
         salience=-10,
