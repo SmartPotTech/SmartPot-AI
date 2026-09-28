@@ -53,7 +53,7 @@ def decide(diagnosis: list[ParameterDiagnosis], predictions: dict[str, float | N
     light = by_parameter.get("brightness")
     if resting and light and light.status in ("OPTIMAL", "HIGH"):
         propose("UV_LIGHT", "DEACTIVATE", None, "Es de noche: se apaga la luz ultravioleta para respetar el "
-                                             "descanso de la planta.")
+                                                "descanso de la planta.")
     elif light and light.status == "LOW":
         propose("UV_LIGHT", "ACTIVATE", 900, "Luz insuficiente: se enciende la luz ultravioleta 15 minutos.")
     elif light and light.status == "HIGH":
