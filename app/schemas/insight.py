@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
@@ -24,12 +25,29 @@ class Measures(CamelModel):
         return self.model_dump(by_alias=True, exclude={"measured_at"})
 
 
+class Place(CamelModel):
+    setting: Literal["INDOOR", "OUTDOOR"] | None = None
+    exposure: Literal["FULL_SUN", "PARTIAL_SUN", "SHADE"] | None = None
+
+
+class Outside(CamelModel):
+    """Clima actual del lugar del cultivo."""
+    temperature: float = Field(ge=-60, le=60)
+    humidity: float = Field(ge=0, le=100)
+    precipitation: float = Field(0, ge=0, le=500)
+    radiation: float = Field(0, ge=0, le=1500)
+    is_day: bool = True
+    condition: str | None = Field(None, max_length=20)
+
+
 class InsightRequest(CamelModel):
     crop_type: str
     measures: Measures
     history: list[Measures] = Field(default_factory=list, max_length=500)
     actuators: list[str] = Field(default_factory=list, max_length=20)
     local_hour: int | None = Field(None, ge=0, le=23)
+    placement: Place | None = None
+    weather: Outside | None = None
 
     @field_validator("crop_type")
     @classmethod
@@ -128,6 +146,15 @@ class Learning(CamelModel):
     anomaly: LearnedAnomaly | None = None
 
 
+class PlacementAdvice(CamelModel):
+    level: str = Field(description="OK, UNKNOWN (sin lugar), TIP (no es el ideal) o MOVE (ya afecta la salud)")
+    title: str
+    message: str
+    light_need: str = Field(description="Luz que pide la especie: FULL_SUN o PARTIAL_SUN")
+    ideal_setting: str
+    ideal_exposure: str
+
+
 class InsightResponse(CamelModel):
     crop_type: str
     health: Health
@@ -137,4 +164,5 @@ class InsightResponse(CamelModel):
     actions: list[Action]
     forecasts: list[Forecast] = Field(default_factory=list)
     learning: Learning | None = None
+    placement: PlacementAdvice | None = None
     summary: str
