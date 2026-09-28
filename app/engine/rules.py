@@ -1,9 +1,9 @@
 """Reglas del sistema experto de SmartPot.
 
 La memoria de trabajo arranca con los hechos del diagnóstico por variable
-(status:<variable> y severity:<variable>) y, si existen, con las predicciones de los modelos base
-(prediction:<nombre>), los pronósticos (forecast:<variable>) y lo aprendido de las lecturas reales
-(learned:<tarea>).
+(status:<variable>, severity:<variable> y value:<variable>) y, si existen, con las predicciones de los modelos
+base (prediction:<nombre>), los pronósticos (forecast:<variable>), lo aprendido de las lecturas reales
+(learned:<tarea>), el lugar del cultivo (placement:setting, placement:exposure) y el clima de afuera (outside).
 Las reglas de salience alta combinan variables; las de salience baja encadenan conclusiones.
 """
 
@@ -32,6 +32,33 @@ LEARNED_CERTAINTY = 0.7
 
 def _learned(memory: WorkingMemory, task: str) -> float:
     return float(memory.get(f"learned:{task}", 0.0))
+
+
+# Lluvia (mm por hora) desde la que no hace falta regar un cultivo al aire libre.
+RAIN_MM = 0.5
+# Diferencia (°C) entre el sensor y el clima de afuera desde la que conviene revisar el sensor.
+SENSOR_GAP = 8.0
+
+
+def _outdoor(memory: WorkingMemory) -> dict | None:
+    """Clima de afuera, solo si el cultivo está al aire libre."""
+    if memory.get("placement:setting") != "OUTDOOR":
+        return None
+    return memory.get("outside")
+
+
+def _raining(memory: WorkingMemory) -> bool:
+    outside = _outdoor(memory)
+    return bool(outside and outside.get("precipitation", 0) >= RAIN_MM)
+
+
+def _sensor_gap(memory: WorkingMemory) -> float | None:
+    outside = _outdoor(memory)
+    measured = memory.get("value:temperature")
+    if not outside or measured is None:
+        return None
+    gap = measured - outside["temperature"]
+    return gap if abs(gap) >= SENSOR_GAP else None
 
 
 def _critical_count(memory: WorkingMemory) -> int:
@@ -202,10 +229,32 @@ RULES: list[Rule] = [
         salience=4,
     ),
     Rule(
+        name="rain_outside",
+        title="Está lloviendo",
+        condition=lambda m: _raining(m),
+        message=lambda m: f"Llueve donde está el cultivo ({_outdoor(m)['precipitation']:.1f} mm): la lluvia riega "
+                          "por ti. Si el sustrato se encharca, cúbrelo o revisa el drenaje.",
+        certainty=0.9,
+        salience=8,
+        conclude=lambda m: {"raining": True},
+    ),
+    Rule(
+        name="sensor_vs_outside",
+        title="El sensor no coincide con el clima",
+        condition=lambda m: _sensor_gap(m) is not None,
+        message=lambda m: (f"El sensor marca {m.get('value:temperature'):.1f} °C y afuera hay "
+                           f"{_outdoor(m)['temperature']:.1f} °C. "
+                           + ("Si le da el sol directo al sensor, dale sombra para que mida el aire."
+                              if _sensor_gap(m) > 0 and _outdoor(m).get("radiation", 0) >= 400
+                              else "Revisa el sensor o confirma que el cultivo sí está al aire libre.")),
+        certainty=0.6,
+        salience=6,
+    ),
+    Rule(
         name="night_rest",
         title="Descanso nocturno",
         condition=lambda m: _status(m, "brightness") == "REST",
-        message=lambda m: "La planta está en su periodo de oscuridad: no hace falta encender la luz de cultivo "
+        message=lambda m: "La planta está en su periodo de oscuridad: no hace falta encender la luz ultravioleta "
                           "hasta la mañana.",
         certainty=1.0,
         salience=-10,
