@@ -10,8 +10,8 @@ bearer = HTTPBearer(auto_error=False)
 
 
 def require_service_token(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
-    settings: Annotated[Settings, Depends(get_settings)],
+        credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+        settings: Annotated[Settings, Depends(get_settings)],
 ) -> None:
     """El servicio es interno: solo la API, con el token compartido, puede consultarlo."""
     if credentials is None or not secrets.compare_digest(credentials.credentials, settings.smartpot_ai_token):
