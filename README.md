@@ -8,8 +8,8 @@
 
 ## Descripción
 
-SmartPot-AI es el **asistente inteligente** de SmartPot. Recibe la última lectura de un cultivo, su historial reciente y
-los actuadores disponibles, y devuelve un diagnóstico completo que combina estas técnicas de inteligencia artificial:
+SmartPot-AI es el **asistente inteligente** de SmartPot. Recibe la última lectura de un cultivo, su historial reciente,
+los actuadores disponibles, dónde está y el clima de afuera, y devuelve un diagnóstico completo que combina estas técnicas de inteligencia artificial:
 
 | Técnica                    | Qué resuelve                                                                                                                                                                                         | Dónde vive                                                |
 |----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------|
@@ -19,6 +19,7 @@ los actuadores disponibles, y devuelve un diagnóstico completo que combina esta
 | **Agente reactivo**        | Convierte el diagnóstico en acciones sobre los actuadores que el cultivo sí tiene                                                                                                                    | `app/engine/agent.py`                                     |
 | **Pronóstico**             | Tendencia de cada variable (Theil-Sen) y horas hasta salir del rango ideal                                                                                                                           | `app/engine/forecast.py`                                  |
 | **Análisis de flota**      | Ranking, problemas compartidos del entorno, grupos K-Means y acciones en bloque                                                                                                                      | `app/engine/fleet.py`                                     |
+| **Consejo de lugar**       | Compara la luz que pide la especie con la que recibe el cultivo y sube el tono solo cuando el lugar ya afecta la salud                                                                               |                                                           |
 | **Aprendizaje continuo**   | Aprende de las lecturas reales: supervisado (¿se secará?, ¿habrá calor?, humedad en 1 h) y no supervisado (estados de operación y lecturas atípicas), con reentrenamiento cuando llegan datos nuevos | `app/learning/`                                           |
 
 Es un servicio **interno**: solo [SmartPot-API](https://github.com/SmartPotTech/SmartPot-API) lo consulta, con un token
@@ -78,15 +79,20 @@ tolerancia completa el hallazgo es **crítico**.
 5. **Pronóstico:** con el historial y la hora de cada lectura, el estimador de Theil-Sen (mediana de las pendientes
    entre pares, resistente a lecturas atípicas) calcula la pendiente por hora, el valor esperado en 3 h y en cuántas
    horas la variable saldría de su rango. Alimenta las reglas `drying_trend` y `heat_building`.
-6. **Agente:** propone acciones solo para los actuadores del cultivo: riego si el sustrato está seco, luz si falta de
-   día (y apagarla de noche), ventilación si hay calor, humedad alta o el modelo lo predice, humidificador, dosificador
+6. **Agente:** propone acciones solo para los actuadores del cultivo: riego si el sustrato está seco (salvo que llueva
+   sobre un cultivo al aire libre), luz ultravioleta si falta de día (y apagarla de noche), ventilación si hay calor, humedad alta o el modelo lo predice, humidificador, dosificador
    de pH y de nutrientes. Si el pronóstico indica que el sustrato llegará al mínimo o la temperatura al máximo en menos
    de 1 h, actúa antes (riego o ventilación preventivos). La API aplica el enfriamiento y solo ejecuta con el modo
    automático activo.
 7. **Aprendizaje:** lo aprendido de las lecturas reales de la especie (ver abajo) entra al sistema experto (
    `learned_drying`, `learned_heat`, `unusual_pattern`) y, con probabilidad de 85 % o más, al agente como riego o
    ventilación preventivos.
-8. **Flota:** `POST /v1/fleet` recibe todos los cultivos de una cuenta y devuelve el ranking por salud, los problemas
+8. **Lugar y clima:** con `placement` (bajo techo o al aire libre y cuánto sol recibe) y `weather` (el clima de afuera
+   que la API pide al simulador), la evaluación devuelve `placement`: `OK` si el lugar le sirve a la especie, `UNKNOWN`
+   si no se sabe dónde está, `TIP` si no es el ideal pero la planta está bien y `MOVE` si el lugar ya se nota en las
+   lecturas. Al aire libre suma dos reglas: `rain_outside` (con 0,5 mm o más de lluvia no hace falta regar) y
+   `sensor_vs_outside` (el sensor se aleja 8 °C o más del clima de afuera).
+9. **Flota:** `POST /v1/fleet` recibe todos los cultivos de una cuenta y devuelve el ranking por salud, los problemas
    que se repiten en la mitad o más de los cultivos (señal de que el problema es el entorno), grupos por condiciones
    similares con K-Means (la cantidad de grupos se elige por silueta) y las acciones del agente reunidas por actuador
    para aplicarlas en bloque.
@@ -140,7 +146,9 @@ Todas las rutas `/v1` exigen `Authorization: Bearer <SMARTPOT_AI_TOKEN>`.
   "measures": {"temperature": 31, "humidity": 55, "ph": 6.1, "tds": 1600, "soilMoisture": 45, "brightness": 700},
   "history": [],
   "actuators": ["WATER_PUMP", "FAN", "UV_LIGHT"],
-  "localHour": 14
+  "localHour": 14,
+  "placement": {"setting": "OUTDOOR", "exposure": "FULL_SUN"},
+  "weather": {"temperature": 24.4, "humidity": 63, "radiation": 520, "precipitation": 0, "isDay": true}
 }
 ```
 
@@ -153,7 +161,7 @@ calculan los pronósticos.
 ```
 
 La respuesta trae `health` (`index`, `level`, `label` y `byParameter`, la salud de cada variable que explica el índice),
-`forecasts`, `diagnosis`, `conclusions` (con su certeza), `predictions`, `actions` (`actuator`, `action`,
+`forecasts`, `diagnosis`, `conclusions` (con su certeza), `predictions`, `placement` (el consejo de lugar), `actions` (`actuator`, `action`,
 `durationSeconds`, `reason`) y un `summary` como: *«Tu tomate está en estado "Saludable" (79/100). Revisa la humedad del
 sustrato y la temperatura. El asistente propone 2 acciones.»*
 
@@ -183,7 +191,8 @@ uv run pytest
 ```
 
 Cubren la base de conocimiento, el encadenamiento de reglas, la monotonía del índice difuso, la exactitud mínima de los
-modelos, las decisiones del agente, el contrato HTTP y el aprendizaje continuo: seudonimización, poda, calidad de datos,
+modelos, las decisiones del agente, la lluvia y el sensor frente al clima, el consejo de lugar, el contrato HTTP y el
+aprendizaje continuo: seudonimización, poda, calidad de datos,
 etiquetas, modelos que superan a la línea base, campeón y retador, persistencia y la respuesta `learning`.
 
 ### Imagen Docker
@@ -209,7 +218,7 @@ El asistente es un servicio interno: la API le pregunta y aplica sus respuestas.
 y [PDF](docs/SmartPot_AI_Documentation.pdf)), con sus diagramas en [`docs/diagrams`](docs/diagrams): el general del
 componente y los de la evaluación, el aprendizaje continuo y el análisis de flota.
 La [documentación técnica](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Technical_Documentation.md)
-explica la base de conocimiento, las 19 reglas, el índice difuso, el pronóstico, el análisis de flota y el aprendizaje
+explica la base de conocimiento, las 21 reglas, el consejo de lugar, el índice difuso, el pronóstico, el análisis de flota y el aprendizaje
 continuo. Los diagramas generales muestran la plataforma completa en una sola imagen ampliable:
 
 - [Decisión de la IA](https://github.com/SmartPotTech/.github/blob/main/docs/diagrams/SmartPot_Global_08_AI_Decision.svg):
