@@ -5,7 +5,7 @@ acento: AI
 subtitulo: El asistente inteligente de SmartPot
 bajada: Sistema experto, lógica difusa, modelos de aprendizaje automático, agente reactivo, pronóstico, análisis de flota y aprendizaje continuo con las lecturas de los cultivos reales.
 documento: SmartPot-AI
-version: 1.0 · septiembre 2026
+version: 1.1 · octubre 2026
 equipo: SmartPotTech
 proyecto: smartpot.app
 -->
@@ -18,7 +18,7 @@ proyecto: smartpot.app
 |--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Proyecto                       | SmartPot · [smartpot.app](https://smartpot.app)                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Componente                     | [SmartPot-AI](https://github.com/SmartPotTech/SmartPot-AI)                                                                                                                                                                                                                                                                                                                                                                                              |
-| Versión                        | 1.0 · septiembre 2026                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Versión                        | 1.1 · octubre 2026                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Alcance                        | Cómo razona el asistente, aprendizaje continuo, análisis de flota, contrato, configuración, pruebas y operación                                                                                                                                                                                                                                                                                                                                         |
 | Documentación de la plataforma | [Documentación técnica](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Technical_Documentation.md), [recorrido del proyecto](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Project_Journey.md), [ciclo de vida](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Software_Lifecycle.md) y [diagramas generales](https://github.com/SmartPotTech/.github/blob/main/docs/README.md#diagramas-generales) |
 | Mantenimiento                  | Se genera desde `docs/` de este repositorio con las herramientas de `.github/docs/tools`; se actualiza con cada cambio del componente                                                                                                                                                                                                                                                                                                                   |
@@ -29,8 +29,8 @@ proyecto: smartpot.app
 
 ### En palabras simples
 
-SmartPot-AI es el agrónomo de la plataforma. La API le manda la última lectura de un cultivo, su historial y sus
-actuadores; el asistente responde cómo está (un índice de salud de 0 a 100), por qué, qué va a pasar en las próximas
+SmartPot-AI es el agrónomo de la plataforma. La API le manda la última lectura de un cultivo, su historial, sus
+actuadores, dónde está y el clima de afuera; el asistente responde cómo está (un índice de salud de 0 a 100), por qué, qué va a pasar en las próximas
 horas y qué conviene hacer. Además aprende sin parar de las lecturas de los cultivos reales de cada especie, sin saber
 de qué cuenta viene cada una. Es un servicio interno: solo la API lo consulta, con un token.
 
@@ -42,6 +42,7 @@ de qué cuenta viene cada una. Es un servicio interno: solo la API lo consulta, 
 | Pronóstico             | Tendencia de cada variable y horas hasta salir del rango                               |
 | Agente reactivo        | Acciones sobre los actuadores que el cultivo sí tiene                                  |
 | Análisis de flota      | Ranking, problemas del entorno, grupos y acciones en bloque                            |
+| Consejo de lugar       | Si el lugar le sirve a la especie y cuándo conviene moverla                            |
 | Aprendizaje continuo   | Modelos que mejoran con las lecturas reales y solo reemplazan al vigente si lo superan |
 
 ## 2. Arquitectura del componente
@@ -113,14 +114,15 @@ flowchart LR
 ```mermaid
 %%{init: {"theme": "base", "fontFamily": "Segoe UI, Arial, sans-serif", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "15px", "primaryColor": "#DDF5EA", "primaryTextColor": "#17261F", "primaryBorderColor": "#067A52", "secondaryColor": "#E3F2FB", "secondaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "tertiaryBorderColor": "#D5E3DC", "lineColor": "#5B6B63", "textColor": "#17261F", "mainBkg": "#DDF5EA", "nodeBorder": "#067A52", "clusterBkg": "#F7FAF8", "clusterBorder": "#D5E3DC", "edgeLabelBackground": "#FFFFFF", "actorBkg": "#067A52", "actorBorder": "#0B3D2B", "actorTextColor": "#FFFFFF", "actorLineColor": "#5B6B63", "signalColor": "#17261F", "signalTextColor": "#17261F", "labelBoxBkgColor": "#0B3D2B", "labelBoxBorderColor": "#0B3D2B", "labelTextColor": "#FFFFFF", "loopTextColor": "#0B3D2B", "noteBkgColor": "#FDF4DD", "noteBorderColor": "#C98D12", "noteTextColor": "#17261F", "activationBkgColor": "#DDF5EA", "activationBorderColor": "#067A52", "attributeBackgroundColorOdd": "#FFFFFF", "attributeBackgroundColorEven": "#F2F7F4"}}}%%
 flowchart TB
-  req(["POST /v1/insights<br/>especie · medidas · historial · actuadores · hora local"])
+  req(["POST /v1/insights<br/>especie · medidas · historial · actuadores · hora local<br/>lugar y clima de afuera"])
   req --> diag["1 · Diagnóstico por variable<br/>LOW · OPTIMAL · HIGH · REST de noche<br/>severidad en tolerancias"]
   diag --> fc["2 · Pronóstico Theil-Sen<br/>pendiente por hora · valor en 3 h<br/>horas hasta salir del rango"]
   fc --> ml["3 · Modelos<br/>base sintéticos: logística, MLP, Isolation Forest<br/>aprendidos de cultivos reales si existen"]
-  ml --> es["4 · Sistema experto<br/>encadenamiento hacia adelante<br/>primer y segundo nivel · sensor_fault bloquea"]
+  ml --> es["4 · Sistema experto<br/>encadenamiento hacia adelante<br/>primer y segundo nivel · sensor_fault bloquea<br/>rain_outside y sensor_vs_outside"]
   es --> fz["5 · Lógica difusa<br/>salud por variable · índice ponderado<br/>peor caso si algo es crítico"]
   fz --> ag["6 · Agente reactivo<br/>solo actuadores del cultivo<br/>preventivo si el pronóstico o lo aprendido lo anticipa"]
-  ag --> out(["Respuesta<br/>health · diagnosis · conclusions · predictions<br/>forecasts · learning · actions · summary"])
+  ag --> place["7 · Consejo de lugar<br/>OK · UNKNOWN · TIP · MOVE"]
+  place --> out(["Respuesta<br/>health · diagnosis · conclusions · predictions<br/>forecasts · learning · placement · actions · summary"])
   classDef leaf fill:#DDF5EA,stroke:#067A52,color:#17261F
   classDef water fill:#E3F2FB,stroke:#1F6FA0,color:#17261F
   classDef sun fill:#FDF4DD,stroke:#C98D12,color:#17261F
@@ -129,16 +131,17 @@ flowchart TB
   classDef deep fill:#0B3D2B,stroke:#06281C,color:#FFFFFF
   classDef muted fill:#F2F7F4,stroke:#5B6B63,color:#17261F
   class req,out core
-  class diag,fc,ml,es,fz,ag leaf
+  class diag,fc,ml,es,fz,ag,place leaf
 ```
 
-| Paso                 | Detalle                                                                                                                                                                                  |
-|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Base de conocimiento | Rangos ideales de lechuga, tomate, fresa, albahaca, espinaca y pimentón en la escala de los sensores; una variable fuera de rango se mide en tolerancias y desde una completa es crítica |
-| Noche                | Entre las 22:00 y las 6:00 la luz baja es descanso (`REST`) y no resta salud                                                                                                             |
-| Modelos base         | Se entrenan al arrancar con 4000 muestras sintéticas y semilla fija; `GET /v1/models` informa su exactitud                                                                               |
-| Reglas               | Encadenamiento hacia adelante con prioridades; `sensor_fault` bloquea las acciones si la lectura es imposible                                                                            |
-| Agente               | Riego, luz de día (y apagarla de noche), ventilación, humidificador y dosificadores, solo si el cultivo tiene el actuador; la API aplica el enfriamiento y el modo automático            |
+| Paso                 | Detalle                                                                                                                                                                                                                                   |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Base de conocimiento | Rangos ideales de lechuga, tomate, fresa, albahaca, espinaca y pimentón en la escala de los sensores; una variable fuera de rango se mide en tolerancias y desde una completa es crítica                                                  |
+| Noche                | Entre las 22:00 y las 6:00 la luz baja es descanso (`REST`) y no resta salud                                                                                                                                                              |
+| Modelos base         | Se entrenan al arrancar con 4000 muestras sintéticas y semilla fija; `GET /v1/models` informa su exactitud                                                                                                                                |
+| Reglas               | Encadenamiento hacia adelante con prioridades; `sensor_fault` bloquea las acciones si la lectura es imposible                                                                                                                             |
+| Agente               | Riego (no con lluvia sobre un cultivo al aire libre), luz ultravioleta de día (y apagarla de noche), ventilación, humidificador y dosificadores, solo si el cultivo tiene el actuador; la API aplica el enfriamiento y el modo automático |
+| Lugar y clima        | Con `placement` y `weather`: consejo `OK`, `UNKNOWN`, `TIP` o `MOVE` según la luz que pide la especie; reglas `rain_outside` (0,5 mm o más) y `sensor_vs_outside` (8 °C o más de diferencia con el clima)                                 |
 
 ## 4. Aprendizaje continuo
 
@@ -230,8 +233,9 @@ ejemplos de petición y respuesta.
 
 ## 8. Pruebas
 
-`uv run ruff check .` y `uv run pytest`: 73 pruebas sobre la base de conocimiento, el encadenamiento de reglas, la
-monotonía del índice difuso, la exactitud mínima de los modelos, el pronóstico, el agente, la flota, el contrato HTTP y
+`uv run ruff check .` y `uv run pytest`: 84 pruebas sobre la base de conocimiento, el encadenamiento de reglas, la
+monotonía del índice difuso, la exactitud mínima de los modelos, el pronóstico, el agente, la lluvia y el sensor frente
+al clima, el consejo de lugar, la flota, el contrato HTTP y
 el aprendizaje continuo (seudonimización, poda, calidad, etiquetas, modelos que superan a la línea base, campeón y
 retador, persistencia).
 
