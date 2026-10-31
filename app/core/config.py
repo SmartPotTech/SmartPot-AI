@@ -14,6 +14,10 @@ class Settings(BaseSettings):
 
     # Aprendizaje con lecturas reales. data_dir vacío: todo en memoria.
     data_dir: str = "data"
+    smartpot_trainer_url: str | None = Field(
+        None,
+        description="URL de SmartPot-Trainer cuando el entrenamiento se ejecuta en un microservicio separado",
+    )
     learning_min_samples: int = Field(200, ge=50)
     learning_retrain_every: int = Field(300, ge=10)
     learning_check_seconds: int = Field(300, ge=0, description="0 apaga el reentrenamiento en segundo plano")
