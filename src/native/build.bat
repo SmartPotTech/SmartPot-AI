@@ -29,4 +29,9 @@ if %errorlevel% equ 0 (
     exit /b 1
 )
 
+echo Building Cython extension...
+pushd "%SCRIPT_DIR%"
+uv run python setup.py build_ext --build-lib "%OUT_DIR%"
+popd
+
 endlocal
