@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,7 +15,15 @@ class Settings(BaseSettings):
     # Configuración de gRPC Dual UDS/TCP
     grpc_enabled: bool = True
     grpc_port: int = Field(50051, ge=1024, le=65535, description="Puerto TCP del servidor gRPC")
-    grpc_uds_path: str = Field("/var/run/smartpot/ai.sock", description="Ruta al socket Unix gRPC")
+    grpc_uds_path: str = Field(
+        "/var/run/smartpot/ai.sock",
+        validation_alias=AliasChoices("grpc_uds_path", "ai_grpc_socket"),
+        description="Ruta al socket Unix gRPC",
+    )
+    valkey_socket: str = Field(
+        "/var/run/smartpot/valkey.sock",
+        description="Ruta al socket Unix de Valkey",
+    )
     trusted_model_public_key_hex: str | None = Field(None, description="Clave pública Ed25519")
 
     # Aprendizaje con lecturas reales. data_dir vacío: todo en memoria.
