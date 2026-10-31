@@ -30,6 +30,20 @@ def _service(request: Request) -> LearningService:
 def reload_models(payload: ReloadRequest | None = None, request: Request = None) -> dict[str, Any]:
     service = _service(request)
     crop_type = payload.crop_type if payload else None
+
+    # Verificación criptográfica si existe manifiesto
+    if getattr(service, "models_dir", None):
+        m_file = service.models_dir / (f"{crop_type}_manifest.json" if crop_type else "manifest.json")
+        if m_file.exists():
+            from app.engine.model_verifier import verify_model_manifest
+
+            settings = get_settings()
+            valid, reason, _ = verify_model_manifest(m_file, settings.trusted_model_public_key_hex)
+            if not valid:
+                raise HTTPException(
+                    status_code=400, detail=f"Fallo de verificación criptográfica del modelo: {reason}"
+                )
+
     reloaded = service.reload(crop_type)
     return {"status": "OK", "reloaded": reloaded}
 
