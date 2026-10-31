@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
+      - name: Build C++ native acceleration core
+        run: make -C src/native
+
       - name: Lint with Ruff
         run: uv run --frozen ruff check .
 

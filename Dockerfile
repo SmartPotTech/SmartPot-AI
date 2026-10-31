@@ -1,6 +1,8 @@
 FROM python:3.13-slim-bookworm AS build
 
-RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get upgrade -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends g++ make \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.12 /uv /bin/uv
 
@@ -12,6 +14,9 @@ WORKDIR /app
 
 COPY pyproject.toml uv.lock .python-version ./
 RUN uv sync --frozen --no-dev --no-install-project
+
+COPY src/native ./src/native
+RUN make -C src/native
 
 COPY app ./app
 
