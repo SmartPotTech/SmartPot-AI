@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from app.engine.native_bridge import engine
 from app.learning.store import COLUMNS
 
 PHYSICAL = {
@@ -35,6 +36,22 @@ def assess(values: np.ndarray) -> QualityReport:
     rows = values.shape[0]
     if rows == 0:
         return QualityReport(0, 0.0, 0.0, 0, 0.0, np.zeros(0, dtype=bool))
+
+    if engine.is_available:
+        try:
+            bounds = [PHYSICAL[name] for name in COLUMNS]
+            res = engine.assess_quality(values, bounds)
+            return QualityReport(
+                rows=res["rows"],
+                completeness=round(res["completeness"], 4),
+                validity=round(res["validity"], 4),
+                outliers=int(res["outliers"]),
+                score=round(res["score"], 4),
+                keep=res["keep"],
+            )
+        except Exception:
+            pass
+
     present = ~np.isnan(values)
     completeness = float(present.mean())
     valid = np.ones_like(present)

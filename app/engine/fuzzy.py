@@ -9,6 +9,8 @@ peor caso: una variable crítica limita la salud total.
 
 from dataclasses import dataclass
 
+from app.engine.native_bridge import engine
+
 WEIGHTS = {
     "ph": 1.3,
     "temperature": 1.2,
@@ -69,6 +71,14 @@ class HealthResult:
 def health_index(deviations: dict[str, float]) -> HealthResult:
     if not deviations:
         return HealthResult(0.0, "UNKNOWN", "Sin datos", {})
+
+    if engine.is_available:
+        try:
+            res = engine.fuzzy_health(deviations)
+            return HealthResult(res["index"], res["level"], res["label"], res["by_parameter"])
+        except Exception:
+            pass
+
     scores = {parameter: parameter_health(dev) for parameter, dev in deviations.items()}
     weighted = sum(scores[p] * WEIGHTS.get(p, 1.0) for p in scores) / sum(WEIGHTS.get(p, 1.0) for p in scores)
     worst_critical = max(memberships(dev)["critical"] for dev in deviations.values())

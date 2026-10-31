@@ -11,6 +11,7 @@ from datetime import datetime
 
 import numpy as np
 
+from app.engine.native_bridge import engine
 from app.knowledge.profiles import CropProfile
 
 FORECAST_PARAMETERS = ("temperature", "humidity", "ph", "tds", "soilMoisture")
@@ -37,6 +38,12 @@ class Forecast:
 
 def theil_sen(hours: np.ndarray, values: np.ndarray) -> tuple[float, float, float]:
     """Pendiente, intercepto y concordancia (fracción de pendientes con el signo de la mediana)."""
+    if engine.is_available and len(hours) > 0:
+        try:
+            return engine.theil_sen(hours, values)
+        except Exception:
+            pass
+
     i, j = np.triu_indices(len(hours), k=1)
     dt = hours[j] - hours[i]
     valid = dt > 1e-9
