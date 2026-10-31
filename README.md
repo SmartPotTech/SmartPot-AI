@@ -281,6 +281,26 @@ continuo. Los diagramas generales muestran la plataforma completa en una sola im
 - [Máquinas de estado](https://github.com/SmartPotTech/.github/blob/main/docs/diagrams/SmartPot_Global_05_State_Machines.svg):
   los estados del aprendizaje de cada especie
 
+## Hoja de Ruta Industrial: Migración In-Place a Rust 2024 Edition
+
+Como parte del **Plan Maestro de Maximización del Stack B (demo-beta)**, `SmartPot-AI` evoluciona in-place hacia un binario 100% nativo en **Rust 2024 Edition** con `#![forbid(unsafe_code)]` en la lógica de negocio y `mimalloc` como allocator global:
+
+1. **Servidor HTTP y gRPC Dual**:
+   - `axum 0.8`: Preserva la compatibilidad 1:1 con todas las rutas REST JSON públicas (`/health`, `/v1/insights`, `/v1/fleet`, `/v1/crop-profiles`, `/v1/models`, `/v1/engine`).
+   - `tonic`: Servidor gRPC de alto rendimiento sobre socket UNIX `/var/run/smartpot/ai.sock` (mononodo / `demo-beta`) con fallback transparente a TCP interno.
+2. **Núcleo Físico-Agronómico SIMD (`core::simd` / `wide`)**:
+   - **VPD Foliar Psicrométrico**: Ecuación de Tetens/Buck con offset radiativo foliar ($\Delta T_{\text{leaf}} = -1.5^\circ\text{C}$).
+   - **EKF 1D**: Filtro de Kalman Extendido unidimensional para desacoplar el ruido electromagnético de relés y bombas en pH, TDS y temperatura.
+   - **Theil-Sen $O(M)$ y Sugeno Branchless**: Portados a registros `f64x4` con paralelismo a nivel de instrucción.
+3. **Sistema Experto Compilado en Bitsets `u64`**:
+   - Codificación de hechos agronómicos en máscaras de bits (`TempHigh`, `VpdCritical`, `PhAcidicDrift`, `MoistureDepleting`).
+   - Evaluación atómica de las 21 reglas mediante `(facts & rule.mask) == rule.mask` en $< 200\text{ ns}$.
+4. **Motor ML Zero-Copy y Hot-Reload Atómico**:
+   - Evaluación de árboles con `tract-onnx` puro (eliminando `dlopen` de bibliotecas C dinámicas, Treelite y deserialización pickle).
+   - Tensores LoRA y centroides mapeados en memoria mediante `rkyv` (`memmap2`).
+   - Hot-reload atómico lock-free con `arc_swap::ArcSwap<ModelBundle>` previa verificación de hash BLAKE3 y firma Ed25519 ante eventos Valkey Pub/Sub (`smartpot:ai:reload`).
+   - Control Predictivo Basado en Modelos (MPC) para el cálculo de duración de actuación.
+
 ## Licencia
 
 Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
