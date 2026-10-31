@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+import polars as pl
 
 log = logging.getLogger(__name__)
 
@@ -111,21 +112,27 @@ class ReadingStore:
         with self._lock:
             return int(self._connection.execute("SELECT COUNT(*) FROM readings").fetchone()[0])
 
+    def load_df(self, crop_type: str, limit: int) -> pl.DataFrame:
+        """Las `limit` lecturas más recientes de la especie directamente en un DataFrame de Polars."""
+        columns = ", ".join(COLUMNS)
+        query = (
+            f"SELECT crop_key, measured_at, local_hour, {columns} FROM "
+            f"(SELECT * FROM readings WHERE crop_type = ? ORDER BY measured_at DESC LIMIT ?) "
+            f"ORDER BY crop_key, measured_at"
+        )
+        with self._lock:
+            return pl.read_database(query, self._connection, execute_options={"parameters": (crop_type, limit)})
+
     def load(self, crop_type: str, limit: int) -> Series:
         """Las `limit` lecturas más recientes de la especie, ordenadas por cultivo y hora."""
-        columns = ", ".join(COLUMNS)
-        with self._lock:
-            rows = self._connection.execute(
-                f"SELECT crop_key, measured_at, local_hour, {columns} FROM "
-                f"(SELECT * FROM readings WHERE crop_type = ? ORDER BY measured_at DESC LIMIT ?) "
-                f"ORDER BY crop_key, measured_at", (crop_type, limit)).fetchall()
-        if not rows:
+        df = self.load_df(crop_type, limit)
+        if df.is_empty():
             empty = np.empty(0)
             return Series(np.empty(0, dtype=object), empty, empty, np.empty((0, len(COLUMNS))))
-        crops = np.array([row[0] for row in rows], dtype=object)
-        times = np.array([row[1] for row in rows], dtype=float)
-        hours = np.array([np.nan if row[2] is None else row[2] for row in rows], dtype=float)
-        values = np.array([[np.nan if v is None else v for v in row[3:]] for row in rows], dtype=float)
+        crops = df["crop_key"].to_numpy()
+        times = df["measured_at"].to_numpy()
+        hours = df["local_hour"].cast(pl.Float64).to_numpy()
+        values = df.select(COLUMNS).to_numpy()
         return Series(crops, times, hours, values)
 
     def forget(self, crop_id: str) -> int:
