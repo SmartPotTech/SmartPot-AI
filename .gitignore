@@ -15,3 +15,13 @@ data/
 .vscode
 .DS_Store
 Thumbs.db
+
+# Native C++ build artifacts
+app/native/*.dll
+app/native/*.so
+app/native/*.dylib
+app/native/*.exp
+app/native/*.lib
+app/native/*.obj
+app/native/*.o
+src/native/build/
