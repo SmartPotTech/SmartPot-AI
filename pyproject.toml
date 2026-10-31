@@ -11,6 +11,9 @@ dependencies = [
     "pydantic-settings>=2.11",
     "numpy>=2.3",
     "scikit-learn>=1.7",
+    "cython>=3.0",
+    "setuptools>=84.2.1",
+    "polars>=1.0",
 ]
 
 [dependency-groups]
