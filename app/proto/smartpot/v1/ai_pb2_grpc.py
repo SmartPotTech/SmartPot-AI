@@ -29,7 +29,9 @@ if _version_not_supported:
 
 
 class SmartPotAIServiceStub:
-    """SmartPotAIService define el contrato de inferencia agronómica y gestión de modelos en caliente.
+    """SmartPotAIService es el transporte rápido entre la API y la IA: HTTP/2 por socket UNIX (mismo servidor) o por TCP
+    interno. Se autentica con el metadato "authorization: Bearer <SMARTPOT_AI_TOKEN>". Si no está disponible, la API
+    usa REST por HTTP/1.1, que pasa por cualquier proxy.
     """
 
     def __init__(self, channel):
@@ -40,39 +42,32 @@ class SmartPotAIServiceStub:
         """
         self.EvaluateInsight = channel.unary_unary(
                 '/smartpot.v1.SmartPotAIService/EvaluateInsight',
-                request_serializer=smartpot_dot_v1_dot_ai__pb2.InsightRequest.SerializeToString,
-                response_deserializer=smartpot_dot_v1_dot_ai__pb2.InsightResponse.FromString,
+                request_serializer=smartpot_dot_v1_dot_ai__pb2.JsonBody.SerializeToString,
+                response_deserializer=smartpot_dot_v1_dot_ai__pb2.JsonBody.FromString,
                 _registered_method=True)
         self.AnalyzeFleet = channel.unary_unary(
                 '/smartpot.v1.SmartPotAIService/AnalyzeFleet',
-                request_serializer=smartpot_dot_v1_dot_ai__pb2.FleetRequest.SerializeToString,
-                response_deserializer=smartpot_dot_v1_dot_ai__pb2.FleetResponse.FromString,
-                _registered_method=True)
-        self.HotReloadModel = channel.unary_unary(
-                '/smartpot.v1.SmartPotAIService/HotReloadModel',
-                request_serializer=smartpot_dot_v1_dot_ai__pb2.ReloadRequest.SerializeToString,
-                response_deserializer=smartpot_dot_v1_dot_ai__pb2.ReloadResponse.FromString,
+                request_serializer=smartpot_dot_v1_dot_ai__pb2.JsonBody.SerializeToString,
+                response_deserializer=smartpot_dot_v1_dot_ai__pb2.JsonBody.FromString,
                 _registered_method=True)
 
 
 class SmartPotAIServiceServicer:
-    """SmartPotAIService define el contrato de inferencia agronómica y gestión de modelos en caliente.
+    """SmartPotAIService es el transporte rápido entre la API y la IA: HTTP/2 por socket UNIX (mismo servidor) o por TCP
+    interno. Se autentica con el metadato "authorization: Bearer <SMARTPOT_AI_TOKEN>". Si no está disponible, la API
+    usa REST por HTTP/1.1, que pasa por cualquier proxy.
     """
 
     def EvaluateInsight(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Evalúa una lectura: cuerpo InsightRequest, respuesta InsightResponse.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def AnalyzeFleet(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def HotReloadModel(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Analiza los cultivos de una cuenta: cuerpo FleetRequest, respuesta FleetResponse.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -82,18 +77,13 @@ def add_SmartPotAIServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'EvaluateInsight': grpc.unary_unary_rpc_method_handler(
                     servicer.EvaluateInsight,
-                    request_deserializer=smartpot_dot_v1_dot_ai__pb2.InsightRequest.FromString,
-                    response_serializer=smartpot_dot_v1_dot_ai__pb2.InsightResponse.SerializeToString,
+                    request_deserializer=smartpot_dot_v1_dot_ai__pb2.JsonBody.FromString,
+                    response_serializer=smartpot_dot_v1_dot_ai__pb2.JsonBody.SerializeToString,
             ),
             'AnalyzeFleet': grpc.unary_unary_rpc_method_handler(
                     servicer.AnalyzeFleet,
-                    request_deserializer=smartpot_dot_v1_dot_ai__pb2.FleetRequest.FromString,
-                    response_serializer=smartpot_dot_v1_dot_ai__pb2.FleetResponse.SerializeToString,
-            ),
-            'HotReloadModel': grpc.unary_unary_rpc_method_handler(
-                    servicer.HotReloadModel,
-                    request_deserializer=smartpot_dot_v1_dot_ai__pb2.ReloadRequest.FromString,
-                    response_serializer=smartpot_dot_v1_dot_ai__pb2.ReloadResponse.SerializeToString,
+                    request_deserializer=smartpot_dot_v1_dot_ai__pb2.JsonBody.FromString,
+                    response_serializer=smartpot_dot_v1_dot_ai__pb2.JsonBody.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -104,7 +94,9 @@ def add_SmartPotAIServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class SmartPotAIService:
-    """SmartPotAIService define el contrato de inferencia agronómica y gestión de modelos en caliente.
+    """SmartPotAIService es el transporte rápido entre la API y la IA: HTTP/2 por socket UNIX (mismo servidor) o por TCP
+    interno. Se autentica con el metadato "authorization: Bearer <SMARTPOT_AI_TOKEN>". Si no está disponible, la API
+    usa REST por HTTP/1.1, que pasa por cualquier proxy.
     """
 
     @staticmethod
@@ -122,8 +114,8 @@ class SmartPotAIService:
             request,
             target,
             '/smartpot.v1.SmartPotAIService/EvaluateInsight',
-            smartpot_dot_v1_dot_ai__pb2.InsightRequest.SerializeToString,
-            smartpot_dot_v1_dot_ai__pb2.InsightResponse.FromString,
+            smartpot_dot_v1_dot_ai__pb2.JsonBody.SerializeToString,
+            smartpot_dot_v1_dot_ai__pb2.JsonBody.FromString,
             options,
             channel_credentials,
             insecure,
@@ -149,35 +141,8 @@ class SmartPotAIService:
             request,
             target,
             '/smartpot.v1.SmartPotAIService/AnalyzeFleet',
-            smartpot_dot_v1_dot_ai__pb2.FleetRequest.SerializeToString,
-            smartpot_dot_v1_dot_ai__pb2.FleetResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def HotReloadModel(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/smartpot.v1.SmartPotAIService/HotReloadModel',
-            smartpot_dot_v1_dot_ai__pb2.ReloadRequest.SerializeToString,
-            smartpot_dot_v1_dot_ai__pb2.ReloadResponse.FromString,
+            smartpot_dot_v1_dot_ai__pb2.JsonBody.SerializeToString,
+            smartpot_dot_v1_dot_ai__pb2.JsonBody.FromString,
             options,
             channel_credentials,
             insecure,

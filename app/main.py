@@ -34,9 +34,10 @@ def create_app() -> FastAPI:
         if settings.grpc_enabled:
             grpc_manager = GrpcServerManager(
                 models=app.state.models,
+                token=settings.smartpot_ai_token,
                 learning=app.state.learning,
-                port=settings.grpc_port,
                 uds_path=settings.grpc_uds_path,
+                tcp_port=settings.grpc_tcp_port,
             )
             grpc_manager.start()
         yield

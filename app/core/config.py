@@ -12,13 +12,19 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     model_seed: int = 42
 
-    # Configuración de gRPC Dual UDS/TCP
+    # gRPC hacia la API: socket UNIX (misma máquina) y, si se pide, TCP interno. Sin ninguno, solo REST.
     grpc_enabled: bool = True
-    grpc_port: int = Field(50051, ge=1024, le=65535, description="Puerto TCP del servidor gRPC")
     grpc_uds_path: str = Field(
-        "/var/run/smartpot/ai.sock",
+        "",
         validation_alias=AliasChoices("grpc_uds_path", "ai_grpc_socket"),
-        description="Ruta al socket Unix gRPC",
+        description="Ruta del socket UNIX de gRPC (vacía = sin socket)",
+    )
+    grpc_tcp_port: int = Field(
+        0,
+        ge=0,
+        le=65535,
+        validation_alias=AliasChoices("grpc_tcp_port", "grpc_port"),
+        description="Puerto TCP interno de gRPC (0 = apagado)",
     )
     valkey_socket: str = Field(
         "/var/run/smartpot/valkey.sock",

@@ -1,55 +1,71 @@
-from app.engine.models import ModelRegistry
-from app.grpc_server.server import SmartPotAIServicer
-from app.proto.smartpot.v1 import ai_pb2
+import json
+from concurrent import futures
+
+import grpc
+import pytest
+
+from app.grpc_server.server import SmartPotAIServicer, TokenInterceptor
+from app.proto.smartpot.v1 import ai_pb2, ai_pb2_grpc
+from tests.conftest import TOKEN
+from tests.test_api import PAYLOAD
 
 
-def test_grpc_evaluate_insight_direct():
-    models = ModelRegistry(seed=42)
-    servicer = SmartPotAIServicer(models=models, learning=None)
-
-    measures_proto = ai_pb2.Measures(
-        temperature=23.5,
-        humidity=65.0,
-        ph=6.2,
-        tds=850.0,
-        soil_moisture=70.0,
-        brightness=15000.0,
-        atmosphere=1013.0,
-    )
-    req = ai_pb2.InsightRequest(
-        crop_id="test-crop-001",
-        crop_type="LETTUCE",
-        measures=measures_proto,
-        local_hour=14,
-    )
-
-    res = servicer.EvaluateInsight(req, None)
-    assert res.health.index > 0
-    assert len(res.health.label) > 0
-    assert res.health.level in ("EXCELLENT", "GOOD", "FAIR", "POOR", "CRITICAL")
-    assert res.evaluation_latency_nanos > 0
-    assert len(res.diagnosis) > 0
+@pytest.fixture
+def stub(client):
+    # Mismos modelos que la app REST, para comparar las dos vías.
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=2), interceptors=[TokenInterceptor(TOKEN)])
+    servicer = SmartPotAIServicer(client.app.state.models, getattr(client.app.state, "learning", None))
+    ai_pb2_grpc.add_SmartPotAIServiceServicer_to_server(servicer, server)
+    port = server.add_insecure_port("127.0.0.1:0")
+    server.start()
+    channel = grpc.insecure_channel(f"127.0.0.1:{port}")
+    yield ai_pb2_grpc.SmartPotAIServiceStub(channel)
+    channel.close()
+    server.stop(grace=None)
 
 
-def test_grpc_fleet_analysis_direct():
-    models = ModelRegistry(seed=42)
-    servicer = SmartPotAIServicer(models=models, learning=None)
+def _call(rpc, body: dict, token: str | None = TOKEN) -> dict:
+    metadata = [("authorization", f"Bearer {token}")] if token else []
+    response = rpc(ai_pb2.JsonBody(json=json.dumps(body).encode()), metadata=metadata, timeout=30)
+    return json.loads(response.json)
 
-    crops = [
-        ai_pb2.FleetCropItem(
-            crop_id="c1",
-            crop_type="LETTUCE",
-            measures=ai_pb2.Measures(temperature=24.0, humidity=60.0, ph=6.0, tds=800.0, soil_moisture=70.0),
-            health_index=85,
-        ),
-        ai_pb2.FleetCropItem(
-            crop_id="c2",
-            crop_type="LETTUCE",
-            measures=ai_pb2.Measures(temperature=35.0, humidity=20.0, ph=5.0, tds=1200.0, soil_moisture=25.0),
-            health_index=35,
-        ),
-    ]
-    req = ai_pb2.FleetRequest(crops=crops)
-    res = servicer.AnalyzeFleet(req, None)
-    assert res.cluster_count >= 0
-    assert "Analizados 2 cultivos" in res.fleet_summary
+
+def test_grpc_answers_exactly_like_rest(client, auth, stub):
+    rest = client.post("/v1/insights", json=PAYLOAD, headers=auth).json()
+    via_grpc = _call(stub.EvaluateInsight, PAYLOAD)
+    for field in ("health", "diagnosis", "conclusions", "predictions", "actions", "forecasts", "summary"):
+        assert via_grpc.get(field) == rest.get(field), field
+
+
+def test_grpc_keeps_zero_readings_and_missing_sensors(client, auth, stub):
+    # 0 °C y 0 lux son lecturas reales (helada, noche); un sensor ausente no se inventa.
+    payload = {**PAYLOAD, "measures": {"temperature": 0, "brightness": 0, "humidity": 70}}
+    rest = client.post("/v1/insights", json=payload, headers=auth).json()
+    via_grpc = _call(stub.EvaluateInsight, payload)
+    assert via_grpc["diagnosis"] == rest["diagnosis"]
+    assert any(d["parameter"] == "temperature" for d in via_grpc["diagnosis"])
+    assert not any(d["parameter"] == "ph" for d in via_grpc["diagnosis"])
+
+
+def test_grpc_fleet_matches_rest(client, auth, stub):
+    crops = [{"id": f"c{i}", "name": f"Lechuga {i}", "cropType": "LETTUCE", "measures": PAYLOAD["measures"]}
+             for i in range(3)]
+    fleet = {"crops": crops, "localHour": 14}
+    rest = client.post("/v1/fleet", json=fleet, headers=auth)
+    assert rest.status_code == 200
+    assert _call(stub.AnalyzeFleet, fleet) == rest.json()
+
+
+def test_grpc_requires_the_service_token(stub):
+    with pytest.raises(grpc.RpcError) as error:
+        _call(stub.EvaluateInsight, PAYLOAD, token="otro")
+    assert error.value.code() == grpc.StatusCode.UNAUTHENTICATED
+    with pytest.raises(grpc.RpcError) as error:
+        _call(stub.EvaluateInsight, PAYLOAD, token=None)
+    assert error.value.code() == grpc.StatusCode.UNAUTHENTICATED
+
+
+def test_grpc_rejects_an_invalid_body(stub):
+    with pytest.raises(grpc.RpcError) as error:
+        _call(stub.EvaluateInsight, {"measures": "no es un objeto"})
+    assert error.value.code() == grpc.StatusCode.INVALID_ARGUMENT
