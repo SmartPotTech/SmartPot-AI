@@ -13,7 +13,9 @@ ideal), así un mismo modelo sirve para todos los cultivos:
 import logging
 import math
 from dataclasses import dataclass, field
+from pathlib import Path
 
+import joblib
 import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.linear_model import LogisticRegression
@@ -29,6 +31,7 @@ log = logging.getLogger(__name__)
 SAMPLES = 4000
 LABEL_NOISE = 0.04
 SPIKE_Z = 4.0
+BASE_RESOURCE_PATH = Path(__file__).resolve().parent.parent / "resources" / "base_models.joblib"
 
 
 def normalize(profile: CropProfile, measures: dict[str, float | None]) -> dict[str, float]:
@@ -46,9 +49,31 @@ def normalize(profile: CropProfile, measures: dict[str, float | None]) -> dict[s
 @dataclass
 class ModelRegistry:
     seed: int = 42
+    force_train: bool = False
+    artifact_path: Path | None = None
     metrics: dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        path = self.artifact_path or BASE_RESOURCE_PATH
+        if not self.force_train and self.seed == 42 and path.exists():
+            try:
+                payload = joblib.load(path)
+                if isinstance(payload, dict) and payload.get("seed") == self.seed:
+                    self.metrics = dict(payload["metrics"])
+                    self.ventilation = payload["ventilation"]
+                    self.ph_correction = payload["ph_correction"]
+                    self.anomaly = payload["anomaly"]
+                    log.info(
+                        "Modelos base cargados desde artefacto pre-horneado: %s",
+                        {k: round(v, 3) for k, v in self.metrics.items()},
+                    )
+                    return
+            except Exception as e:
+                log.warning(
+                    "Fallo al cargar artefacto de modelos pre-horneados (%s), reentrenando dinámicamente...",
+                    e,
+                )
+
         rng = np.random.default_rng(self.seed)
         self._train_ventilation(rng)
         self._train_ph_correction(rng)
