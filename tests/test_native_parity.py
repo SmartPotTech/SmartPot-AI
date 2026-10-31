@@ -1,8 +1,12 @@
 import numpy as np
+import pytest
 
 from app.engine.forecast import theil_sen as py_theil_sen
 from app.engine.fuzzy import health_index as py_fuzzy
 from app.engine.native_bridge import engine
+
+# Sin el núcleo nativo compilado la IA usa el respaldo en Python; estas pruebas solo aplican con él.
+pytestmark = pytest.mark.skipif(not engine.is_available, reason="núcleo nativo sin compilar")
 
 
 def test_native_engine_is_loaded():

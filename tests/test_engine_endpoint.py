@@ -1,4 +1,9 @@
+import pytest
+
 from app.engine.native_bridge import engine
+
+# Sin el núcleo nativo compilado la IA usa el respaldo en Python; estas pruebas solo aplican con él.
+pytestmark = pytest.mark.skipif(not engine.is_available, reason="núcleo nativo sin compilar")
 
 
 def test_engine_singleton_properties():
