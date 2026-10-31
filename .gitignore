@@ -17,11 +17,14 @@ data/
 Thumbs.db
 
 # Native C++ build artifacts
+build/
 app/native/*.dll
 app/native/*.so
 app/native/*.dylib
+app/native/*.pyd
 app/native/*.exp
 app/native/*.lib
 app/native/*.obj
 app/native/*.o
 src/native/build/
+src/native/cy_bridge.cpp
