@@ -156,3 +156,11 @@ def test_indoor_crops_ignore_the_rain_outside(client, auth):
 def test_an_unknown_place_is_rejected(client, auth):
     payload = {**PAYLOAD, "placement": {"setting": "ROOF"}}
     assert client.post("/v1/insights", json=payload, headers=auth).status_code == 422
+
+
+def test_learning_reload_endpoint(client, auth):
+    response = client.post("/v1/learning/reload", json={"cropType": "LETTUCE"}, headers=auth)
+    assert response.status_code == 200
+    assert response.json()["status"] == "OK"
+    assert "reloaded" in response.json()
+

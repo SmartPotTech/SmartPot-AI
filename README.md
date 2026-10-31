@@ -116,10 +116,7 @@ quién pertenece.
 | 6. Campeón y retador          | Se evalúa en el 20 % de lecturas más recientes; el modelo nuevo reemplaza al vigente solo si lo mejora y si supera a la línea base                                                                        | `trainer.py`  |
 | 7. No supervisado             | Estados de operación con K-Means (k de 2 a 6 por silueta, con nombre legible) e Isolation Forest entrenado con lecturas reales                                                                            | `trainer.py`  |
 
-Cada especie se entrena por separado desde 200 lecturas etiquetadas y se reentrena cada 300 lecturas nuevas, en un
-proceso aparte para no frenar las evaluaciones. Los modelos se guardan con joblib en `/data/models` y se cargan al
-arrancar. Una tarea queda pendiente, con su razón, mientras falten datos o casos (por ejemplo, si ningún cultivo de la
-especie ha tenido calor no se puede aprender a anticiparlo).
+Cada especie se entrena por separado desde 200 lecturas etiquetadas y se reentrena cada 300 lecturas nuevas. En modo autónomo puede ejecutarse en un proceso local secundario, mientras que en arquitecturas desacopladas de producción el entrenamiento se delega enteramente a **SmartPot-Trainer** (`http://trainer-smartpot:8001`), operando SmartPot-AI como un motor puro de inferencia sub-milisegundo que recarga los modelos en caliente (`POST /v1/learning/reload`) en < 5 ms sin interrupción de servicio.
 
 `POST /v1/insights` responde además `learning`: el estado de operación actual, si la lectura es atípica para la especie,
 la probabilidad de necesitar riego o ventilación en la próxima hora y la humedad esperada del sustrato en 1 h, cada una
