@@ -53,12 +53,14 @@ def _hour_features(hours: np.ndarray, times: np.ndarray) -> np.ndarray:
 
 def _slopes(times: np.ndarray, series: np.ndarray, scale: float) -> np.ndarray:
     """Cambio por hora en la última media hora, en rangos ideales por hora; 0 si no hay historial suficiente."""
-    slopes = np.zeros(times.shape[0])
+    n = times.shape[0]
+    if n == 0:
+        return np.zeros(0)
     starts = np.searchsorted(times, times - SLOPE_WINDOW_SECONDS, side="left")
-    for i, start in enumerate(starts):
-        span = times[i] - times[start]
-        if span >= MIN_SLOPE_SPAN_SECONDS and not (np.isnan(series[i]) or np.isnan(series[start])):
-            slopes[i] = (series[i] - series[start]) / scale / (span / 3600.0)
+    spans = times - times[starts]
+    valid = (spans >= MIN_SLOPE_SPAN_SECONDS) & ~np.isnan(series) & ~np.isnan(series[starts])
+    slopes = np.zeros(n)
+    slopes[valid] = (series[valid] - series[starts[valid]]) / (scale * (spans[valid] / 3600.0))
     return slopes
 
 
