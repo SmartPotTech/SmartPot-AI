@@ -216,6 +216,30 @@ class LearningService:
         if self.types:
             log.info("Modelos aprendidos cargados: %s", ", ".join(sorted(self.types)))
 
+    def reload(self, crop_type: str | None = None) -> list[str]:
+        """Recarga modelos aprendidos desde el volumen en memoria caliente (< 5 ms)."""
+        if self.models_dir is None or not self.models_dir.exists():
+            return []
+        reloaded = []
+        paths = (
+            [self.models_dir / f"{crop_type.upper()}.joblib"]
+            if crop_type
+            else list(self.models_dir.glob("*.joblib"))
+        )
+        for path in paths:
+            if not path.exists():
+                continue
+            try:
+                saved = joblib.load(path)
+                if saved.get("sklearn") == sklearn.__version__:
+                    with self._lock:
+                        self.types[path.stem] = saved["state"]
+                    reloaded.append(path.stem)
+                    log.info("Modelo recargado en caliente: %s", path.stem)
+            except Exception as error:  # noqa: BLE001
+                log.warning("No se pudo recargar %s: %s", path.name, error)
+        return reloaded
+
     # --- consulta ------------------------------------------------------------------------------------------
 
     def infer(self, crop_type: str, measures: dict[str, float | None], hour: int | None, moment: float,
