@@ -31,18 +31,21 @@ def reload_models(payload: ReloadRequest | None = None, request: Request = None)
     service = _service(request)
     crop_type = payload.crop_type if payload else None
 
-    # Verificación criptográfica si existe manifiesto
-    if getattr(service, "models_dir", None):
-        m_file = service.models_dir / (f"{crop_type}_manifest.json" if crop_type else "manifest.json")
-        if m_file.exists():
-            from app.engine.model_verifier import verify_model_manifest
+    # Con TRUSTED_MODEL_PUBLIC_KEY_HEX, solo se recargan modelos firmados con esa clave (sin manifiesto o con otra
+    # clave, se rechaza). Sin ella no hay verificación: la firma que trae el propio manifiesto no prueba nada.
+    trusted_key = get_settings().trusted_model_public_key_hex
+    if trusted_key:
+        models_dir = getattr(service, "models_dir", None)
+        if models_dir is None:
+            raise HTTPException(status_code=400, detail="No hay carpeta de modelos para verificar la firma")
+        m_file = models_dir / (f"{crop_type}_manifest.json" if crop_type else "manifest.json")
+        if not m_file.exists():
+            raise HTTPException(status_code=400, detail="El modelo no trae manifiesto firmado")
+        from app.engine.model_verifier import verify_model_manifest
 
-            settings = get_settings()
-            valid, reason, _ = verify_model_manifest(m_file, settings.trusted_model_public_key_hex)
-            if not valid:
-                raise HTTPException(
-                    status_code=400, detail=f"Fallo de verificación criptográfica del modelo: {reason}"
-                )
+        valid, reason, _ = verify_model_manifest(m_file, trusted_key)
+        if not valid:
+            raise HTTPException(status_code=400, detail=f"Fallo de verificación criptográfica del modelo: {reason}")
 
     reloaded = service.reload(crop_type)
     return {"status": "OK", "reloaded": reloaded}

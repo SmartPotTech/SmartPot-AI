@@ -49,3 +49,20 @@ def test_model_verifier_valid_and_tampered(tmp_path: Path):
     valid_tampered, reason_tampered, _ = verify_model_manifest(manifest_file, trusted_public_key_hex=pub_hex)
     assert valid_tampered is False
     assert "Hash mismatch" in reason_tampered
+
+
+def test_reload_rejects_unsigned_models_when_a_trusted_key_is_set(client, auth, monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setenv("TRUSTED_MODEL_PUBLIC_KEY_HEX", "ab" * 32)
+    get_settings.cache_clear()
+    try:
+        response = client.post("/v1/learning/reload", json={"cropType": "LETTUCE"}, headers=auth)
+        assert response.status_code == 400
+    finally:
+        monkeypatch.delenv("TRUSTED_MODEL_PUBLIC_KEY_HEX")
+        get_settings.cache_clear()
+
+
+def test_reload_without_a_trusted_key_skips_the_signature(client, auth):
+    assert client.post("/v1/learning/reload", json={"cropType": "LETTUCE"}, headers=auth).status_code == 200
