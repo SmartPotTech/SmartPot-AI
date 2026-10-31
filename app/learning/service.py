@@ -20,6 +20,7 @@ import sklearn
 
 from app.knowledge.profiles import PARAMETERS, PROFILES, get_profile
 from app.learning.features import build, live_features, to_store
+from app.learning.lora import LowRankCropAdapter
 from app.learning.quality import assess
 from app.learning.store import ReadingStore, Series, StoredReading
 from app.learning.trainer import AnomalyModel, ModelCard, StatesModel, train_all
@@ -39,6 +40,7 @@ class TypeState:
     quality: dict[str, float] = field(default_factory=dict)
     trained_at: float | None = None
     readings_at_training: int = 0
+    lora_adapters: dict[str, LowRankCropAdapter] = field(default_factory=dict)
 
     @property
     def usable(self) -> bool:
@@ -237,9 +239,15 @@ class LearningService:
             for task in LEARNED_TASKS:
                 card = state.cards.get(task)
                 if card and card.usable and applicable[task]:
-                    probability = float(card.estimator.predict_proba(features)[0, 1])
+                    lora = state.lora_adapters.get(task)
+                    if lora is not None and lora.updates_count > 0:
+                        probability = float(lora.predict_proba(features)[0, 1])
+                        model_name = f"{card.model} + LoRA"
+                    else:
+                        probability = float(card.estimator.predict_proba(features)[0, 1])
+                        model_name = card.model
                     result["predictions"].append({"name": task, "label": card.label,
-                                                  "probability": round(probability, 3), "model": card.model,
+                                                  "probability": round(probability, 3), "model": model_name,
                                                   "metric": card.metric, "score": card.holdout})
             card = state.cards.get("moisture_1h")
             current = measures.get("soilMoisture")
@@ -260,6 +268,26 @@ class LearningService:
         result["message"] = (f"Aprendido de {readings:,} lecturas reales de {name}".replace(",", ".")
                              + f": {trained} de 3 modelos supervisados entrenados.")
         return result
+
+    def adapt_online(
+        self,
+        crop_type: str,
+        task: str,
+        x_batch: np.ndarray,
+        y_batch: np.ndarray,
+        lr: float = 0.02,
+    ) -> float:
+        """Actualización online ultra-rápida (< 1 ms) vía adaptador LoRA."""
+        state = self.types.get(crop_type)
+        if state is None:
+            return 0.0
+        adapter = state.lora_adapters.get(task)
+        if adapter is None:
+            d_in = x_batch.shape[1] if x_batch.ndim > 1 else len(x_batch)
+            adapter = LowRankCropAdapter(d_in=d_in, k_out=1, rank=2, alpha=1.0)
+            state.lora_adapters[task] = adapter
+        loss = adapter.online_update(x_batch, y_batch, lr=lr)
+        return loss
 
     def status(self) -> dict[str, Any]:
         counts = self.counts()
