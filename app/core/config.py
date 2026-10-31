@@ -12,6 +12,12 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     model_seed: int = 42
 
+    # Configuración de gRPC Dual UDS/TCP
+    grpc_enabled: bool = True
+    grpc_port: int = Field(50051, ge=1024, le=65535, description="Puerto TCP del servidor gRPC")
+    grpc_uds_path: str = Field("/var/run/smartpot/ai.sock", description="Ruta al socket Unix gRPC")
+    trusted_model_public_key_hex: str | None = Field(None, description="Clave pública Ed25519")
+
     # Aprendizaje con lecturas reales. data_dir vacío: todo en memoria.
     data_dir: str = "data"
     smartpot_trainer_url: str | None = Field(
