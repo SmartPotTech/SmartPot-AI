@@ -15,6 +15,9 @@ dependencies = [
     "setuptools>=84.2.1",
     "polars>=1.0",
     "httpx>=0.28",
+    "grpcio>=1.68",
+    "grpcio-tools>=1.68",
+    "cryptography>=43.0",
 ]
 
 [dependency-groups]
@@ -30,6 +33,7 @@ package = false
 [tool.ruff]
 line-length = 120
 target-version = "py313"
+extend-exclude = ["app/proto"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
