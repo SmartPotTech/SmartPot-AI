@@ -1,13 +1,15 @@
-"""Puente nativo C++ para aceleración numérica directa de SmartPot-AI.
+"""Puente nativo C++ de 3 niveles para aceleración numérica directa de SmartPot-AI.
 
-Carga la biblioteca compilada (libsmartpot_core.so en Linux o smartpot_core.dll en Windows)
-y expone llamadas C ABI con tipado estricto ctypes. Si la biblioteca no está compilada,
-ofrece detección transparente para fallback seguro en Python.
+Jerarquía de ejecución:
+1. Cython Extension (.so/.pyd) con paso zero-copy mediante memoryviews y release de GIL (with nogil).
+2. ctypes DLL/SO con llamadas C ABI estructuradas.
+3. Pure Python Fallback en caso de que ninguna extensión binaria esté presente.
 """
 
 from __future__ import annotations
 
 import ctypes
+import importlib
 import logging
 import os
 import sys
@@ -93,15 +95,39 @@ class CQualityReport(ctypes.Structure):
 
 class NativeEngine:
     def __init__(self) -> None:
+        self.cy_module: Any | None = None
         self.lib: ctypes.CDLL | None = None
-        self._load_library()
-        if self.lib:
-            self._setup_bindings()
+        self.tier: str = "python"
+        self._init_engine()
 
-    def _load_library(self) -> None:
-        candidates: list[Path] = []
+    def _init_engine(self) -> None:
+        # Nivel 1: Intentar cargar extensión Cython
         base_dir = Path(__file__).resolve().parent.parent / "native"
+        if str(base_dir) not in sys.path:
+            sys.path.insert(0, str(base_dir))
 
+        try:
+            self.cy_module = importlib.import_module("smartpot_cy_core")
+            self.tier = "cython"
+            log.info("Motor nativo Nivel 1 activo: Cython Extension (nogil + Memoryviews)")
+            return
+        except ImportError:
+            self.cy_module = None
+
+        # Nivel 2: Intentar cargar biblioteca compartida ctypes
+        self._load_ctypes_library(base_dir)
+        if self.lib:
+            self._setup_ctypes_bindings()
+            self.tier = "ctypes"
+            log.info("Motor nativo Nivel 2 activo: ctypes C ABI DLL/SO")
+            return
+
+        # Nivel 3: Fallback a Python puro
+        self.tier = "python"
+        log.info("Motor nativo Nivel 3 activo: Fallback estándar en Python")
+
+    def _load_ctypes_library(self, base_dir: Path) -> None:
+        candidates: list[Path] = []
         if sys.platform == "win32":
             candidates.append(base_dir / "smartpot_core.dll")
             candidates.append(Path("smartpot_core.dll"))
@@ -112,7 +138,6 @@ class NativeEngine:
             candidates.append(Path("/app/app/native/libsmartpot_core.so"))
             candidates.append(Path("/usr/local/lib/libsmartpot_core.so"))
 
-        # Variable de entorno de anulación explícita
         custom_path = os.environ.get("SMARTPOT_CORE_LIB")
         if custom_path:
             candidates.insert(0, Path(custom_path))
@@ -121,17 +146,13 @@ class NativeEngine:
             if path.exists():
                 try:
                     self.lib = ctypes.CDLL(str(path))
-                    log.info("Motor nativo C++ cargado exitosamente desde: %s", path)
                     return
                 except Exception as e:
-                    log.warning("No se pudo cargar la biblioteca nativa en %s: %s", path, e)
+                    log.warning("No se pudo cargar ctypes en %s: %s", path, e)
 
-        log.info("Motor nativo C++ no disponible; operando con motor estándar en Python")
-
-    def _setup_bindings(self) -> None:
+    def _setup_ctypes_bindings(self) -> None:
         assert self.lib is not None
 
-        # smartpot_theil_sen
         self.lib.smartpot_theil_sen.argtypes = [
             ctypes.POINTER(ctypes.c_double),
             ctypes.POINTER(ctypes.c_double),
@@ -140,7 +161,6 @@ class NativeEngine:
         ]
         self.lib.smartpot_theil_sen.restype = ctypes.c_int
 
-        # smartpot_fuzzy_health_index
         self.lib.smartpot_fuzzy_health_index.argtypes = [
             ctypes.POINTER(ctypes.c_char_p),
             ctypes.POINTER(ctypes.c_double),
@@ -149,7 +169,6 @@ class NativeEngine:
         ]
         self.lib.smartpot_fuzzy_health_index.restype = ctypes.c_int
 
-        # smartpot_forecast_describe
         self.lib.smartpot_forecast_describe.argtypes = [
             ctypes.POINTER(CParamRange),
             ctypes.c_double,
@@ -160,7 +179,6 @@ class NativeEngine:
         ]
         self.lib.smartpot_forecast_describe.restype = ctypes.c_int
 
-        # smartpot_quality_assess
         self.lib.smartpot_quality_assess.argtypes = [
             ctypes.POINTER(ctypes.c_double),
             ctypes.c_int,
@@ -171,7 +189,6 @@ class NativeEngine:
         ]
         self.lib.smartpot_quality_assess.restype = ctypes.c_int
 
-        # smartpot_features_normalize
         self.lib.smartpot_features_normalize.argtypes = [
             ctypes.POINTER(ctypes.c_double),
             ctypes.POINTER(CParamRange),
@@ -180,7 +197,6 @@ class NativeEngine:
         ]
         self.lib.smartpot_features_normalize.restype = ctypes.c_int
 
-        # smartpot_features_circular_hour
         self.lib.smartpot_features_circular_hour.argtypes = [
             ctypes.c_double,
             ctypes.POINTER(ctypes.c_double),
@@ -188,7 +204,6 @@ class NativeEngine:
         ]
         self.lib.smartpot_features_circular_hour.restype = ctypes.c_int
 
-        # info
         self.lib.smartpot_engine_version.argtypes = []
         self.lib.smartpot_engine_version.restype = ctypes.c_char_p
 
@@ -197,134 +212,136 @@ class NativeEngine:
 
     @property
     def is_available(self) -> bool:
-        return self.lib is not None
+        return self.tier in ("cython", "ctypes")
 
     def get_info(self) -> dict[str, Any]:
-        if not self.is_available or self.lib is None:
+        if self.tier == "cython" and self.cy_module is not None:
+            return self.cy_module.cy_engine_info()
+        elif self.tier == "ctypes" and self.lib is not None:
             return {
-                "available": False,
-                "engine": "Python (NumPy / Scipy fallback)",
-                "build": "Standard CPython interpreter",
+                "available": True,
+                "engine": self.lib.smartpot_engine_version().decode("utf-8"),
+                "build": self.lib.smartpot_engine_build_info().decode("utf-8"),
+                "tier": "ctypes",
             }
         return {
-            "available": True,
-            "engine": self.lib.smartpot_engine_version().decode("utf-8"),
-            "build": self.lib.smartpot_engine_build_info().decode("utf-8"),
+            "available": False,
+            "engine": "Python (NumPy / Scipy fallback)",
+            "build": "Standard CPython interpreter",
+            "tier": "python",
         }
 
     def theil_sen(self, hours: np.ndarray, values: np.ndarray) -> tuple[float, float, float]:
-        if not self.is_available or self.lib is None:
-            raise RuntimeError("Motor nativo C++ no cargado")
-
         n = len(hours)
         if n == 0:
             return 0.0, 0.0, 0.0
 
-        c_hours = (ctypes.c_double * n)(*hours.astype(np.float64))
-        c_values = (ctypes.c_double * n)(*values.astype(np.float64))
-        out_res = CTheilSenResult()
+        if self.tier == "cython" and self.cy_module is not None:
+            c_hours = np.ascontiguousarray(hours, dtype=np.float64)
+            c_values = np.ascontiguousarray(values, dtype=np.float64)
+            return self.cy_module.cy_theil_sen(c_hours, c_values)
 
-        status = self.lib.smartpot_theil_sen(c_hours, c_values, n, ctypes.byref(out_res))
-        if status != 0:
-            raise ValueError(f"Fallo en smartpot_theil_sen (código {status})")
+        if self.tier == "ctypes" and self.lib is not None:
+            c_hours_buf = (ctypes.c_double * n)(*hours.astype(np.float64))
+            c_values_buf = (ctypes.c_double * n)(*values.astype(np.float64))
+            out_res = CTheilSenResult()
+            status = self.lib.smartpot_theil_sen(c_hours_buf, c_values_buf, n, ctypes.byref(out_res))
+            if status != 0:
+                raise ValueError(f"Fallo en smartpot_theil_sen (código {status})")
+            return float(out_res.slope), float(out_res.intercept), float(out_res.agreement)
 
-        return float(out_res.slope), float(out_res.intercept), float(out_res.agreement)
+        raise RuntimeError("Motor nativo C++ no cargado")
 
     def fuzzy_health(self, deviations: dict[str, float]) -> dict[str, Any]:
-        if not self.is_available or self.lib is None:
-            raise RuntimeError("Motor nativo C++ no cargado")
-
-        items = list(deviations.items())
-        count = len(items)
-        if count == 0:
+        if not deviations:
             return {"index": 0.0, "level": "UNKNOWN", "label": "Sin datos", "by_parameter": {}}
 
-        param_names_bytes = [k.encode("utf-8") for k, _ in items]
-        c_names = (ctypes.c_char_p * count)(*param_names_bytes)
-        c_devs = (ctypes.c_double * count)(*[float(v) for _, v in items])
-        out_res = CHealthResult()
+        if self.tier == "cython" and self.cy_module is not None:
+            return self.cy_module.cy_fuzzy_health(deviations)
 
-        status = self.lib.smartpot_fuzzy_health_index(c_names, c_devs, count, ctypes.byref(out_res))
-        if status != 0:
-            raise ValueError(f"Fallo en smartpot_fuzzy_health_index (código {status})")
+        if self.tier == "ctypes" and self.lib is not None:
+            items = list(deviations.items())
+            count = len(items)
+            param_names_bytes = [k.encode("utf-8") for k, _ in items]
+            c_names = (ctypes.c_char_p * count)(*param_names_bytes)
+            c_devs = (ctypes.c_double * count)(*[float(v) for _, v in items])
+            out_res = CHealthResult()
 
-        by_parameter: dict[str, float] = {}
-        for i in range(out_res.param_count):
-            p_name = bytes(out_res.param_names[i]).split(b"\0", 1)[0].decode("utf-8")
-            by_parameter[p_name] = float(out_res.param_scores[i])
+            status = self.lib.smartpot_fuzzy_health_index(c_names, c_devs, count, ctypes.byref(out_res))
+            if status != 0:
+                raise ValueError(f"Fallo en smartpot_fuzzy_health_index (código {status})")
 
-        level_str = bytes(out_res.level).split(b"\0", 1)[0].decode("utf-8")
-        label_str = bytes(out_res.label).split(b"\0", 1)[0].decode("utf-8")
+            by_parameter: dict[str, float] = {}
+            for i in range(out_res.param_count):
+                p_name = bytes(out_res.param_names[i]).split(b"\0", 1)[0].decode("utf-8")
+                by_parameter[p_name] = float(out_res.param_scores[i])
 
-        return {
-            "index": float(out_res.index),
-            "level": level_str,
-            "label": label_str,
-            "by_parameter": by_parameter,
-        }
+            level_str = bytes(out_res.level).split(b"\0", 1)[0].decode("utf-8")
+            label_str = bytes(out_res.label).split(b"\0", 1)[0].decode("utf-8")
+
+            return {
+                "index": float(out_res.index),
+                "level": level_str,
+                "label": label_str,
+                "by_parameter": by_parameter,
+            }
+
+        raise RuntimeError("Motor nativo C++ no cargado")
 
     def assess_quality(self, matrix: np.ndarray, bounds: list[tuple[float, float]]) -> dict[str, Any]:
-        if not self.is_available or self.lib is None:
-            raise RuntimeError("Motor nativo C++ no cargado")
-
         rows, cols = matrix.shape
-        flat = matrix.astype(np.float64).flatten()
-        c_matrix = (ctypes.c_double * len(flat))(*flat)
+        if rows == 0 or cols == 0:
+            return {
+                "rows": 0, "cols": 0, "completeness": 0.0, "validity": 0.0,
+                "outliers": 0.0, "score": 0.0, "keep": np.zeros(0, dtype=bool)
+            }
 
-        c_bounds = (CPhysicalBound * cols)()
-        for i in range(cols):
-            c_bounds[i].min_val = float(bounds[i][0])
-            c_bounds[i].max_val = float(bounds[i][1])
+        if self.tier == "cython" and self.cy_module is not None:
+            c_mat = np.ascontiguousarray(matrix, dtype=np.float64)
+            return self.cy_module.cy_assess_quality(c_mat, bounds)
 
-        out_report = CQualityReport()
-        out_keep = (ctypes.c_uint8 * rows)()
+        if self.tier == "ctypes" and self.lib is not None:
+            flat = matrix.astype(np.float64).flatten()
+            c_matrix = (ctypes.c_double * len(flat))(*flat)
+            c_bounds = (CPhysicalBound * cols)()
+            for i in range(cols):
+                c_bounds[i].min_val = float(bounds[i][0])
+                c_bounds[i].max_val = float(bounds[i][1])
 
-        status = self.lib.smartpot_quality_assess(
-            c_matrix, rows, cols, c_bounds, ctypes.byref(out_report), out_keep
-        )
-        if status != 0:
-            raise ValueError(f"Fallo en smartpot_quality_assess (código {status})")
+            out_report = CQualityReport()
+            out_keep = (ctypes.c_uint8 * rows)()
+            status = self.lib.smartpot_quality_assess(
+                c_matrix, rows, cols, c_bounds, ctypes.byref(out_report), out_keep
+            )
+            if status != 0:
+                raise ValueError(f"Fallo en smartpot_quality_assess (código {status})")
 
-        keep_array = np.array(list(out_keep), dtype=bool)
-        return {
-            "rows": out_report.rows,
-            "cols": out_report.cols,
-            "completeness": float(out_report.completeness),
-            "validity": float(out_report.validity),
-            "outliers": float(out_report.outliers),
-            "score": float(out_report.score),
-            "keep": keep_array,
-        }
+            keep_array = np.array(list(out_keep), dtype=bool)
+            return {
+                "rows": out_report.rows,
+                "cols": out_report.cols,
+                "completeness": float(out_report.completeness),
+                "validity": float(out_report.validity),
+                "outliers": float(out_report.outliers),
+                "score": float(out_report.score),
+                "keep": keep_array,
+            }
 
-    def normalize(self, values: list[float], ranges: list[tuple[float, float]]) -> list[float]:
-        if not self.is_available or self.lib is None:
-            raise RuntimeError("Motor nativo C++ no cargado")
-
-        count = len(values)
-        c_vals = (ctypes.c_double * count)(*values)
-        c_ranges = (CParamRange * count)()
-        for i in range(count):
-            c_ranges[i].min_val = ranges[i][0]
-            c_ranges[i].max_val = ranges[i][1]
-
-        out_norm = (ctypes.c_double * count)()
-        status = self.lib.smartpot_features_normalize(c_vals, c_ranges, count, out_norm)
-        if status != 0:
-            raise ValueError(f"Fallo en smartpot_features_normalize (código {status})")
-
-        return [float(x) for x in out_norm]
+        raise RuntimeError("Motor nativo C++ no cargado")
 
     def circular_hour(self, hour: float) -> tuple[float, float]:
-        if not self.is_available or self.lib is None:
-            raise RuntimeError("Motor nativo C++ no cargado")
+        if self.tier == "cython" and self.cy_module is not None:
+            return self.cy_module.cy_circular_hour(hour)
 
-        sin_val = ctypes.c_double()
-        cos_val = ctypes.c_double()
-        status = self.lib.smartpot_features_circular_hour(hour, ctypes.byref(sin_val), ctypes.byref(cos_val))
-        if status != 0:
-            raise ValueError(f"Fallo en smartpot_features_circular_hour (código {status})")
+        if self.tier == "ctypes" and self.lib is not None:
+            sin_val = ctypes.c_double()
+            cos_val = ctypes.c_double()
+            status = self.lib.smartpot_features_circular_hour(hour, ctypes.byref(sin_val), ctypes.byref(cos_val))
+            if status != 0:
+                raise ValueError(f"Fallo en smartpot_features_circular_hour (código {status})")
+            return float(sin_val.value), float(cos_val.value)
 
-        return float(sin_val.value), float(cos_val.value)
+        raise RuntimeError("Motor nativo C++ no cargado")
 
 
 # Instancia única del puente nativo
