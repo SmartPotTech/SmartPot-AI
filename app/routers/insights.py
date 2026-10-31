@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 
 from app.core.security import require_service_token
+from app.engine.native_bridge import engine
 from app.knowledge.profiles import PROFILES
 from app.schemas.fleet import FleetRequest, FleetResponse
 from app.schemas.insight import InsightRequest, InsightResponse
@@ -33,3 +34,8 @@ def crop_profiles() -> list[CropProfileOut]:
 @router.get("/models", summary="Exactitud de los modelos entrenados al arrancar")
 def models(request: Request) -> dict[str, float]:
     return {name: round(value, 4) for name, value in request.app.state.models.metrics.items()}
+
+
+@router.get("/engine", summary="Estado y telemetría del motor de cómputo en C++")
+def engine_status() -> dict[str, object]:
+    return engine.get_info()
