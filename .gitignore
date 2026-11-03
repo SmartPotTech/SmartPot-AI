@@ -1,0 +1,6 @@
+/target
+**/*.rs.bk
+.env
+.idea
+*.log
+__pycache__/

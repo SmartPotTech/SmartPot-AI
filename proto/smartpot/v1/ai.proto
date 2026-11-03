@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package smartpot.v1;
+
+option go_package = "github.com/SmartPotTech/SmartPot-API-Go/internal/proto/v1;smartpotv1";
+
+// JsonBody lleva el mismo JSON del contrato REST de SmartPot-AI (/v1/insights y /v1/fleet). Los esquemas de la IA
+// son la única definición: gRPC y REST no pueden desincronizarse y un campo nuevo llega a la API sin regenerar código.
+message JsonBody {
+  bytes json = 1;
+}
+
+// SmartPotAIService es el transporte rápido entre la API y la IA: HTTP/2 por socket UNIX (mismo servidor) o por TCP
+// interno. Se autentica con el metadato "authorization: Bearer <SMARTPOT_AI_TOKEN>". Si no está disponible, la API
+// usa REST por HTTP/1.1, que pasa por cualquier proxy.
+service SmartPotAIService {
+  // Evalúa una lectura: cuerpo InsightRequest, respuesta InsightResponse.
+  rpc EvaluateInsight (JsonBody) returns (JsonBody);
+  // Analiza los cultivos de una cuenta: cuerpo FleetRequest, respuesta FleetResponse.
+  rpc AnalyzeFleet (JsonBody) returns (JsonBody);
+}

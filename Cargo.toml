@@ -1,0 +1,55 @@
+[package]
+name = "smartpot-ia"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.88"
+authors = ["Sebastián López O <sebastianlopezosorno2005@gmail.com>"]
+description = "Inferencia agronómica de SmartPot en Rust: sistema experto, lógica difusa, modelos, agente, pronóstico y flota con REST y gRPC"
+license = "MIT"
+repository = "https://github.com/SmartPotTech/SmartPot-IA-Rust"
+
+[lib]
+name = "smartpot_ia"
+path = "src/lib.rs"
+
+[[bin]]
+name = "smartpot-ia"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1.48", features = ["macros", "rt-multi-thread", "net", "signal", "sync", "time", "fs"] }
+tokio-stream = { version = "0.1", features = ["net"] }
+axum = { version = "0.8", features = ["macros"] }
+tower = { version = "0.5", features = ["util"] }
+tower-http = { version = "0.7", features = ["trace", "limit"] }
+tonic = "0.14"
+tonic-prost = "0.14"
+prost = "0.14"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
+bytes = "1"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock", "serde"] }
+subtle = "2.6"
+ed25519-dalek = "3.0"
+blake2 = "0.11"
+hex = "0.4"
+arc-swap = "1.7"
+thiserror = "2.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[build-dependencies]
+tonic-prost-build = "0.14"
+protox = "0.10"
+
+[dev-dependencies]
+hyper-util = { version = "0.1", features = ["tokio"] }
+tempfile = "3"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
