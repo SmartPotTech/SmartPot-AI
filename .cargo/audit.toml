@@ -1,0 +1,4 @@
+# Avisos de RustSec aceptados de forma explícita. Hoy no hay ninguno: `cargo audit` sale limpio (234 dependencias,
+# 2026-11-02). Si alguno se acepta, va aquí con su motivo y la condición para quitarlo.
+[advisories]
+ignore = []
