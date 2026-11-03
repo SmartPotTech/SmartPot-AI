@@ -1,0 +1,270 @@
+{
+ "crop_profiles": [
+  {
+   "type": "LETTUCE",
+   "name": "Lechuga",
+   "description": "Hoja de clima fresco; se espiga con calor y luz excesiva.",
+   "ranges": {
+    "temperature": {
+     "min": 15.0,
+     "max": 22.0,
+     "unit": "°C",
+     "label": "la temperatura"
+    },
+    "humidity": {
+     "min": 50.0,
+     "max": 70.0,
+     "unit": "%",
+     "label": "la humedad del aire"
+    },
+    "brightness": {
+     "min": 300.0,
+     "max": 1400.0,
+     "unit": "lux",
+     "label": "la luz"
+    },
+    "ph": {
+     "min": 5.5,
+     "max": 6.5,
+     "unit": "pH",
+     "label": "el pH"
+    },
+    "tds": {
+     "min": 560.0,
+     "max": 840.0,
+     "unit": "ppm",
+     "label": "el nivel de nutrientes (TDS)"
+    },
+    "soilMoisture": {
+     "min": 60.0,
+     "max": 80.0,
+     "unit": "%",
+     "label": "la humedad del sustrato"
+    }
+   }
+  },
+  {
+   "type": "TOMATO",
+   "name": "Tomate",
+   "description": "Fruto exigente en luz, calor y nutrientes durante la floración.",
+   "ranges": {
+    "temperature": {
+     "min": 20.0,
+     "max": 28.0,
+     "unit": "°C",
+     "label": "la temperatura"
+    },
+    "humidity": {
+     "min": 60.0,
+     "max": 80.0,
+     "unit": "%",
+     "label": "la humedad del aire"
+    },
+    "brightness": {
+     "min": 600.0,
+     "max": 1800.0,
+     "unit": "lux",
+     "label": "la luz"
+    },
+    "ph": {
+     "min": 5.5,
+     "max": 6.5,
+     "unit": "pH",
+     "label": "el pH"
+    },
+    "tds": {
+     "min": 1400.0,
+     "max": 2800.0,
+     "unit": "ppm",
+     "label": "el nivel de nutrientes (TDS)"
+    },
+    "soilMoisture": {
+     "min": 55.0,
+     "max": 75.0,
+     "unit": "%",
+     "label": "la humedad del sustrato"
+    }
+   }
+  },
+  {
+   "type": "STRAWBERRY",
+   "name": "Fresa",
+   "description": "Sensible al exceso de sales y a la humedad alta, que favorece hongos.",
+   "ranges": {
+    "temperature": {
+     "min": 18.0,
+     "max": 26.0,
+     "unit": "°C",
+     "label": "la temperatura"
+    },
+    "humidity": {
+     "min": 60.0,
+     "max": 75.0,
+     "unit": "%",
+     "label": "la humedad del aire"
+    },
+    "brightness": {
+     "min": 500.0,
+     "max": 1600.0,
+     "unit": "lux",
+     "label": "la luz"
+    },
+    "ph": {
+     "min": 5.5,
+     "max": 6.2,
+     "unit": "pH",
+     "label": "el pH"
+    },
+    "tds": {
+     "min": 700.0,
+     "max": 980.0,
+     "unit": "ppm",
+     "label": "el nivel de nutrientes (TDS)"
+    },
+    "soilMoisture": {
+     "min": 60.0,
+     "max": 80.0,
+     "unit": "%",
+     "label": "la humedad del sustrato"
+    }
+   }
+  },
+  {
+   "type": "BASIL",
+   "name": "Albahaca",
+   "description": "Aromática de clima cálido; tolera ambientes secos.",
+   "ranges": {
+    "temperature": {
+     "min": 20.0,
+     "max": 30.0,
+     "unit": "°C",
+     "label": "la temperatura"
+    },
+    "humidity": {
+     "min": 40.0,
+     "max": 60.0,
+     "unit": "%",
+     "label": "la humedad del aire"
+    },
+    "brightness": {
+     "min": 500.0,
+     "max": 1600.0,
+     "unit": "lux",
+     "label": "la luz"
+    },
+    "ph": {
+     "min": 5.5,
+     "max": 6.5,
+     "unit": "pH",
+     "label": "el pH"
+    },
+    "tds": {
+     "min": 700.0,
+     "max": 1120.0,
+     "unit": "ppm",
+     "label": "el nivel de nutrientes (TDS)"
+    },
+    "soilMoisture": {
+     "min": 50.0,
+     "max": 70.0,
+     "unit": "%",
+     "label": "la humedad del sustrato"
+    }
+   }
+  },
+  {
+   "type": "SPINACH",
+   "name": "Espinaca",
+   "description": "Hoja de clima fresco con alta demanda de nitrógeno.",
+   "ranges": {
+    "temperature": {
+     "min": 15.0,
+     "max": 24.0,
+     "unit": "°C",
+     "label": "la temperatura"
+    },
+    "humidity": {
+     "min": 50.0,
+     "max": 70.0,
+     "unit": "%",
+     "label": "la humedad del aire"
+    },
+    "brightness": {
+     "min": 300.0,
+     "max": 1400.0,
+     "unit": "lux",
+     "label": "la luz"
+    },
+    "ph": {
+     "min": 6.0,
+     "max": 7.0,
+     "unit": "pH",
+     "label": "el pH"
+    },
+    "tds": {
+     "min": 1260.0,
+     "max": 1610.0,
+     "unit": "ppm",
+     "label": "el nivel de nutrientes (TDS)"
+    },
+    "soilMoisture": {
+     "min": 60.0,
+     "max": 80.0,
+     "unit": "%",
+     "label": "la humedad del sustrato"
+    }
+   }
+  },
+  {
+   "type": "PEPPER",
+   "name": "Pimentón",
+   "description": "Fruto de clima cálido; necesita luz intensa y pH estable.",
+   "ranges": {
+    "temperature": {
+     "min": 21.0,
+     "max": 29.0,
+     "unit": "°C",
+     "label": "la temperatura"
+    },
+    "humidity": {
+     "min": 50.0,
+     "max": 70.0,
+     "unit": "%",
+     "label": "la humedad del aire"
+    },
+    "brightness": {
+     "min": 600.0,
+     "max": 1800.0,
+     "unit": "lux",
+     "label": "la luz"
+    },
+    "ph": {
+     "min": 5.8,
+     "max": 6.5,
+     "unit": "pH",
+     "label": "el pH"
+    },
+    "tds": {
+     "min": 1400.0,
+     "max": 2100.0,
+     "unit": "ppm",
+     "label": "el nivel de nutrientes (TDS)"
+    },
+    "soilMoisture": {
+     "min": 55.0,
+     "max": 75.0,
+     "unit": "%",
+     "label": "la humedad del sustrato"
+    }
+   }
+  }
+ ],
+ "models": {
+  "ventilation_accuracy": 0.895,
+  "ph_correction_accuracy": 0.9425,
+  "anomaly_detection_rate": 1.0
+ },
+ "unauthorized": {
+  "detail": "Token de servicio inválido"
+ }
+}

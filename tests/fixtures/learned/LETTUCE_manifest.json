@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "crop_type": "LETTUCE",
+  "created_at": 1793675390.527154,
+  "artifacts": {
+    "LETTUCE_inference.json": {
+      "blake2b": "0cea61e87d1f9e1a288e06cd04fd3d5ac5eb064de699a99144950750673da89f",
+      "size_bytes": 2571896,
+      "format": "SMARTPOT_JSON"
+    }
+  },
+  "public_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+  "signature_hex": "fd686429fcdd95aef79aaeb591daaa16c683b44280eddd2405968708c5f073085adc2a999656759d4193219d21f952d43a864db24ef59860dd0791ca85fafc00"
+}
