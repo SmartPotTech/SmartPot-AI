@@ -1,11 +1,13 @@
-"""Genera los casos de paridad de lo aprendido: modelos del Trainer evaluados por Rust y por el servicio en Python.
+"""Generate the learned-model parity cases: Trainer models evaluated by Rust and by the Python service.
 
-Paso 1, con el entorno de SmartPot-Trainer: entrena lechuga con datos sintéticos, exporta `LETTUCE_inference.json`
-firmado con una clave de prueba fija y guarda el estado para el paso 2.
+Step 1, with the SmartPot-Trainer environment: trains lettuce on synthetic data, exports `LETTUCE_inference.json`
+signed with a fixed test key and stores the state for step 2.
 
     uv run --project ../SmartPot-Trainer python tools/generate_learned_fixtures.py train ../SmartPot-Trainer
 
-Paso 2, con el entorno de SmartPot-AI: carga esos modelos en el servicio en Python y guarda sus respuestas.
+Step 2, with the SmartPot-AI environment: loads those models into the Python service and stores its responses.
+The Python service answers in Spanish; the expected texts are regenerated in English with
+`SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored` (numbers and structure stay unchanged).
 
     uv run --project ../SmartPot-AI python tools/generate_learned_fixtures.py expect ../SmartPot-AI
 """
@@ -91,7 +93,7 @@ def train(trainer: Path) -> None:
     WORK.mkdir(parents=True, exist_ok=True)
     joblib.dump({"sklearn": sklearn.__version__, "state": state}, WORK / "LETTUCE.joblib")
     (WORK / "requests.json").write_text(json.dumps(requests), encoding="utf-8")
-    print(f"Modelos en {TARGET}; {len(requests)} peticiones; lecturas de entrenamiento: {state.readings_at_training}")
+    print(f"Models in {TARGET}; {len(requests)} requests; training readings: {state.readings_at_training}")
 
 
 def expect(ai: Path) -> None:
@@ -111,7 +113,7 @@ def expect(ai: Path) -> None:
     cases = []
     with TestClient(create_app()) as client:
         service = client.app.state.learning
-        assert "LETTUCE" in service.types, "el servicio en Python no cargó los modelos del Trainer"
+        assert "LETTUCE" in service.types, "the Python service did not load the Trainer models"
         # Sin Trainer, la IA en Rust informa las lecturas con las que se entrenó: el oráculo hace lo mismo.
         service.counts = lambda: {"LETTUCE": {"readings": readings, "crops": 2}}
         for body in requests:
@@ -119,7 +121,7 @@ def expect(ai: Path) -> None:
             cases.append({"request": body, "status": response.status_code, "response": response.json()})
     (TARGET / "expected_insights.json").write_text(json.dumps(cases, ensure_ascii=False, indent=1), encoding="utf-8")
     learned = sum(1 for c in cases if c["response"].get("learning", {}).get("predictions"))
-    print(f"{len(cases)} respuestas; {learned} con predicciones aprendidas")
+    print(f"{len(cases)} responses; {learned} with learned predictions")
 
 
 if __name__ == "__main__":

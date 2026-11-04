@@ -124,7 +124,7 @@ impl Validator {
         match value {
             Value::Object(map) => Some(map),
             _ => {
-                self.fail(path.to_string(), "Debe ser un objeto");
+                self.fail(path.to_string(), "Must be an object");
                 None
             }
         }
@@ -139,7 +139,7 @@ impl Validator {
         match parsed {
             Some(v) if v.is_finite() => Some(v),
             _ => {
-                self.fail(path.to_string(), "Debe ser un número");
+                self.fail(path.to_string(), "Must be a number");
                 None
             }
         }
@@ -150,13 +150,13 @@ impl Validator {
         if number < min {
             self.fail(
                 path.to_string(),
-                format!("Debe ser mayor o igual que {}", plain(min)),
+                format!("Must be greater than or equal to {}", plain(min)),
             );
             None
         } else if number > max {
             self.fail(
                 path.to_string(),
-                format!("Debe ser menor o igual que {}", plain(max)),
+                format!("Must be less than or equal to {}", plain(max)),
             );
             None
         } else {
@@ -175,19 +175,19 @@ impl Validator {
             _ => None,
         };
         let Some(number) = parsed else {
-            self.fail(path.to_string(), "Debe ser un número entero");
+            self.fail(path.to_string(), "Must be an integer");
             return None;
         };
         if number < min {
             self.fail(
                 path.to_string(),
-                format!("Debe ser mayor o igual que {min}"),
+                format!("Must be greater than or equal to {min}"),
             );
             None
         } else if number > max {
             self.fail(
                 path.to_string(),
-                format!("Debe ser menor o igual que {max}"),
+                format!("Must be less than or equal to {max}"),
             );
             None
         } else {
@@ -199,7 +199,7 @@ impl Validator {
         match value {
             Value::String(s) => Some(s),
             _ => {
-                self.fail(path.to_string(), "Debe ser un texto");
+                self.fail(path.to_string(), "Must be a string");
                 None
             }
         }
@@ -211,13 +211,13 @@ impl Validator {
         if length < min {
             self.fail(
                 path.to_string(),
-                format!("Debe tener al menos {min} caracteres"),
+                format!("Must be at least {min} characters"),
             );
             None
         } else if length > max {
             self.fail(
                 path.to_string(),
-                format!("Debe tener como máximo {max} caracteres"),
+                format!("Must be at most {max} characters"),
             );
             None
         } else {
@@ -241,7 +241,7 @@ impl Validator {
             _ => None,
         };
         if parsed.is_none() {
-            self.fail(path.to_string(), "Debe ser verdadero o falso");
+            self.fail(path.to_string(), "Must be true or false");
         }
         parsed
     }
@@ -254,20 +254,17 @@ impl Validator {
         max: usize,
     ) -> Option<&'a Vec<Value>> {
         let Value::Array(items) = value else {
-            self.fail(path.to_string(), "Debe ser una lista");
+            self.fail(path.to_string(), "Must be a list");
             return None;
         };
         if items.len() < min {
             self.fail(
                 path.to_string(),
-                format!("Debe tener al menos {min} elemento(s)"),
+                format!("Must have at least {min} item(s)"),
             );
             None
         } else if items.len() > max {
-            self.fail(
-                path.to_string(),
-                format!("Debe tener como máximo {max} elementos"),
-            );
+            self.fail(path.to_string(), format!("Must have at most {max} items"));
             None
         } else {
             Some(items)
@@ -276,17 +273,14 @@ impl Validator {
 
     fn crop_type(&mut self, value: Option<&Value>, path: &str) -> Option<&'static CropProfile> {
         let Some(value) = value else {
-            self.fail(path.to_string(), "Campo obligatorio");
+            self.fail(path.to_string(), "Required field");
             return None;
         };
         let text = self.text(value, path)?;
         match profile(text) {
             Some(found) => Some(found),
             None => {
-                self.fail(
-                    path.to_string(),
-                    format!("Tipo de cultivo desconocido: {text}"),
-                );
+                self.fail(path.to_string(), format!("Unknown crop type: {text}"));
                 None
             }
         }
@@ -303,7 +297,7 @@ impl Validator {
             _ => None,
         };
         if parsed.is_none() {
-            self.fail(path.to_string(), "Debe ser una fecha y hora ISO 8601");
+            self.fail(path.to_string(), "Must be an ISO 8601 date and time");
         }
         parsed
     }
@@ -364,7 +358,7 @@ impl Validator {
                 if place.setting.is_none() {
                     self.fail(
                         "placement.setting".into(),
-                        "Debe ser uno de: INDOOR, OUTDOOR",
+                        "Must be one of: INDOOR, OUTDOOR",
                     );
                 }
             }
@@ -375,7 +369,7 @@ impl Validator {
                 if place.exposure.is_none() {
                     self.fail(
                         "placement.exposure".into(),
-                        "Debe ser uno de: FULL_SUN, PARTIAL_SUN, SHADE",
+                        "Must be one of: FULL_SUN, PARTIAL_SUN, SHADE",
                     );
                 }
             }
@@ -389,7 +383,7 @@ impl Validator {
             match field(object, camel, camel) {
                 Some(raw) => v.bounded(raw, &format!("weather.{camel}"), min, max),
                 None => {
-                    v.fail(format!("weather.{camel}"), "Campo obligatorio");
+                    v.fail(format!("weather.{camel}"), "Required field");
                     None
                 }
             }
@@ -471,7 +465,7 @@ pub fn parse_insight(body: &Value) -> Result<InsightRequest, Vec<FieldError>> {
     let measures = match field(object, "measures", "measures") {
         Some(raw) => v.measures(raw, "measures"),
         None => {
-            v.fail("measures".into(), "Campo obligatorio");
+            v.fail("measures".into(), "Required field");
             None
         }
     };
@@ -494,8 +488,8 @@ pub fn parse_insight(body: &Value) -> Result<InsightRequest, Vec<FieldError>> {
         return Err(v.errors);
     }
     Ok(InsightRequest {
-        profile: profile.expect("validado"),
-        measures: measures.expect("validado"),
+        profile: profile.expect("validated"),
+        measures: measures.expect("validated"),
         history,
         actuators,
         local_hour,
@@ -524,14 +518,14 @@ pub fn parse_fleet(body: &Value) -> Result<FleetRequest, Vec<FieldError>> {
                     let id = match field(crop, "id", "id") {
                         Some(raw) => v.sized_text(raw, &join(&path, "id"), 1, 64),
                         None => {
-                            v.fail(join(&path, "id"), "Campo obligatorio");
+                            v.fail(join(&path, "id"), "Required field");
                             None
                         }
                     };
                     let name = match field(crop, "name", "name") {
                         Some(raw) => v.sized_text(raw, &join(&path, "name"), 1, 80),
                         None => {
-                            v.fail(join(&path, "name"), "Campo obligatorio");
+                            v.fail(join(&path, "name"), "Required field");
                             None
                         }
                     };
@@ -544,9 +538,9 @@ pub fn parse_fleet(body: &Value) -> Result<FleetRequest, Vec<FieldError>> {
                     let actuators = v.actuators(crop, &path);
                     if v.errors.len() == before {
                         crops.push(FleetCrop {
-                            id: id.expect("validado"),
-                            name: name.expect("validado"),
-                            profile: profile.expect("validado"),
+                            id: id.expect("validated"),
+                            name: name.expect("validated"),
+                            profile: profile.expect("validated"),
                             measures,
                             actuators,
                         });
@@ -554,7 +548,7 @@ pub fn parse_fleet(body: &Value) -> Result<FleetRequest, Vec<FieldError>> {
                 }
             }
         }
-        None => v.fail("crops".into(), "Campo obligatorio"),
+        None => v.fail("crops".into(), "Required field"),
     }
     let local_hour = v.local_hour(object);
     if !v.errors.is_empty() {
@@ -578,7 +572,7 @@ mod tests {
             parse_datetime("2026-10-01T12:00:00.123456789Z"),
             Some(utc + 123_456)
         );
-        assert!(parse_datetime("ayer").is_none());
+        assert!(parse_datetime("yesterday").is_none());
     }
 
     #[test]
@@ -609,7 +603,7 @@ mod tests {
                 "localHour"
             ]
         );
-        assert_eq!(errors[0].message, "Tipo de cultivo desconocido: CACTUS");
+        assert_eq!(errors[0].message, "Unknown crop type: CACTUS");
     }
 
     #[test]

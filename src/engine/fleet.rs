@@ -35,12 +35,12 @@ const SEED: u32 = 42;
 /// Cómo se nombra cada variable fuera de rango (por debajo, por encima).
 pub fn phrase(parameter: Parameter, status: Status) -> &'static str {
     let (low, high) = match parameter {
-        Parameter::Temperature => ("temperatura baja", "temperatura alta"),
-        Parameter::Humidity => ("aire seco", "aire muy húmedo"),
-        Parameter::Brightness => ("poca luz", "exceso de luz"),
-        Parameter::Ph => ("pH bajo", "pH alto"),
-        Parameter::Tds => ("pocos nutrientes", "exceso de nutrientes"),
-        Parameter::SoilMoisture => ("sustrato seco", "sustrato encharcado"),
+        Parameter::Temperature => ("low temperature", "high temperature"),
+        Parameter::Humidity => ("dry air", "very humid air"),
+        Parameter::Brightness => ("low light", "excess light"),
+        Parameter::Ph => ("low pH", "high pH"),
+        Parameter::Tds => ("low nutrients", "excess nutrients"),
+        Parameter::SoilMoisture => ("dry substrate", "waterlogged substrate"),
     };
     if status == Status::Low {
         low
@@ -154,7 +154,7 @@ fn shared_issues(results: &[CropResult], measured: &[usize]) -> Vec<SharedIssue>
             if ids.len() >= 2 && share >= SHARED_SHARE {
                 let text = phrase(parameter, status);
                 let message = format!(
-                    "{} en {} de {} cultivos: probablemente es el entorno y no un cultivo en particular.",
+                    "{} in {} of {} crops: likely an environmental issue rather than an individual crop.",
                     capitalize(text),
                     ids.len(),
                     measured.len()
@@ -184,8 +184,8 @@ fn describe_group(center: &[f64]) -> (String, String) {
     }
     if traits.is_empty() {
         return (
-            "En rango".into(),
-            "Las variables del grupo están, en promedio, dentro de su rango ideal.".into(),
+            "Within range".into(),
+            "Group variables are, on average, within their optimal range.".into(),
         );
     }
     let label = traits
@@ -193,10 +193,10 @@ fn describe_group(center: &[f64]) -> (String, String) {
         .take(2)
         .copied()
         .collect::<Vec<_>>()
-        .join(" y ");
+        .join(" and ");
     (
         capitalize(&label),
-        format!("En promedio: {}.", traits.join(", ")),
+        format!("On average: {}.", traits.join(", ")),
     )
 }
 
@@ -240,9 +240,9 @@ fn groups(request: &FleetRequest, results: &[CropResult]) -> Vec<CropGroup> {
     let distinct = rounded.len();
     if distinct < 2 {
         return vec![CropGroup {
-            label: "Condiciones similares".into(),
+            label: "Similar conditions".into(),
             crop_ids: ids,
-            description: "Todos los cultivos están en condiciones parecidas.".into(),
+            description: "All crops are under similar conditions.".into(),
         }];
     }
 
@@ -330,7 +330,7 @@ fn fleet_actions(
                         crop_ids: Vec::new(),
                         reason: action.reason,
                     });
-                    merged.last_mut().expect("recién agregado")
+                    merged.last_mut().expect("just added")
                 }
             };
             entry.crop_ids.push(crop.id.clone());
@@ -353,10 +353,10 @@ fn summary(
     actions: &[FleetAction],
 ) -> String {
     let Some(average) = average else {
-        return "Todavía no hay lecturas para comparar tus cultivos.".into();
+        return "There are no readings yet to compare your crops.".into();
     };
     let mut text = format!(
-        "Tus {} cultivos con lecturas promedian {}/100 de salud.",
+        "Your {} crops with readings average {}/100 health.",
         measured.len(),
         no_decimals(average)
     );
@@ -364,27 +364,27 @@ fn summary(
     let worst_index = index_of(worst);
     if worst_index < 70.0 {
         text.push_str(&format!(
-            " El que más atención necesita es «{}» ({}/100).",
+            " The one needing the most attention is \"{}\" ({}/100).",
             worst.name,
             no_decimals(worst_index)
         ));
     }
     if !shared.is_empty() {
-        let noun = if shared.len() == 1 {
-            "problema compartido"
+        let (verb, noun) = if shared.len() == 1 {
+            ("is", "shared environmental issue")
         } else {
-            "problemas compartidos"
+            ("are", "shared environmental issues")
         };
-        text.push_str(&format!(" Hay {} {noun} del entorno.", shared.len()));
+        text.push_str(&format!(" There {verb} {} {noun}.", shared.len()));
     }
     if !actions.is_empty() {
         let noun = if actions.len() == 1 {
-            "acción"
+            "bulk action"
         } else {
-            "acciones"
+            "bulk actions"
         };
         text.push_str(&format!(
-            " El asistente sugiere {} {noun} en bloque.",
+            " The assistant suggests {} {noun}.",
             actions.len()
         ));
     }

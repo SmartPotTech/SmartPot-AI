@@ -14,13 +14,13 @@ pub struct Invalid(pub Vec<FieldError>);
 
 impl Invalid {
     pub fn body(&self) -> Value {
-        json!({"detail": "Datos inválidos", "errors": self.0})
+        json!({"detail": "Invalid data", "errors": self.0})
     }
 
     pub fn json() -> Self {
         Invalid(vec![FieldError {
             field: String::new(),
-            message: "El cuerpo no es JSON válido".into(),
+            message: "Request body is not valid JSON".into(),
         }])
     }
 }
@@ -34,12 +34,12 @@ pub fn insight(state: &AppState, body: &[u8]) -> Result<Vec<u8>, Invalid> {
     let value: Value = serde_json::from_slice(body).map_err(|_| Invalid::json())?;
     let request = parse_insight(&value).map_err(Invalid)?;
     let response = insights::analyze(state, &request, now());
-    Ok(serde_json::to_vec(&response).expect("la respuesta siempre se serializa"))
+    Ok(serde_json::to_vec(&response).expect("the response always serializes"))
 }
 
 /// `POST /v1/fleet` (y `AnalyzeFleet` por gRPC).
 pub fn fleet(body: &[u8]) -> Result<Vec<u8>, Invalid> {
     let value: Value = serde_json::from_slice(body).map_err(|_| Invalid::json())?;
     let request = parse_fleet(&value).map_err(Invalid)?;
-    Ok(serde_json::to_vec(&fleet::analyze(&request)).expect("la respuesta siempre se serializa"))
+    Ok(serde_json::to_vec(&fleet::analyze(&request)).expect("the response always serializes"))
 }

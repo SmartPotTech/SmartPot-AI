@@ -179,19 +179,27 @@ fn describe(
         }
     }
 
-    let label = capitalize(range.label);
-    let per_hour = format!("{} {} por hora", short(slope.abs()), range.unit);
-    let verb = if slope > 0.0 { "sube" } else { "baja" };
+    let label = if parameter == Parameter::Ph {
+        "pH".to_string()
+    } else {
+        capitalize(range.label)
+    };
+    let per_hour = format!("{} {} per hour", short(slope.abs()), range.unit);
+    let verb = if slope > 0.0 {
+        "is rising"
+    } else {
+        "is falling"
+    };
     let message = match (trend, hours_to_limit, limit) {
-        (Trend::Stable, _, _) => format!("{label} se mantiene estable."),
+        (Trend::Stable, _, _) => format!("{label} remains stable."),
         (_, Some(hours), Some(bound)) => {
             let (value, word) = if bound == Limit::Max {
-                (range.max, "máximo")
+                (range.max, "maximum")
             } else {
-                (range.min, "mínimo")
+                (range.min, "minimum")
             };
             format!(
-                "{label} {verb} {per_hour}: llegará al {word} ({} {}) en {}.",
+                "{label} {verb} {per_hour}: it will reach the {word} ({} {}) in {}.",
                 short(value),
                 range.unit,
                 hours_text(hours)
@@ -216,12 +224,12 @@ fn describe(
 fn hours_text(value: f64) -> String {
     if value < 1.0 {
         let minutes = (py_round_int(value * 60.0 / 5.0) * 5).max(5);
-        return format!("unos {minutes} minutos");
+        return format!("about {minutes} minutes");
     }
     if value >= 1.5 {
-        format!("unas {} h", py_round_int(value))
+        format!("about {} h", py_round_int(value))
     } else {
-        "alrededor de 1 h".to_string()
+        "around 1 h".to_string()
     }
 }
 
@@ -287,7 +295,7 @@ mod tests {
         assert_eq!(soil.trend, Trend::Falling);
         assert_eq!(soil.limit, Some(Limit::Min));
         assert!(soil.message.starts_with(
-            "La humedad del sustrato baja 2 % por hora: llegará al mínimo (60 %) en unas 6 h."
+            "Substrate moisture is falling 2 % per hour: it will reach the minimum (60 %) in about 6 h."
         ));
     }
 

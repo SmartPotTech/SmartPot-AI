@@ -94,7 +94,7 @@ mod tests {
         assert_eq!(thousands(12_345), "12.345");
         assert_eq!(thousands(999), "999");
         assert_eq!(thousands(1_000_000), "1.000.000");
-        assert_eq!(capitalize("la humedad"), "La humedad");
-        assert_eq!(capitalize("ñandú"), "Ñandú");
+        assert_eq!(capitalize("soil moisture"), "Soil moisture");
+        assert_eq!(capitalize("pH"), "PH");
     }
 }

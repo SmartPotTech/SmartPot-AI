@@ -40,17 +40,17 @@ impl Settings {
 
     /// Construye la configuración con una función de búsqueda (las pruebas no tocan el entorno real).
     pub fn from_lookup(get: impl Fn(&str) -> Option<String>) -> Result<Self, String> {
-        let token = clean(get("SMARTPOT_AI_TOKEN")).ok_or("Falta SMARTPOT_AI_TOKEN")?;
+        let token = clean(get("SMARTPOT_AI_TOKEN")).ok_or("Missing SMARTPOT_AI_TOKEN")?;
         if token.chars().count() < MIN_TOKEN_LENGTH {
             return Err(format!(
-                "SMARTPOT_AI_TOKEN debe tener al menos {MIN_TOKEN_LENGTH} caracteres"
+                "SMARTPOT_AI_TOKEN must be at least {MIN_TOKEN_LENGTH} characters"
             ));
         }
         let port = |name: &str, default: u16| -> Result<u16, String> {
             match clean(get(name)) {
                 Some(raw) => raw
                     .parse()
-                    .map_err(|_| format!("{name} debe ser un puerto entre 0 y 65535")),
+                    .map_err(|_| format!("{name} must be a port between 0 and 65535")),
                 None => Ok(default),
             }
         };
@@ -65,7 +65,7 @@ impl Settings {
         let trainer_url = clean(get("SMARTPOT_TRAINER_URL"));
         if let Some(url) = &trainer_url {
             if !(url.starts_with("http://") || url.starts_with("https://")) {
-                return Err("SMARTPOT_TRAINER_URL debe empezar por http:// o https://".into());
+                return Err("SMARTPOT_TRAINER_URL must start with http:// or https://".into());
             }
         }
         let trainer_token = clean(get("SMARTPOT_TRAINER_TOKEN")).unwrap_or_else(|| token.clone());
@@ -87,7 +87,7 @@ impl Settings {
                 .parse::<i64>()
                 .ok()
                 .filter(|v| *v >= 50)
-                .ok_or("LEARNING_MIN_SAMPLES debe ser un entero desde 50")?,
+                .ok_or("LEARNING_MIN_SAMPLES must be an integer of at least 50")?,
             None => 200,
         };
         Ok(Self {
@@ -120,18 +120,18 @@ mod tests {
     #[test]
     fn requires_a_long_token() {
         assert!(settings(&[]).is_err());
-        assert!(settings(&[("SMARTPOT_AI_TOKEN", "corto")]).is_err());
-        let ok = settings(&[("SMARTPOT_AI_TOKEN", "un-token-suficientemente-largo")]).unwrap();
+        assert!(settings(&[("SMARTPOT_AI_TOKEN", "short")]).is_err());
+        let ok = settings(&[("SMARTPOT_AI_TOKEN", "a-sufficiently-long-service-token")]).unwrap();
         assert_eq!(ok.http_port, 8000);
         assert_eq!(ok.grpc_tcp_port, 0);
         assert!(ok.grpc_socket.is_none() && ok.trainer_url.is_none());
-        assert_eq!(ok.trainer_token, "un-token-suficientemente-largo");
+        assert_eq!(ok.trainer_token, "a-sufficiently-long-service-token");
     }
 
     #[test]
     fn reads_transport_and_trainer_settings() {
         let s = settings(&[
-            ("SMARTPOT_AI_TOKEN", "un-token-suficientemente-largo"),
+            ("SMARTPOT_AI_TOKEN", "a-sufficiently-long-service-token"),
             ("GRPC_UDS_PATH", "/var/run/smartpot/ai.sock"),
             ("GRPC_TCP_PORT", "50051"),
             ("SMARTPOT_TRAINER_URL", "http://trainer-smartpot:8001/"),
@@ -145,17 +145,17 @@ mod tests {
         assert_eq!(s.grpc_tcp_port, 50051);
         assert_eq!(s.models_dir, Some(PathBuf::from("/data").join("models")));
         assert!(settings(&[
-            ("SMARTPOT_AI_TOKEN", "un-token-suficientemente-largo"),
+            ("SMARTPOT_AI_TOKEN", "a-sufficiently-long-service-token"),
             ("SMARTPOT_TRAINER_URL", "ftp://x")
         ])
         .is_err());
         assert!(settings(&[
-            ("SMARTPOT_AI_TOKEN", "un-token-suficientemente-largo"),
+            ("SMARTPOT_AI_TOKEN", "a-sufficiently-long-service-token"),
             ("TRUSTED_MODEL_PUBLIC_KEY_HEX", "zz")
         ])
         .is_err());
         let off = settings(&[
-            ("SMARTPOT_AI_TOKEN", "un-token-suficientemente-largo"),
+            ("SMARTPOT_AI_TOKEN", "a-sufficiently-long-service-token"),
             ("DATA_DIR", ""),
         ])
         .unwrap();

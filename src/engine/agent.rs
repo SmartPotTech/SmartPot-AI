@@ -83,7 +83,7 @@ pub fn decide(
             "WATER_PUMP",
             "ACTIVATE",
             Some(if critical { 30 } else { 15 }),
-            "El sustrato está seco: riego automático.",
+            "The substrate is dry: automatic irrigation.",
         );
     } else if status(soil, Status::Optimal) && upcoming(Parameter::SoilMoisture) == Some(Limit::Min)
     {
@@ -91,7 +91,7 @@ pub fn decide(
             "WATER_PUMP",
             "ACTIVATE",
             Some(10),
-            "Riego preventivo: el sustrato llegará al mínimo en menos de 1 h.",
+            "Preventive irrigation: the substrate will reach the minimum in less than 1 h.",
         );
     } else if status(soil, Status::Optimal)
         && !resting
@@ -101,7 +101,7 @@ pub fn decide(
             "WATER_PUMP",
             "ACTIVATE",
             Some(10),
-            "Riego preventivo: lo aprendido de esta especie anticipa que el sustrato se secará en la próxima hora.",
+            "Preventive irrigation: learned models for this species anticipate the substrate will dry out within the next hour.",
         );
     }
 
@@ -111,21 +111,21 @@ pub fn decide(
             "UV_LIGHT",
             "DEACTIVATE",
             None,
-            "Es de noche: se apaga la luz ultravioleta para respetar el descanso de la planta.",
+            "It is nighttime: turning off the UV light to respect the plant's rest period.",
         );
     } else if status(light, Status::Low) {
         propose(
             "UV_LIGHT",
             "ACTIVATE",
             Some(900),
-            "Luz insuficiente: se enciende la luz ultravioleta 15 minutos.",
+            "Insufficient light: turning on the UV light for 15 minutes.",
         );
     } else if status(light, Status::High) {
         propose(
             "UV_LIGHT",
             "DEACTIVATE",
             None,
-            "Exceso de luz: se apaga la luz ultravioleta.",
+            "Excess light: turning off the UV light.",
         );
     }
 
@@ -137,7 +137,7 @@ pub fn decide(
             "FAN",
             "ACTIVATE",
             Some(600),
-            "Calor o humedad alta: ventilación por 10 minutos.",
+            "High heat or humidity: ventilating for 10 minutes.",
         );
     } else if status(temperature, Status::Optimal)
         && upcoming(Parameter::Temperature) == Some(Limit::Max)
@@ -146,7 +146,7 @@ pub fn decide(
             "FAN",
             "ACTIVATE",
             Some(600),
-            "Ventilación preventiva: la temperatura pasará el máximo en menos de 1 h.",
+            "Preventive ventilation: temperature will exceed the maximum in less than 1 h.",
         );
     } else if status(temperature, Status::Optimal)
         && facts.learned_overheat.unwrap_or(0.0) >= LEARNED_ACTION
@@ -155,14 +155,14 @@ pub fn decide(
             "FAN",
             "ACTIVATE",
             Some(600),
-            "Ventilación preventiva: lo aprendido de esta especie anticipa calor en la próxima hora.",
+            "Preventive ventilation: learned models for this species anticipate heat within the next hour.",
         );
     } else if status(temperature, Status::Low) {
         propose(
             "FAN",
             "DEACTIVATE",
             None,
-            "Temperatura baja: se apaga la ventilación.",
+            "Low temperature: turning off ventilation.",
         );
     }
 
@@ -171,7 +171,7 @@ pub fn decide(
             "HUMIDIFIER",
             "ACTIVATE",
             Some(300),
-            "Aire seco: humidificador por 5 minutos.",
+            "Dry air: running the humidifier for 5 minutes.",
         );
     }
 
@@ -185,7 +185,7 @@ pub fn decide(
             "PH_DOSER",
             "ACTIVATE",
             Some(3),
-            "pH alto: dosis corta de solución reductora.",
+            "High pH: short dose of pH Down solution.",
         );
     }
 
@@ -194,7 +194,7 @@ pub fn decide(
             "NUTRIENT_DOSER",
             "ACTIVATE",
             Some(3),
-            "Nutrientes bajos: dosis corta de solución nutritiva.",
+            "Low nutrients: short dose of nutrient solution.",
         );
     }
 

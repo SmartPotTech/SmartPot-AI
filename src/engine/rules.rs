@@ -66,30 +66,27 @@ fn nothing(_: &mut Memory) {}
 pub static RULES: [Rule; 21] = [
     Rule {
         name: "heat_stress",
-        title: "Estrés térmico",
+        title: "Heat stress",
         certainty: 0.9,
         salience: 20,
         condition: |m| is(m, Temperature, High) && is(m, Humidity, Low),
-        message: |_| {
-            "Calor con aire seco: la planta pierde agua más rápido de lo que la absorbe.".into()
-        },
+        message: |_| "Heat with dry air: the plant loses water faster than it absorbs it.".into(),
         conclude: |m| m.stress = Some("heat"),
     },
     Rule {
         name: "fungal_risk",
-        title: "Riesgo de hongos",
+        title: "Fungal risk",
         certainty: 0.8,
         salience: 20,
         condition: |m| is(m, Humidity, High) && warm(m),
         message: |_| {
-            "Humedad alta con temperatura templada: condiciones favorables para hongos y moho."
-                .into()
+            "High humidity with warm temperature: favorable conditions for fungi and mold.".into()
         },
         conclude: |m| m.risk = Some("fungal"),
     },
     Rule {
         name: "nutrient_lockout",
-        title: "Bloqueo de nutrientes",
+        title: "Nutrient lockout",
         certainty: 0.85,
         salience: 20,
         condition: |m| {
@@ -97,76 +94,70 @@ pub static RULES: [Rule; 21] = [
                 && matches!(m.status(Tds), Some(Optimal | High))
         },
         message: |_| {
-            "Hay nutrientes en la solución, pero el pH fuera de rango impide absorberlos. \
-             Corrige el pH antes de agregar más nutrientes."
+            "Nutrients are present in the solution, but out-of-range pH prevents absorption. \
+             Correct pH before adding more nutrients."
                 .into()
         },
         conclude: |m| m.lockout = true,
     },
     Rule {
         name: "root_rot_risk",
-        title: "Riesgo de pudrición de raíz",
+        title: "Root rot risk",
         certainty: 0.75,
         salience: 20,
         condition: |m| is(m, SoilMoisture, High) && is(m, Temperature, High),
         message: |_| {
-            "Sustrato encharcado y caliente: las raíces pierden oxígeno y aparecen patógenos."
-                .into()
+            "Waterlogged and warm substrate: roots lose oxygen and pathogens appear.".into()
         },
         conclude: |m| m.risk = Some("root_rot"),
     },
     Rule {
         name: "drought",
-        title: "Sequía",
+        title: "Drought",
         certainty: 0.9,
         salience: 15,
         condition: |m| m.critical(SoilMoisture) && is(m, SoilMoisture, Low),
-        message: |_| "El sustrato está muy seco: riega pronto para evitar marchitez.".into(),
+        message: |_| "The substrate is very dry: water soon to prevent wilting.".into(),
         conclude: |m| m.stress = Some("water"),
     },
     Rule {
         name: "etiolation",
-        title: "Crecimiento ahilado",
+        title: "Leggy growth",
         certainty: 0.7,
         salience: 15,
         condition: |m| is(m, Brightness, Low) && warm(m),
         message: |_| {
-            "Poca luz con temperatura cálida: la planta estira sus tallos buscando luz y se debilita.".into()
+            "Low light with warm temperature: the plant stretches its stems seeking light and weakens.".into()
         },
         conclude: nothing,
     },
     Rule {
         name: "cold_stress",
-        title: "Estrés por frío",
+        title: "Cold stress",
         certainty: 0.9,
         salience: 15,
         condition: |m| m.critical(Temperature) && is(m, Temperature, Low),
-        message: |_| {
-            "La temperatura está muy baja para la especie: el crecimiento se detiene.".into()
-        },
+        message: |_| "Temperature is too low for this species: growth stops.".into(),
         conclude: |m| m.stress = Some("cold"),
     },
     Rule {
         name: "salt_stress",
-        title: "Exceso de sales",
+        title: "Excess salts",
         certainty: 0.85,
         salience: 15,
         condition: |m| m.critical(Tds) && is(m, Tds, High),
-        message: |_| {
-            "La concentración de sales es tan alta que puede quemar las raíces. Diluye la solución."
-                .into()
-        },
+        message: |_| "Salt concentration is high enough to burn roots. Dilute the solution.".into(),
         conclude: nothing,
     },
     Rule {
         name: "ventilation_model",
-        title: "El modelo recomienda ventilar",
+        title: "Model recommends ventilation",
         certainty: 0.7,
         salience: 10,
         condition: |m| m.ventilation.unwrap_or(0.0) >= 0.7 && !m.has_fired(FUNGAL_RISK),
         message: |m| {
             format!(
-                "La regresión logística estima {} de necesidad de ventilación por la combinación de temperatura y humedad.",
+                "Logistic regression estimates a {} ventilation need based on temperature and humidity.",
                 percent(m.ventilation.unwrap_or(0.0))
             )
         },
@@ -174,26 +165,26 @@ pub static RULES: [Rule; 21] = [
     },
     Rule {
         name: "sensor_fault",
-        title: "Posible falla de sensor",
+        title: "Possible sensor fault",
         certainty: 0.6,
         salience: 5,
         condition: |m| m.anomaly.unwrap_or(0.0) >= 0.8 && m.critical_count() >= 2,
         message: |_| {
-            "La lectura es atípica frente al historial y varias variables están en valores extremos. \
-             Revisa la conexión y calibración de los sensores antes de actuar."
+            "The reading is anomalous compared to history and multiple variables are at extreme values. \
+             Check sensor wiring and calibration before acting."
                 .into()
         },
         conclude: |m| m.sensor_fault = true,
     },
     Rule {
         name: "critical_state",
-        title: "Estado crítico",
+        title: "Critical state",
         certainty: 0.95,
         salience: 0,
         condition: |m| m.critical_count() >= 2 && !m.sensor_fault,
         message: |m| {
             format!(
-                "{} variables están en nivel crítico: el cultivo necesita atención inmediata.",
+                "{} variables are at a critical level: the crop requires immediate attention.",
                 m.critical_count()
             )
         },
@@ -201,18 +192,18 @@ pub static RULES: [Rule; 21] = [
     },
     Rule {
         name: "compound_stress",
-        title: "Estrés combinado",
+        title: "Compound stress",
         certainty: 0.8,
         salience: -5,
         condition: |m| m.stress.is_some() && (m.risk.is_some() || m.lockout),
         message: |_| {
-            "Varios factores de estrés actúan a la vez; corrige primero el más severo y observa la respuesta.".into()
+            "Multiple stress factors are acting simultaneously; correct the most severe one first and monitor the response.".into()
         },
         conclude: nothing,
     },
     Rule {
         name: "drying_trend",
-        title: "Secado acelerado",
+        title: "Rapid drying",
         certainty: 0.75,
         salience: 12,
         condition: |m| {
@@ -220,7 +211,7 @@ pub static RULES: [Rule; 21] = [
         },
         message: |m| {
             format!(
-                "El sustrato se seca rápido: llegará al mínimo en {} h si sigue la tendencia. Conviene regar pronto.",
+                "The substrate is drying quickly: it will reach the minimum in {} h if the trend continues. Watering soon is advised.",
                 one_decimal(approaching(m, SoilMoisture, Limit::Min).unwrap_or(0.0))
             )
         },
@@ -228,7 +219,7 @@ pub static RULES: [Rule; 21] = [
     },
     Rule {
         name: "heat_building",
-        title: "Calor en aumento",
+        title: "Rising heat",
         certainty: 0.7,
         salience: 12,
         condition: |m| {
@@ -236,7 +227,7 @@ pub static RULES: [Rule; 21] = [
         },
         message: |m| {
             format!(
-                "La temperatura sube y pasará el máximo en {} h: ventila o aleja el cultivo del sol antes de que llegue.",
+                "Temperature is rising and will exceed the maximum in {} h: ventilate or move the crop out of direct sun beforehand.",
                 one_decimal(approaching(m, Temperature, Limit::Max).unwrap_or(0.0))
             )
         },
@@ -244,7 +235,7 @@ pub static RULES: [Rule; 21] = [
     },
     Rule {
         name: "learned_drying",
-        title: "Riego probable en la próxima hora",
+        title: "Watering likely within the next hour",
         certainty: 0.7,
         salience: 11,
         condition: |m| {
@@ -254,7 +245,7 @@ pub static RULES: [Rule; 21] = [
         },
         message: |m| {
             format!(
-                "Lo aprendido de los cultivos de esta especie da {} de probabilidad de que el sustrato baje del mínimo en la próxima hora.",
+                "Models learned from this species estimate a {} probability that substrate moisture will drop below the minimum within the next hour.",
                 percent(m.learned_needs_water.unwrap_or(0.0))
             )
         },
@@ -262,7 +253,7 @@ pub static RULES: [Rule; 21] = [
     },
     Rule {
         name: "learned_heat",
-        title: "Calor probable en la próxima hora",
+        title: "Heat likely within the next hour",
         certainty: 0.65,
         salience: 11,
         condition: |m| {
@@ -272,7 +263,7 @@ pub static RULES: [Rule; 21] = [
         },
         message: |m| {
             format!(
-                "Lo aprendido de los cultivos de esta especie da {} de probabilidad de que la temperatura pase del máximo en la próxima hora.",
+                "Models learned from this species estimate a {} probability that temperature will exceed the maximum within the next hour.",
                 percent(m.learned_overheat.unwrap_or(0.0))
             )
         },
@@ -280,26 +271,26 @@ pub static RULES: [Rule; 21] = [
     },
     Rule {
         name: "unusual_pattern",
-        title: "Combinación poco habitual",
+        title: "Unusual combination",
         certainty: 0.6,
         salience: 4,
         condition: |m| m.learned_unusual.is_some() && !m.sensor_fault,
         message: |_| {
-            "Esta combinación de valores casi nunca se ha visto en los cultivos de la especie. \
-             Si nada cambió en el cultivo, revisa los sensores."
+            "This combination of values has rarely been seen in crops of this species. \
+             If nothing changed in the crop, check the sensors."
                 .into()
         },
         conclude: nothing,
     },
     Rule {
         name: "rain_outside",
-        title: "Está lloviendo",
+        title: "It is raining",
         certainty: 0.9,
         salience: 8,
         condition: raining,
         message: |m| {
             format!(
-                "Llueve donde está el cultivo ({} mm): la lluvia riega por ti. Si el sustrato se encharca, cúbrelo o revisa el drenaje.",
+                "It is raining where the crop is located ({} mm): the rain waters it for you. If the substrate gets waterlogged, cover it or check drainage.",
                 one_decimal(outdoor(m).map_or(0.0, |o| o.precipitation))
             )
         },
@@ -307,7 +298,7 @@ pub static RULES: [Rule; 21] = [
     },
     Rule {
         name: "sensor_vs_outside",
-        title: "El sensor no coincide con el clima",
+        title: "Sensor disagrees with outdoor weather",
         certainty: 0.6,
         salience: 6,
         condition: |m| sensor_gap(m).is_some(),
@@ -315,12 +306,12 @@ pub static RULES: [Rule; 21] = [
             let outside_temperature = outdoor(m).map_or(0.0, |o| o.temperature);
             let radiation = outdoor(m).map_or(0.0, |o| o.radiation);
             let advice = if sensor_gap(m).unwrap_or(0.0) > 0.0 && radiation >= 400.0 {
-                "Si le da el sol directo al sensor, dale sombra para que mida el aire."
+                "If direct sunlight hits the sensor, shade it so it measures air temperature."
             } else {
-                "Revisa el sensor o confirma que el cultivo sí está al aire libre."
+                "Check the sensor or confirm that the crop is actually outdoors."
             };
             format!(
-                "El sensor marca {} °C y afuera hay {} °C. {advice}",
+                "The sensor reads {} °C while outdoors it is {} °C. {advice}",
                 one_decimal(m.value[Temperature.index()].unwrap_or(0.0)),
                 one_decimal(outside_temperature)
             )
@@ -329,26 +320,26 @@ pub static RULES: [Rule; 21] = [
     },
     Rule {
         name: "night_rest",
-        title: "Descanso nocturno",
+        title: "Night rest",
         certainty: 1.0,
         salience: -10,
         condition: |m| is(m, Brightness, Rest),
         message: |_| {
-            "La planta está en su periodo de oscuridad: no hace falta encender la luz ultravioleta hasta la mañana."
+            "The plant is in its dark period: there is no need to turn on the UV light until morning."
                 .into()
         },
         conclude: nothing,
     },
     Rule {
         name: "ideal_conditions",
-        title: "Condiciones ideales",
+        title: "Ideal conditions",
         certainty: 1.0,
         salience: -10,
         condition: |m| {
             let measured: Vec<Status> = m.status.iter().flatten().copied().collect();
             !measured.is_empty() && measured.iter().all(|s| matches!(s, Optimal | Rest))
         },
-        message: |_| "Todas las variables medidas están en su rango ideal. ¡Buen trabajo!".into(),
+        message: |_| "All measured variables are within their optimal range. Great job!".into(),
         conclude: nothing,
     },
 ];

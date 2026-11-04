@@ -34,11 +34,11 @@ const SETS: [(f64, f64, f64, f64); 4] = [
 ];
 
 const LEVELS: [(f64, &str, &str); 5] = [
-    (85.0, "EXCELLENT", "Excelente"),
-    (70.0, "GOOD", "Saludable"),
-    (50.0, "FAIR", "Aceptable"),
-    (30.0, "POOR", "En riesgo"),
-    (0.0, "CRITICAL", "Crítico"),
+    (85.0, "EXCELLENT", "Excellent"),
+    (70.0, "GOOD", "Healthy"),
+    (50.0, "FAIR", "Fair"),
+    (30.0, "POOR", "At risk"),
+    (0.0, "CRITICAL", "Critical"),
 ];
 
 /// Pertenencia trapezoidal sin ramificaciones: `max(0, min(subida, 1, bajada))`.
@@ -94,7 +94,7 @@ pub fn health_index(deviations: &[(Parameter, f64)]) -> Health {
         return Health {
             index: 0.0,
             level: "UNKNOWN",
-            label: "Sin datos",
+            label: "No data",
             by_parameter: Ordered::default(),
         };
     }

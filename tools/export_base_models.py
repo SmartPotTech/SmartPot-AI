@@ -1,11 +1,10 @@
-"""Exporta los modelos base de SmartPot-AI (semilla 42) al formato JSON que carga SmartPot-IA-Rust.
+"""Export the SmartPot-AI base models (seed 42) to the JSON format loaded by SmartPot-IA-Rust.
 
-Entrena exactamente los mismos modelos que el servicio en Python (misma semilla, mismos datos sintéticos y la misma
-versión de scikit-learn) y guarda sus parámetros: escalado, coeficientes, capas de la red y árboles del Isolation
-Forest. Antes de escribir comprueba que la evaluación con esos parámetros coincide con scikit-learn, y deja casos de
-referencia para las pruebas de Rust.
+Trains exactly the same models as the Python service (same seed, same synthetic data and the same scikit-learn
+version) and stores their parameters: scaler, coefficients, network layers and Isolation Forest trees. Before writing,
+it checks that evaluating those parameters matches scikit-learn, and leaves reference cases for the Rust tests.
 
-Uso, desde la raíz de SmartPot-IA-Rust y con el entorno de SmartPot-AI:
+Usage, from the SmartPot-IA-Rust root and with the SmartPot-AI environment:
 
     uv run --project ../SmartPot-AI python tools/export_base_models.py ../SmartPot-AI
 """
@@ -75,7 +74,7 @@ def isolation_forest(forest) -> dict:
 
 
 def forest_decision(spec: dict, x: np.ndarray) -> np.ndarray:
-    """Evaluación de referencia con los parámetros exportados (la misma que hace Rust)."""
+    """Reference evaluation with the exported parameters (the same one Rust performs)."""
     x32 = x.astype(np.float32).astype(np.float64)
     out = np.empty(x.shape[0])
     for row in range(x.shape[0]):
@@ -117,7 +116,7 @@ def main() -> None:
     exported = forest_decision(payload["anomaly"], vectors)
     gap = float(np.max(np.abs(exported - anomaly)))
     if gap > 1e-12:
-        raise SystemExit(f"El bosque exportado no coincide con scikit-learn (diferencia {gap})")
+        raise SystemExit(f"The exported forest does not match scikit-learn (difference {gap})")
 
     golden = {
         "positions": positions.tolist(),
@@ -134,7 +133,7 @@ def main() -> None:
     fixtures = ROOT / "tests" / "fixtures" / "base_models_golden.json"
     fixtures.parent.mkdir(parents=True, exist_ok=True)
     fixtures.write_text(json.dumps(golden, separators=(",", ":")), encoding="utf-8")
-    print(f"Modelos base: {models} ({models.stat().st_size} bytes); casos de referencia: {fixtures}")
+    print(f"Base models: {models} ({models.stat().st_size} bytes); reference cases: {fixtures}")
 
 
 if __name__ == "__main__":

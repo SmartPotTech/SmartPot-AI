@@ -22,8 +22,6 @@ pub fn advise(
     let need = light_need(profile.kind);
     let (ideal_setting, ideal_exposure) = need.ideal;
     let name = profile.name.to_lowercase();
-    // Concordancia del pronombre: la lechuga, el tomate.
-    let o = if name.ends_with('a') { "a" } else { "o" };
     let result = |level: &'static str, title: String, message: String| PlacementAdvice {
         level,
         title,
@@ -36,9 +34,9 @@ pub fn advise(
     let (Some(setting), Some(exposure)) = (setting, exposure) else {
         return result(
             "UNKNOWN",
-            format!("¿Dónde está tu {name}?"),
+            format!("Where is your {name}?"),
             format!(
-                "{} Indica en Ajustes si está bajo techo o al aire libre y cuánto sol recibe, y el asistente te dirá si el lugar le conviene.",
+                "{} Set whether it is indoors or outdoors and how much sun it receives in Settings, and the assistant will tell you if the spot suits it.",
                 need.note
             ),
         );
@@ -49,8 +47,8 @@ pub fn advise(
     if need.comfortable.contains(&sun) {
         return result(
             "OK",
-            "El lugar le sienta bien".into(),
-            format!("{} Está {place}, justo lo que necesita.", need.note),
+            "Good location".into(),
+            format!("{} It is {place}, just what it needs.", need.note),
         );
     }
 
@@ -65,30 +63,30 @@ pub fn advise(
     if wants_more_sun {
         let suffering = status(Parameter::Brightness) == Some(Status::Low);
         let movement = if setting == Setting::Outdoor {
-            format!("muével{o} a pleno sol")
+            "move it to full sun"
         } else {
-            format!("sácal{o} al aire libre a pleno sol o, si no se puede, ponl{o} junto a la ventana más soleada")
+            "move it outdoors to full sun or, if not possible, place it next to the sunniest window"
         };
         let extra = if sunny_outside && suffering {
-            " Afuera hay sol ahora mismo."
+            " It is sunny outside right now."
         } else {
             ""
         };
         if suffering {
             return result(
                 "MOVE",
-                "Le falta sol".into(),
+                "Needs more sun".into(),
                 format!(
-                    "Está {place} y la luz está baja: {movement}.{extra} La luz ultravioleta ayuda, pero no reemplaza al sol. {}",
+                    "It is {place} and light is low: {movement}.{extra} UV light helps, but it does not replace sunlight. {}",
                     need.note
                 ),
             );
         }
         return result(
             "TIP",
-            "Estaría mejor con más sol".into(),
+            "Would do better with more sun".into(),
             format!(
-                "Está {place}. {} Hoy está bien; si ves tallos largos y pocas flores, {movement}.",
+                "It is {place}. {} It is fine today; if you see leggy stems and few flowers, {movement}.",
                 need.note
             ),
         );
@@ -101,18 +99,18 @@ pub fn advise(
     if suffering {
         return result(
             "MOVE",
-            "Le sobra sol".into(),
+            "Too much sun".into(),
             format!(
-                "Está {place} y el calor o el exceso de luz ya se notan: muével{o} {ideal_place} o cúbrel{o} con una malla de sombra en las horas de más sol. {}",
+                "It is {place} and heat or excess light is already noticeable: move it {ideal_place} or cover it with shade cloth during peak sun hours. {}",
                 need.note
             ),
         );
     }
     result(
         "TIP",
-        "Estaría mejor con menos sol".into(),
+        "Would do better with less sun".into(),
         format!(
-            "Está {place}. {} Hoy está bien; si ves hojas quemadas o que se espiga, pásal{o} {ideal_place}.",
+            "It is {place}. {} It is fine today; if you see scorched leaves or bolting, move it {ideal_place}.",
             need.note
         ),
     )
@@ -141,11 +139,11 @@ mod tests {
         let tomato = profile("TOMATO").unwrap();
         let advice = advise(tomato, Some(Setting::Indoor), None, &[], false);
         assert_eq!(advice.level, "UNKNOWN");
-        assert_eq!(advice.title, "¿Dónde está tu tomate?");
+        assert_eq!(advice.title, "Where is your tomato?");
     }
 
     #[test]
-    fn uses_the_right_pronoun() {
+    fn suggests_relocation_direction() {
         let pepper = profile("PEPPER").unwrap();
         let advice = advise(
             pepper,
@@ -155,7 +153,7 @@ mod tests {
             false,
         );
         assert!(
-            advice.message.contains("muévelo a pleno sol"),
+            advice.message.contains("move it to full sun"),
             "{}",
             advice.message
         );
@@ -168,9 +166,7 @@ mod tests {
             false,
         );
         assert!(
-            advice
-                .message
-                .contains("pásala al aire libre en media sombra"),
+            advice.message.contains("move it outdoors in partial shade"),
             "{}",
             advice.message
         );

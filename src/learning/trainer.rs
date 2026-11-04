@@ -52,7 +52,7 @@ impl TrainerClient {
         let http = reqwest::Client::builder()
             .connect_timeout(Duration::from_secs(3))
             .build()
-            .map_err(|e| format!("no se pudo preparar el cliente del Trainer: {e}"))?;
+            .map_err(|e| format!("could not initialize Trainer client: {e}"))?;
         Ok(Self {
             base: base.trim_end_matches('/').to_string(),
             token: token.to_string(),
@@ -92,13 +92,13 @@ impl TrainerClient {
                 match response.bytes().await {
                     Ok(body) => Some(Forwarded { status, body }),
                     Err(error) => {
-                        warn!("El Trainer cortó la respuesta de {path}: {error}");
+                        warn!("Trainer truncated response from {path}: {error}");
                         None
                     }
                 }
             }
             Err(error) => {
-                warn!("El Trainer no respondió {path}: {error}");
+                warn!("Trainer did not respond to {path}: {error}");
                 None
             }
         }
@@ -118,7 +118,7 @@ impl TrainerClient {
             if let Ok(status) = serde_json::from_slice::<Value>(&body) {
                 self.absorb(&status);
             } else {
-                warn!("El Trainer respondió un estado ilegible ({status})");
+                warn!("Trainer returned an unreadable status ({status})");
             }
         }
         self.refreshed_at.store(now(), Ordering::Relaxed);

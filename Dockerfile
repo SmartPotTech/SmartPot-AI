@@ -18,7 +18,7 @@ RUN touch src/lib.rs src/main.rs && cargo build --release --locked --bin smartpo
 FROM debian:bookworm-slim
 
 LABEL org.opencontainers.image.title="SmartPot IA (Rust)" \
-      org.opencontainers.image.description="Inferencia agronómica de SmartPot en Rust: sistema experto, lógica difusa, modelos, agente, pronóstico y flota con REST y gRPC" \
+      org.opencontainers.image.description="SmartPot agronomic inference in Rust: expert system, fuzzy logic, ML models, reactive agent, forecasting, and fleet analysis over REST and gRPC" \
       org.opencontainers.image.source="https://github.com/SmartPotTech/SmartPot-IA-Rust" \
       org.opencontainers.image.licenses="MIT"
 

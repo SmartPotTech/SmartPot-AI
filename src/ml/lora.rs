@@ -49,9 +49,7 @@ impl Adapter {
         if ok {
             Ok(())
         } else {
-            Err(ModelError(
-                "adaptador LoRA con dimensiones no válidas".into(),
-            ))
+            Err(ModelError("LoRA adapter has invalid dimensions".into()))
         }
     }
 

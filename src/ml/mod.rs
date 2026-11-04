@@ -39,11 +39,11 @@ impl Scaler {
 
     fn validate(&self, features: usize) -> Result<(), ModelError> {
         if self.mean.len() != features || self.scale.len() != features {
-            return Err(invalid(format!("el escalado espera {features} variables")));
+            return Err(invalid(format!("scaler expects {features} features")));
         }
         if self.scale.iter().chain(&self.mean).any(|v| !v.is_finite()) || self.scale.contains(&0.0)
         {
-            return Err(invalid("el escalado trae valores no válidos"));
+            return Err(invalid("scaler contains invalid values"));
         }
         Ok(())
     }
@@ -76,28 +76,28 @@ impl Tree {
             .iter()
             .any(|l| *l != n)
         {
-            return Err(invalid("árbol con arreglos de distinto tamaño"));
+            return Err(invalid("tree arrays have different lengths"));
         }
         if !self.missing_left.is_empty() && self.missing_left.len() != n {
-            return Err(invalid("árbol con arreglo de ausentes de distinto tamaño"));
+            return Err(invalid("tree missing-value array has a different length"));
         }
         for i in 0..n {
             if self.left[i] < 0 {
                 if !self.value[i].is_finite() {
-                    return Err(invalid("hoja con valor no válido"));
+                    return Err(invalid("leaf has an invalid value"));
                 }
                 continue;
             }
             let (l, r) = (self.left[i], self.right[i]);
             let inside = |child: i64| child > i as i64 && (child as usize) < n;
             if !inside(l) || !inside(r) {
-                return Err(invalid("árbol con hijos fuera de orden"));
+                return Err(invalid("tree has out-of-order children"));
             }
             if self.feature[i] < 0
                 || self.feature[i] as usize >= features
                 || self.threshold[i].is_nan()
             {
-                return Err(invalid("árbol con una variable fuera de rango"));
+                return Err(invalid("tree references a feature out of range"));
             }
         }
         Ok(())
@@ -227,7 +227,7 @@ impl Model {
                     || coef.iter().any(|c| !c.is_finite())
                 {
                     return Err(invalid(format!(
-                        "modelo lineal: se esperaban {features} coeficientes finitos"
+                        "linear model: expected {features} finite coefficients"
                     )));
                 }
             }
@@ -238,7 +238,7 @@ impl Model {
                     if layer.weights.len() != width
                         || layer.weights.iter().any(|row| row.len() != outputs)
                     {
-                        return Err(invalid("red neuronal con capas incompatibles"));
+                        return Err(invalid("neural network has incompatible layers"));
                     }
                     if layer
                         .weights
@@ -247,17 +247,17 @@ impl Model {
                         .chain(&layer.bias)
                         .any(|v| !v.is_finite())
                     {
-                        return Err(invalid("red neuronal con pesos no válidos"));
+                        return Err(invalid("neural network has invalid weights"));
                     }
                     width = outputs;
                 }
                 if layers.is_empty() || width != 1 {
-                    return Err(invalid("la red neuronal debe terminar en una salida"));
+                    return Err(invalid("neural network must end in a single output"));
                 }
             }
             Model::Forest { trees } | Model::HistGradientBoosting { trees, .. } => {
                 if trees.is_empty() {
-                    return Err(invalid("conjunto de árboles vacío"));
+                    return Err(invalid("empty tree ensemble"));
                 }
                 for tree in trees {
                     tree.validate(features)?;
@@ -267,18 +267,18 @@ impl Model {
                 k, fit_x, targets, ..
             } => {
                 if *k == 0 || *k > fit_x.len() || fit_x.len() != targets.len() {
-                    return Err(invalid("vecinos más cercanos con datos incompletos"));
+                    return Err(invalid("nearest neighbors model has incomplete data"));
                 }
                 if fit_x
                     .iter()
                     .any(|row| row.len() != features || row.iter().any(|v| !v.is_finite()))
                 {
-                    return Err(invalid("vecinos más cercanos con filas no válidas"));
+                    return Err(invalid("nearest neighbors model has invalid rows"));
                 }
             }
             Model::Constant { value } => {
                 if !value.is_finite() {
-                    return Err(invalid("constante no válida"));
+                    return Err(invalid("invalid constant"));
                 }
             }
         }
@@ -411,7 +411,7 @@ impl IsolationForest {
             || self.denominator <= 0.0
             || !self.offset.is_finite()
         {
-            return Err(invalid("Isolation Forest incompleto"));
+            return Err(invalid("incomplete Isolation Forest"));
         }
         for tree in &self.trees {
             tree.validate(features)?;

@@ -22,13 +22,12 @@ pub fn blake2b_hex(bytes: &[u8]) -> String {
 
 /// Lee una clave pública Ed25519 en hexadecimal (32 bytes).
 pub fn parse_public_key(text: &str) -> Result<VerifyingKey, String> {
-    let bytes =
-        hex::decode(text.trim()).map_err(|_| "la clave pública no es hexadecimal".to_string())?;
+    let bytes = hex::decode(text.trim()).map_err(|_| "public key is not valid hex".to_string())?;
     let array: [u8; 32] = bytes
         .try_into()
-        .map_err(|_| "la clave pública debe tener 32 bytes".to_string())?;
+        .map_err(|_| "public key must be 32 bytes".to_string())?;
     VerifyingKey::from_bytes(&array)
-        .map_err(|_| "la clave pública no es un punto válido".to_string())
+        .map_err(|_| "public key is not a valid curve point".to_string())
 }
 
 /// `repr(float)` de Python: dígitos mínimos, notación fija entre 1e-4 y 1e16 y exponente con signo y dos cifras.
@@ -41,7 +40,7 @@ pub fn python_float(value: f64) -> String {
         };
     }
     let scientific = format!("{value:e}");
-    let (mantissa, exponent) = scientific.split_once('e').expect("formato científico");
+    let (mantissa, exponent) = scientific.split_once('e').expect("scientific notation");
     let exponent: i32 = exponent.parse().expect("exponente");
     let negative = mantissa.starts_with('-');
     let digits: String = mantissa.chars().filter(char::is_ascii_digit).collect();
@@ -163,19 +162,19 @@ pub fn verify(
     trusted: Option<&VerifyingKey>,
 ) -> Result<Verdict, String> {
     let manifest: Value = serde_json::from_slice(manifest_bytes)
-        .map_err(|_| "el manifiesto no es JSON válido".to_string())?;
+        .map_err(|_| "manifest is not valid JSON".to_string())?;
     let Value::Object(map) = &manifest else {
-        return Err("el manifiesto no es un objeto".into());
+        return Err("manifest is not a JSON object".into());
     };
     let expected = map
         .get("artifacts")
         .and_then(|a| a.get(artifact))
         .and_then(|meta| meta.get("blake2b"))
         .and_then(Value::as_str)
-        .ok_or_else(|| format!("el manifiesto no declara {artifact}"))?;
+        .ok_or_else(|| format!("manifest does not declare {artifact}"))?;
     let actual = blake2b_hex(artifact_bytes);
     if !expected.eq_ignore_ascii_case(&actual) {
-        return Err(format!("el hash BLAKE2b de {artifact} no coincide"));
+        return Err(format!("BLAKE2b hash for {artifact} does not match"));
     }
     let Some(key) = trusted else {
         return Ok(Verdict::HashOnly);
@@ -183,16 +182,16 @@ pub fn verify(
     let signature_hex = map
         .get("signature_hex")
         .and_then(Value::as_str)
-        .ok_or("el manifiesto no trae firma")?;
+        .ok_or("manifest is missing signature")?;
     let signature_bytes: [u8; 64] = hex::decode(signature_hex)
         .ok()
         .and_then(|b| b.try_into().ok())
-        .ok_or("la firma no tiene 64 bytes en hexadecimal")?;
+        .ok_or("signature is not 64 hex bytes")?;
     let mut unsigned = map.clone();
     unsigned.remove("signature_hex");
     let payload = python_canonical(&Value::Object(unsigned));
     key.verify_strict(payload.as_bytes(), &Signature::from_bytes(&signature_bytes))
-        .map_err(|_| "la firma Ed25519 no corresponde a la clave de confianza".to_string())?;
+        .map_err(|_| "Ed25519 signature does not match trusted public key".to_string())?;
     Ok(Verdict::Signed)
 }
 
@@ -222,10 +221,10 @@ mod tests {
     fn canonical_json_sorts_keys_and_escapes_like_python() {
         // Las secuencias de escape se arman al ejecutar, con la barra invertida como carácter.
         let escape = |unit: u32| format!("{}u{unit:04x}", '\\');
-        let value = json!({"b": 1, "a": {"z": [true, null], "y": "Línea base"}, "c": 0.5});
+        let value = json!({"b": 1, "a": {"z": [true, null], "y": "Naïve baseline"}, "c": 0.5});
         let expected = format!(
-            r#"{{"a":{{"y":"L{}nea base","z":[true,null]}},"b":1,"c":0.5}}"#,
-            escape(0xed)
+            r#"{{"a":{{"y":"Na{}ve baseline","z":[true,null]}},"b":1,"c":0.5}}"#,
+            escape(0xef)
         );
         assert_eq!(python_canonical(&value), expected);
         let plant = char::from_u32(0x1F331).unwrap().to_string();

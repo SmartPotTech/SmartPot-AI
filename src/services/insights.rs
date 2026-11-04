@@ -140,16 +140,16 @@ pub fn analyze(state: &AppState, request: &InsightRequest, now: f64) -> InsightR
         (
             "ventilation",
             ventilation,
-            "Necesidad de ventilación",
-            "Regresión logística",
+            "Ventilation need",
+            "Logistic regression",
         ),
         (
             "ph_correction",
             ph_correction,
-            "Necesidad de corregir el pH",
-            "Red neuronal (MLP)",
+            "pH correction need",
+            "Neural network (MLP)",
         ),
-        ("anomaly", anomaly, "Lectura atípica", "Isolation Forest"),
+        ("anomaly", anomaly, "Anomalous reading", "Isolation Forest"),
     ] {
         if let Some(value) = value {
             predictions.push(Prediction {
@@ -228,29 +228,29 @@ fn summary(
         .collect();
     issues.sort_by(|a, b| b.deviation.total_cmp(&a.deviation));
     let mut text = format!(
-        "Tu {} está en estado «{label}» ({}/100).",
+        "Your {} is in \"{label}\" condition ({}/100).",
         profile.name.to_lowercase(),
         no_decimals(index)
     );
     if issues.is_empty() {
-        return text + " Todas las variables medidas están en su rango ideal.";
+        return text + " All measured variables are within their optimal range.";
     }
     let names: Vec<&str> = issues
         .iter()
         .take(2)
         .map(|d| profile.range(d.parameter).label)
         .collect();
-    text.push_str(&format!(" Revisa {}.", names.join(" y ")));
+    text.push_str(&format!(" Check {}.", names.join(" and ")));
     if action_count > 0 {
         let noun = if action_count == 1 {
-            "acción"
+            "action"
         } else {
-            "acciones"
+            "actions"
         };
-        text.push_str(&format!(" El asistente propone {action_count} {noun}."));
+        text.push_str(&format!(" The assistant suggests {action_count} {noun}."));
     }
     if move_it {
-        text.push_str(" También conviene cambiar el cultivo de lugar.");
+        text.push_str(" Relocating the crop is also recommended.");
     }
     text
 }

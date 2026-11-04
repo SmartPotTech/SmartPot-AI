@@ -1,10 +1,12 @@
-"""Genera los casos de paridad entre SmartPot-AI (Python) y SmartPot-IA-Rust.
+"""Generate the parity cases between SmartPot-AI (Python) and SmartPot-IA-Rust.
 
-Arma peticiones variadas (todas las especies, valores dentro y fuera de rango, sensores ausentes, ceros de noche,
-historial con tendencia, lugar, clima, actuadores y peticiones inválidas), las envía al servicio en Python y guarda la
-petición con su respuesta exacta. Las pruebas de Rust envían las mismas peticiones y exigen la misma respuesta.
+Builds varied requests (every species, values inside and outside the range, missing sensors, zeros at night, history
+with a trend, placement, weather, actuators and invalid requests), sends them to the Python service and stores each
+request with its exact response. The Rust tests send the same requests and require the same response. The Python
+service answers in Spanish; the expected texts are regenerated in English with
+`SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored` (numbers and structure stay unchanged).
 
-Uso, desde la raíz de SmartPot-IA-Rust y con el entorno de SmartPot-AI:
+Usage, from the SmartPot-IA-Rust root and with the SmartPot-AI environment:
 
     uv run --project ../SmartPot-AI python tools/generate_parity_fixtures.py ../SmartPot-AI
 """
@@ -257,7 +259,7 @@ def main() -> None:
     for name, data in (("parity_insights", insights), ("parity_fleet", fleets), ("parity_extra", extra)):
         (target / f"{name}.json").write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
     ok = sum(1 for item in insights if item["status"] == 200)
-    print(f"Evaluaciones: {len(insights)} ({ok} válidas); flotas: {len(fleets)}")
+    print(f"Insights: {len(insights)} ({ok} valid); fleets: {len(fleets)}")
 
 
 if __name__ == "__main__":

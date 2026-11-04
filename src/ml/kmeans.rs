@@ -180,7 +180,7 @@ fn plus_plus(data: &[Vec<f64>], norms: &[f64], k: usize, rng: &mut Mt19937) -> V
                 best = Some((total, candidate, distances));
             }
         }
-        let (total, candidate, distances) = best.expect("al menos un candidato");
+        let (total, candidate, distances) = best.expect("at least one candidate");
         centers.push(data[candidate].clone());
         closest = distances;
         potential = total;
@@ -319,7 +319,7 @@ pub fn fit(data: &[Vec<f64>], k: usize, n_init: usize, seed: u32) -> Clustering 
             best = Some(run);
         }
     }
-    let mut best = best.expect("al menos una corrida");
+    let mut best = best.expect("at least one run");
     for center in &mut best.centers {
         for (v, m) in center.iter_mut().zip(&means) {
             *v += m;

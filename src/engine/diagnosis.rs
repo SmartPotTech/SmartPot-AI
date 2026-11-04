@@ -65,28 +65,24 @@ fn recommendation(parameter: Parameter, status: Status) -> Option<&'static str> 
     use Parameter::*;
     use Status::*;
     Some(match (parameter, status) {
-        (Temperature, Low) => {
-            "Aleja el cultivo de corrientes frías o usa una fuente de calor suave."
-        }
+        (Temperature, Low) => "Move the crop away from cold drafts or use a gentle heat source.",
         (Temperature, High) => {
-            "Ventila el espacio y evita la luz directa en las horas de más calor."
+            "Ventilate the space and avoid direct sunlight during the hottest hours."
         }
         (Humidity, Low) => {
-            "Aumenta la humedad del ambiente con un humidificador o agrupando plantas."
+            "Increase ambient humidity with a humidifier or by grouping plants together."
         }
-        (Humidity, High) => "Mejora la circulación de aire para prevenir hongos.",
-        (Brightness, Low) => {
-            "Enciende la luz ultravioleta o acerca el cultivo a una fuente de luz."
+        (Humidity, High) => "Improve air circulation to prevent fungal growth.",
+        (Brightness, Low) => "Turn on the UV light or move the crop closer to a light source.",
+        (Brightness, High) => {
+            "Reduce light hours or move the lamp farther away to prevent leaf burn."
         }
-        (Brightness, High) => "Reduce las horas de luz o aleja la lámpara para evitar quemaduras.",
-        (Ph, Low) => "Agrega solución para subir el pH (pH Up) en dosis pequeñas.",
-        (Ph, High) => "Agrega solución para bajar el pH (pH Down) en dosis pequeñas.",
-        (Tds, Low) => "Agrega solución nutritiva A y B según la etapa del cultivo.",
-        (Tds, High) => "Diluye la solución con agua limpia para bajar la concentración de sales.",
-        (SoilMoisture, Low) => "Riega hasta humedecer el sustrato sin encharcarlo.",
-        (SoilMoisture, High) => {
-            "Suspende el riego y revisa el drenaje para evitar la pudrición de raíces."
-        }
+        (Ph, Low) => "Add pH Up solution in small doses.",
+        (Ph, High) => "Add pH Down solution in small doses.",
+        (Tds, Low) => "Add nutrient solutions A and B according to the growth stage.",
+        (Tds, High) => "Dilute the solution with clean water to lower salt concentration.",
+        (SoilMoisture, Low) => "Water until the substrate is moist without waterlogging it.",
+        (SoilMoisture, High) => "Pause watering and check drainage to prevent root rot.",
         _ => return None,
     })
 }
@@ -110,12 +106,17 @@ pub fn diagnose(
         let range = profile.range(parameter);
         let mut deviation = range.deviation(value);
         let (status, severity, message);
+        let label = if parameter == Parameter::Ph {
+            "pH".to_string()
+        } else {
+            capitalize(range.label)
+        };
         if resting && parameter == Parameter::Brightness && value < range.min {
             status = Status::Rest;
             severity = Severity::Ok;
             deviation = 0.0;
             message = format!(
-                "Es de noche: la planta descansa y la luz baja ({} {}) es normal entre las {REST_START_HOUR}:00 y las {REST_END_HOUR}:00.",
+                "It is nighttime: the plant is resting and low light ({} {}) is normal between {REST_START_HOUR}:00 and {REST_END_HOUR}:00.",
                 short(value),
                 range.unit
             );
@@ -123,8 +124,8 @@ pub fn diagnose(
             status = Status::Optimal;
             severity = Severity::Ok;
             message = format!(
-                "{} está en el rango ideal ({}–{} {}).",
-                capitalize(range.label),
+                "{} is within the optimal range ({}–{} {}).",
+                label,
                 short(range.min),
                 short(range.max),
                 range.unit
@@ -141,13 +142,13 @@ pub fn diagnose(
                 Severity::Warning
             };
             let direction = if status == Status::Low {
-                "por debajo"
+                "below"
             } else {
-                "por encima"
+                "above"
             };
             message = format!(
-                "{} ({} {}) está {direction} del rango ideal ({}–{} {}).",
-                capitalize(range.label),
+                "{} ({} {}) is {direction} the optimal range ({}–{} {}).",
+                label,
                 short(value),
                 range.unit,
                 short(range.min),
@@ -200,7 +201,7 @@ mod tests {
         assert_eq!(found[2].severity, Severity::Warning);
         assert_eq!(
             found[0].message,
-            "La temperatura (30 °C) está por encima del rango ideal (15–22 °C)."
+            "Temperature (30 °C) is above the optimal range (15–22 °C)."
         );
     }
 

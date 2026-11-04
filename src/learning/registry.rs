@@ -127,10 +127,10 @@ impl Registry {
             return Ok(None);
         };
         if metadata.len() > MAX_BUNDLE_BYTES {
-            return Err("el archivo de modelos supera el tamaño permitido".into());
+            return Err("model file exceeds maximum allowed size".into());
         }
         let bytes =
-            std::fs::read(&path).map_err(|e| format!("no se pudo leer {}: {e}", path.display()))?;
+            std::fs::read(&path).map_err(|e| format!("could not read {}: {e}", path.display()))?;
         match std::fs::read(dir.join(manifest_name(crop_type))) {
             Ok(manifest) => {
                 let verdict = verifier::verify(
@@ -140,20 +140,20 @@ impl Registry {
                     self.trusted.as_ref(),
                 )?;
                 if verdict == Verdict::HashOnly {
-                    tracing::debug!("{crop_type}: hash verificado; sin clave de confianza no se valida la firma");
+                    tracing::debug!("{crop_type}: hash verified; without a trusted key the signature is not checked");
                 }
             }
-            Err(_) if self.trusted.is_some() => {
-                return Err("el modelo no trae manifiesto firmado".into())
-            }
+            Err(_) if self.trusted.is_some() => return Err("model has no signed manifest".into()),
             Err(_) => {
-                warn!("{crop_type}: modelos sin manifiesto; se cargan sin verificar su integridad")
+                warn!(
+                    "{crop_type}: models without manifest; loading without integrity verification"
+                )
             }
         }
         let bundle = Bundle::parse(&bytes).map_err(|e| e.0)?;
         if bundle.crop_type != crop_type {
             return Err(format!(
-                "el archivo de {crop_type} trae modelos de {}",
+                "file for {crop_type} contains models for {}",
                 bundle.crop_type
             ));
         }
@@ -189,14 +189,14 @@ impl Registry {
                         .disabled
                         .extend(bundle.disabled.iter().map(|d| format!("{kind} {d}")));
                     for problem in &bundle.disabled {
-                        warn!("{kind}: modelo deshabilitado ({problem})");
+                        warn!("{kind}: model disabled ({problem})");
                     }
                     next.insert(kind.clone(), Arc::new(bundle));
                     report.reloaded.push(kind);
                 }
                 Ok(None) => {}
                 Err(reason) => {
-                    warn!("{kind}: modelos rechazados ({reason})");
+                    warn!("{kind}: models rejected ({reason})");
                     report.rejected.push(Rejection {
                         crop_type: kind,
                         reason,
@@ -206,10 +206,7 @@ impl Registry {
         }
         self.models.store(Arc::new(next));
         if !report.reloaded.is_empty() {
-            info!(
-                "Modelos aprendidos en memoria: {}",
-                report.reloaded.join(", ")
-            );
+            info!("Learned models in memory: {}", report.reloaded.join(", "));
         }
         report
     }
@@ -235,7 +232,7 @@ impl Registry {
                 readings,
                 trained_at: None,
                 message: format!(
-                    "Aún aprendo de los cultivos de {name}: hay {readings} lecturas reales y el primer entrenamiento empieza con {min_samples}."
+                    "Still learning from {name} crops: {readings} real readings collected, and the first training starts at {min_samples}."
                 ),
                 predictions: Vec::new(),
                 moisture: None,
@@ -323,7 +320,7 @@ impl Registry {
             readings,
             trained_at: bundle.trained_at.filter(|t| *t != 0.0).map(iso_utc),
             message: format!(
-                "Aprendido de {} lecturas reales de {name}: {} de 3 modelos supervisados entrenados.",
+                "Learned from {} real {name} readings: {} of 3 supervised models trained.",
                 thousands(readings),
                 bundle.trained_cards()
             ),

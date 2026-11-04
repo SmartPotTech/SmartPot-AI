@@ -146,7 +146,7 @@ async fn crop_profile(Path(crop_type): Path<String>) -> Response {
         ),
         None => detail(
             StatusCode::NOT_FOUND,
-            format!("Tipo de cultivo desconocido: {crop_type}"),
+            format!("Unknown crop type: {crop_type}"),
         ),
     }
 }
@@ -184,14 +184,14 @@ fn crop_type_of(body: &[u8]) -> Result<Option<String>, Box<Response>> {
             None => Err(Box::new(invalid(&Invalid(vec![
                 crate::schema::FieldError {
                     field: "cropType".into(),
-                    message: format!("Tipo de cultivo desconocido: {text}"),
+                    message: format!("Unknown crop type: {text}"),
                 },
             ])))),
         },
         Some(_) => Err(Box::new(invalid(&Invalid(vec![
             crate::schema::FieldError {
                 field: "cropType".into(),
-                message: "Debe ser un texto".into(),
+                message: "Must be a string".into(),
             },
         ])))),
     }
@@ -205,7 +205,7 @@ async fn reload(State(state): State<AppState>, body: Bytes) -> Response {
     if state.learned.directory().is_none() {
         return detail(
             StatusCode::BAD_REQUEST,
-            "No hay carpeta de modelos para recargar (DATA_DIR vacío)",
+            "No models directory configured for reload (empty DATA_DIR)",
         );
     }
     let report = state.learned.reload(crop_type.clone()).await;
@@ -213,7 +213,7 @@ async fn reload(State(state): State<AppState>, body: Bytes) -> Response {
         if let Some(rejected) = report.rejected.first() {
             return detail(
                 StatusCode::BAD_REQUEST,
-                format!("Fallo de verificación del modelo: {}", rejected.reason),
+                format!("Model verification failed: {}", rejected.reason),
             );
         }
     }
@@ -254,11 +254,11 @@ async fn readings(State(state): State<AppState>, body: Bytes) -> Response {
         ),
         Some(_) => invalid(&Invalid(vec![crate::schema::FieldError {
             field: "readings".into(),
-            message: "Debe tener como máximo 2000 elementos".into(),
+            message: "Must have at most 2000 items".into(),
         }])),
         None => invalid(&Invalid(vec![crate::schema::FieldError {
             field: "readings".into(),
-            message: "Campo obligatorio".into(),
+            message: "Required field".into(),
         }])),
     }
 }
@@ -300,7 +300,7 @@ async fn train(State(state): State<AppState>, body: Bytes) -> Response {
     let Some(trainer) = &state.trainer else {
         return detail(
             StatusCode::SERVICE_UNAVAILABLE,
-            "El entrenamiento lo hace SmartPot-Trainer y no está configurado",
+            "Training is handled by SmartPot-Trainer, which is not configured",
         );
     };
     let payload = Bytes::from(
@@ -317,7 +317,7 @@ async fn train(State(state): State<AppState>, body: Bytes) -> Response {
     else {
         return detail(
             StatusCode::SERVICE_UNAVAILABLE,
-            "SmartPot-Trainer no responde",
+            "SmartPot-Trainer is not responding",
         );
     };
     if forwarded.status.is_success() && state.learned.directory().is_some() {
@@ -348,7 +348,7 @@ async fn forget(State(state): State<AppState>, Path(crop_id): Path<String>) -> R
             .bytes()
             .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_');
     if !valid {
-        return detail(StatusCode::UNPROCESSABLE_ENTITY, "Datos inválidos");
+        return detail(StatusCode::UNPROCESSABLE_ENTITY, "Invalid data");
     }
     if let Some(trainer) = &state.trainer {
         let path = format!("/v1/learning/crops/{}", segment(&crop_id));

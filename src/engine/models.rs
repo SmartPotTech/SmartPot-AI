@@ -64,10 +64,10 @@ impl BaseModels {
 
     pub fn from_json(text: &str) -> Result<Self, ModelError> {
         let file: BaseFile = serde_json::from_str(text)
-            .map_err(|e| ModelError(format!("modelos base ilegibles: {e}")))?;
+            .map_err(|e| ModelError(format!("unreadable base models: {e}")))?;
         if file.schema != "smartpot.base-models/1" {
             return Err(ModelError(format!(
-                "versión de modelos base desconocida: {}",
+                "unknown base models schema: {}",
                 file.schema
             )));
         }

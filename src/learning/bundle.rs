@@ -61,7 +61,7 @@ impl States {
             || self.scaler.scale.len() != dims
             || self.scaler.scale.contains(&0.0)
         {
-            return Err(ModelError("estados con escalado no válido".into()));
+            return Err(ModelError("states with invalid scaling".into()));
         }
         if self.centers.is_empty()
             || self
@@ -69,12 +69,14 @@ impl States {
                 .iter()
                 .any(|c| c.len() != dims || c.iter().any(|v| !v.is_finite()))
         {
-            return Err(ModelError("estados con centros no válidos".into()));
+            return Err(ModelError("states with invalid centers".into()));
         }
         for raw in 0..self.centers.len() {
             let target = self.target(raw);
             if !self.clusters.iter().any(|c| c.id == target) {
-                return Err(ModelError("estados con un grupo sin descripción".into()));
+                return Err(ModelError(
+                    "states with a cluster missing description".into(),
+                ));
             }
         }
         Ok(())
@@ -172,22 +174,22 @@ fn close(actual: f64, expected: f64) -> bool {
 impl Bundle {
     pub fn parse(bytes: &[u8]) -> Result<Self, ModelError> {
         let mut bundle: Bundle = serde_json::from_slice(bytes)
-            .map_err(|e| ModelError(format!("modelos aprendidos ilegibles: {e}")))?;
+            .map_err(|e| ModelError(format!("unreadable learned models: {e}")))?;
         if bundle.schema != SCHEMA {
             return Err(ModelError(format!(
-                "formato de modelos desconocido: {}",
+                "unknown model schema: {}",
                 bundle.schema
             )));
         }
         if crate::domain::profile(&bundle.crop_type).is_none() {
             return Err(ModelError(format!(
-                "especie desconocida: {}",
+                "unknown crop species: {}",
                 bundle.crop_type
             )));
         }
         if bundle.features != FEATURES {
             return Err(ModelError(format!(
-                "se esperaban {FEATURES} variables y llegaron {}",
+                "expected {FEATURES} features, got {}",
                 bundle.features
             )));
         }
@@ -216,9 +218,8 @@ impl Bundle {
                         _ => None,
                     }?;
                     let actual = estimator.evaluate(&check.x);
-                    (!close(actual, expected)).then(|| {
-                        format!("no coincide con scikit-learn ({actual} frente a {expected})")
-                    })
+                    (!close(actual, expected))
+                        .then(|| format!("does not match scikit-learn ({actual} vs {expected})"))
                 })
             });
             if let Some(reason) = problem {
@@ -232,7 +233,7 @@ impl Bundle {
                     let expected = check.state?;
                     let actual = states.assign(&check.x[..6]).map(|c| c.id);
                     (actual != Some(expected))
-                        .then(|| "el estado asignado no coincide con scikit-learn".to_string())
+                        .then(|| "assigned state does not match scikit-learn".to_string())
                 })
             });
             if let Some(reason) = problem {
@@ -246,7 +247,7 @@ impl Bundle {
                     let expected = check.anomaly?;
                     let actual = anomaly.forest.decision(&check.x[..6]);
                     (!close(actual, expected))
-                        .then(|| "el detector de atípicos no coincide con scikit-learn".to_string())
+                        .then(|| "anomaly detector does not match scikit-learn".to_string())
                 })
             });
             if let Some(reason) = problem {

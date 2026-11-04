@@ -2,7 +2,7 @@
 
 use subtle::ConstantTimeEq;
 
-pub const INVALID_TOKEN: &str = "Token de servicio inválido";
+pub const INVALID_TOKEN: &str = "Invalid service token";
 
 /// `true` si la cabecera es `Bearer <token>` (esquema sin distinguir mayúsculas) con el token esperado.
 pub fn bearer_matches(header: Option<&str>, expected: &str) -> bool {

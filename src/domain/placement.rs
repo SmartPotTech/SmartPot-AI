@@ -67,12 +67,12 @@ pub fn sun_level(setting: Setting, exposure: Exposure) -> u8 {
 /// Cómo se nombra cada lugar en los consejos.
 pub fn place_text(setting: Setting, exposure: Exposure) -> &'static str {
     match (setting, exposure) {
-        (Setting::Outdoor, Exposure::FullSun) => "al aire libre a pleno sol",
-        (Setting::Outdoor, Exposure::PartialSun) => "al aire libre en media sombra",
-        (Setting::Outdoor, Exposure::Shade) => "al aire libre en sombra",
-        (Setting::Indoor, Exposure::FullSun) => "bajo techo junto a una ventana soleada",
-        (Setting::Indoor, Exposure::PartialSun) => "bajo techo con luz indirecta",
-        (Setting::Indoor, Exposure::Shade) => "bajo techo sin luz natural",
+        (Setting::Outdoor, Exposure::FullSun) => "outdoors in full sun",
+        (Setting::Outdoor, Exposure::PartialSun) => "outdoors in partial shade",
+        (Setting::Outdoor, Exposure::Shade) => "outdoors in shade",
+        (Setting::Indoor, Exposure::FullSun) => "indoors next to a sunny window",
+        (Setting::Indoor, Exposure::PartialSun) => "indoors with indirect light",
+        (Setting::Indoor, Exposure::Shade) => "indoors without natural light",
     }
 }
 
@@ -97,27 +97,37 @@ pub fn light_need(crop_type: &str) -> LightNeed {
             "PARTIAL_SUN",
             partial,
             HALF_SHADE,
-            "La lechuga prefiere media sombra: con sol fuerte se calienta, se espiga y amarga.",
+            "Lettuce prefers partial shade: under strong sun it overheats, bolts, and turns bitter.",
         ),
-        "SPINACH" => ("PARTIAL_SUN", partial, HALF_SHADE, "La espinaca crece mejor en media sombra y con clima fresco."),
+        "SPINACH" => (
+            "PARTIAL_SUN",
+            partial,
+            HALF_SHADE,
+            "Spinach grows best in partial shade and cool weather.",
+        ),
         "TOMATO" => (
             "FULL_SUN",
             full,
             SUN_LOVER,
-            "El tomate es de sol: necesita de 6 a 8 horas de sol directo para florecer y dar fruto.",
+            "Tomatoes are sun-loving: they need 6 to 8 hours of direct sunlight to flower and fruit.",
         ),
-        "PEPPER" => ("FULL_SUN", full, SUN_LOVER, "El pimentón es de sol: necesita de 6 a 8 horas de sol directo."),
+        "PEPPER" => (
+            "FULL_SUN",
+            full,
+            SUN_LOVER,
+            "Bell peppers are sun-loving: they need 6 to 8 hours of direct sunlight.",
+        ),
         "STRAWBERRY" => (
             "FULL_SUN",
             full,
             SUN_LOVER,
-            "La fresa necesita al menos 6 horas de sol directo para dar frutos dulces.",
+            "Strawberries need at least 6 hours of direct sunlight to produce sweet fruit.",
         ),
         _ => (
             "FULL_SUN",
             full,
             SUN_LOVER,
-            "La albahaca es de sol: con 6 horas de sol directo crece compacta y aromática.",
+            "Basil is sun-loving: with 6 hours of direct sunlight it grows compact and aromatic.",
         ),
     };
     LightNeed {

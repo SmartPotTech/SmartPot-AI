@@ -78,12 +78,12 @@ async fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::new(filter))
         .init();
-    info!("Iniciando SmartPot-IA v{}", smartpot_ia::version());
+    info!("Starting SmartPot-IA v{}", smartpot_ia::version());
 
     let settings = match Settings::from_env() {
         Ok(settings) => settings,
         Err(message) => {
-            error!("Configuración inválida: {message}");
+            error!("Invalid configuration: {message}");
             std::process::exit(1);
         }
     };
@@ -91,12 +91,12 @@ async fn main() {
     let base = match BaseModels::embedded() {
         Ok(base) => base,
         Err(problem) => {
-            error!("Modelos base inválidos: {problem}");
+            error!("Invalid base models: {problem}");
             std::process::exit(1);
         }
     };
     info!(
-        "Modelos base listos en {:.1} ms: {:?}",
+        "Base models ready in {:.1} ms: {:?}",
         started.elapsed().as_secs_f64() * 1000.0,
         base.metrics
     );
@@ -111,47 +111,45 @@ async fn main() {
     if state.learned.directory().is_some() {
         let report = state.learned.reload(None).await;
         info!(
-            "Modelos aprendidos al arrancar: {} cargados, {} rechazados",
+            "Learned models on startup: {} loaded, {} rejected",
             report.reloaded.len(),
             report.rejected.len()
         );
     }
     match &state.trainer {
         Some(trainer) => info!(
-            "Aprendizaje delegado en SmartPot-Trainer ({})",
+            "Learning delegated to SmartPot-Trainer ({})",
             trainer.base_url()
         ),
-        None => warn!(
-            "Sin SMARTPOT_TRAINER_URL: las rutas de aprendizaje responden un estado deshabilitado"
-        ),
+        None => warn!("SMARTPOT_TRAINER_URL not set: learning routes return a disabled status"),
     }
 
     let (stop, receiver) = watch::channel(false);
     let mut tasks = Vec::new();
     if state.settings.grpc_tcp_port != 0 {
         let address = SocketAddr::from(([0, 0, 0, 0], state.settings.grpc_tcp_port));
-        info!("gRPC por TCP en {address}");
+        info!("gRPC over TCP at {address}");
         let (state, shutdown) = (state.clone(), stopped(receiver.clone()));
         tasks.push(tokio::spawn(async move {
             if let Err(problem) = grpc::serve_tcp(state, address, shutdown).await {
-                error!("gRPC por TCP se detuvo: {problem}");
+                error!("gRPC over TCP stopped: {problem}");
             }
         }));
     }
     if let Some(path) = state.settings.grpc_socket.clone() {
         #[cfg(unix)]
         {
-            info!("gRPC por socket UNIX en {}", path.display());
+            info!("gRPC over UNIX socket at {}", path.display());
             let (state, shutdown) = (state.clone(), stopped(receiver.clone()));
             tasks.push(tokio::spawn(async move {
                 if let Err(problem) = grpc::serve_unix(state, path, shutdown).await {
-                    error!("gRPC por socket UNIX se detuvo: {problem}");
+                    error!("gRPC over UNIX socket stopped: {problem}");
                 }
             }));
         }
         #[cfg(not(unix))]
         warn!(
-            "Este sistema no tiene sockets UNIX: se ignora {}",
+            "UNIX sockets are not supported on this system: ignoring {}",
             path.display()
         );
     }
@@ -160,25 +158,25 @@ async fn main() {
     let listener = match TcpListener::bind(address).await {
         Ok(listener) => listener,
         Err(problem) => {
-            error!("No se pudo abrir {address}: {problem}");
+            error!("Could not bind {address}: {problem}");
             std::process::exit(1);
         }
     };
-    info!("REST escuchando en http://{address}");
+    info!("REST listening at http://{address}");
     let app = http::router(state);
     let shutdown = async move {
         shutdown_signal().await;
-        info!("Deteniendo SmartPot-IA");
+        info!("Stopping SmartPot-IA");
         let _ = stop.send(true);
     };
     if let Err(problem) = axum::serve(listener, app)
         .with_graceful_shutdown(shutdown)
         .await
     {
-        error!("El servidor REST se detuvo: {problem}");
+        error!("REST server stopped: {problem}");
     }
     for task in tasks {
         let _ = tokio::time::timeout(Duration::from_secs(5), task).await;
     }
-    info!("SmartPot-IA detenido");
+    info!("SmartPot-IA stopped");
 }

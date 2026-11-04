@@ -96,10 +96,7 @@ pub struct InferenceEngine {
 
 impl InferenceEngine {
     pub fn new(rules: &'static [Rule]) -> Self {
-        assert!(
-            rules.len() <= 32,
-            "el conjunto de bits admite hasta 32 reglas"
-        );
+        assert!(rules.len() <= 32, "the bit set supports up to 32 rules");
         let mut order: Vec<usize> = (0..rules.len()).collect();
         order.sort_by_key(|&i| std::cmp::Reverse(rules[i].salience));
         Self {

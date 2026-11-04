@@ -97,42 +97,42 @@ const fn ranges(
             max: temperature.1,
             tolerance: 5.0,
             unit: "°C",
-            label: "la temperatura",
+            label: "temperature",
         },
         Range {
             min: humidity.0,
             max: humidity.1,
             tolerance: 15.0,
             unit: "%",
-            label: "la humedad del aire",
+            label: "air humidity",
         },
         Range {
             min: brightness.0,
             max: brightness.1,
             tolerance: 300.0,
             unit: "lux",
-            label: "la luz",
+            label: "light",
         },
         Range {
             min: ph.0,
             max: ph.1,
             tolerance: 0.8,
             unit: "pH",
-            label: "el pH",
+            label: "pH",
         },
         Range {
             min: tds.0,
             max: tds.1,
             tolerance: 400.0,
             unit: "ppm",
-            label: "el nivel de nutrientes (TDS)",
+            label: "nutrient level (TDS)",
         },
         Range {
             min: soil.0,
             max: soil.1,
             tolerance: 15.0,
             unit: "%",
-            label: "la humedad del sustrato",
+            label: "substrate moisture",
         },
     ]
 }
@@ -141,8 +141,8 @@ const fn ranges(
 pub static PROFILES: [CropProfile; 6] = [
     CropProfile {
         kind: "LETTUCE",
-        name: "Lechuga",
-        description: "Hoja de clima fresco; se espiga con calor y luz excesiva.",
+        name: "Lettuce",
+        description: "Cool-weather leafy green; bolts under excessive heat and light.",
         ranges: ranges(
             (15.0, 22.0),
             (50.0, 70.0),
@@ -154,8 +154,8 @@ pub static PROFILES: [CropProfile; 6] = [
     },
     CropProfile {
         kind: "TOMATO",
-        name: "Tomate",
-        description: "Fruto exigente en luz, calor y nutrientes durante la floración.",
+        name: "Tomato",
+        description: "Fruit crop demanding in light, warmth, and nutrients during flowering.",
         ranges: ranges(
             (20.0, 28.0),
             (60.0, 80.0),
@@ -167,8 +167,8 @@ pub static PROFILES: [CropProfile; 6] = [
     },
     CropProfile {
         kind: "STRAWBERRY",
-        name: "Fresa",
-        description: "Sensible al exceso de sales y a la humedad alta, que favorece hongos.",
+        name: "Strawberry",
+        description: "Sensitive to excess salts and high humidity, which promotes fungal growth.",
         ranges: ranges(
             (18.0, 26.0),
             (60.0, 75.0),
@@ -180,8 +180,8 @@ pub static PROFILES: [CropProfile; 6] = [
     },
     CropProfile {
         kind: "BASIL",
-        name: "Albahaca",
-        description: "Aromática de clima cálido; tolera ambientes secos.",
+        name: "Basil",
+        description: "Warm-weather aromatic herb; tolerates dry environments.",
         ranges: ranges(
             (20.0, 30.0),
             (40.0, 60.0),
@@ -193,8 +193,8 @@ pub static PROFILES: [CropProfile; 6] = [
     },
     CropProfile {
         kind: "SPINACH",
-        name: "Espinaca",
-        description: "Hoja de clima fresco con alta demanda de nitrógeno.",
+        name: "Spinach",
+        description: "Cool-weather leafy green with high nitrogen demand.",
         ranges: ranges(
             (15.0, 24.0),
             (50.0, 70.0),
@@ -206,8 +206,8 @@ pub static PROFILES: [CropProfile; 6] = [
     },
     CropProfile {
         kind: "PEPPER",
-        name: "Pimentón",
-        description: "Fruto de clima cálido; necesita luz intensa y pH estable.",
+        name: "Bell pepper",
+        description: "Warm-weather fruit crop; requires intense light and stable pH.",
         ranges: ranges(
             (21.0, 29.0),
             (50.0, 70.0),
@@ -244,8 +244,8 @@ mod tests {
 
     #[test]
     fn profiles_are_case_insensitive() {
-        assert_eq!(profile("lettuce").map(|p| p.name), Some("Lechuga"));
-        assert_eq!(profile("Pepper").map(|p| p.name), Some("Pimentón"));
+        assert_eq!(profile("lettuce").map(|p| p.name), Some("Lettuce"));
+        assert_eq!(profile("Pepper").map(|p| p.name), Some("Bell pepper"));
         assert!(profile("CACTUS").is_none());
     }
 
