@@ -83,16 +83,16 @@ async fn signed_models_reload_and_match_the_python_service() {
         let mut found = Vec::new();
         differences("", &case["response"], &body, &mut found);
         if !found.is_empty() {
-            failures.push(format!("caso {i}: {}", found.join("; ")));
+            failures.push(format!("case {i}: {}", found.join("; ")));
         }
     }
     assert!(
         failures.is_empty(),
-        "{} casos distintos:\n{}",
+        "{} differing cases:\n{}",
         failures.len(),
         failures.join("\n")
     );
-    assert!(learned >= 20, "pocas predicciones aprendidas: {learned}");
+    assert!(learned >= 20, "too few learned predictions: {learned}");
 }
 
 #[tokio::test]
@@ -139,17 +139,17 @@ async fn tampered_or_unsigned_models_are_rejected_with_a_trusted_key() {
         .learned
         .reload(None)
         .await;
-    assert!(
-        report.rejected[0].reason.contains("manifiesto"),
-        "{report:?}"
-    );
+    assert!(report.rejected[0].reason.contains("manifest"), "{report:?}");
 
     let other_key = "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a";
     let report = state_for(&learned_dir(), Some(other_key))
         .learned
         .reload(None)
         .await;
-    assert!(report.rejected[0].reason.contains("firma"), "{report:?}");
+    assert!(
+        report.rejected[0].reason.contains("signature"),
+        "{report:?}"
+    );
 
     let app = router(state_for(tampered.path(), Some(&key)));
     let body = serde_json::json!({"cropType": "LETTUCE"});
@@ -165,7 +165,7 @@ async fn tampered_or_unsigned_models_are_rejected_with_a_trusted_key() {
     assert!(error["detail"]
         .as_str()
         .unwrap()
-        .starts_with("Fallo de verificación del modelo"));
+        .starts_with("Model verification failed"));
 }
 
 #[tokio::test]

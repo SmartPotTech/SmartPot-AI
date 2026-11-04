@@ -35,7 +35,7 @@ async fn tcp_client() -> SmartPotAiServiceClient<Channel> {
         }
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
-    panic!("el servidor gRPC no arrancó");
+    panic!("the gRPC server did not start");
 }
 
 #[tokio::test]
@@ -61,7 +61,7 @@ async fn grpc_answers_exactly_what_rest_answers() {
         assert_eq!(over_grpc, rest);
         assert_eq!(
             over_grpc, case["response"],
-            "también coincide con el servicio en Python"
+            "also matches the parity fixture"
         );
     }
     let fleets = fixture("parity_fleet.json");
@@ -96,11 +96,11 @@ async fn grpc_keeps_zero_readings_and_requires_the_token() {
     assert_eq!(body["diagnosis"][1]["status"], "REST");
 
     let denied = client
-        .evaluate_insight(request(&night, "un-token-equivocado-de-prueba"))
+        .evaluate_insight(request(&night, "a-wrong-test-token-value"))
         .await
         .unwrap_err();
     assert_eq!(denied.code(), Code::Unauthenticated);
-    assert_eq!(denied.message(), "Token de servicio inválido");
+    assert_eq!(denied.message(), "Invalid service token");
     let missing = client
         .analyze_fleet(tonic::Request::new(JsonBody {
             json: b"{}".to_vec(),
@@ -118,7 +118,7 @@ async fn grpc_keeps_zero_readings_and_requires_the_token() {
         .unwrap_err();
     assert_eq!(invalid.code(), Code::InvalidArgument);
     let detail: Value = serde_json::from_str(invalid.message()).unwrap();
-    assert_eq!(detail["detail"], "Datos inválidos");
+    assert_eq!(detail["detail"], "Invalid data");
 }
 
 #[cfg(unix)]

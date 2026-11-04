@@ -32,9 +32,8 @@ pub fn state_with(pairs: &[(&str, &str)]) -> AppState {
     for (k, v) in pairs {
         map.insert((*k).to_string(), (*v).to_string());
     }
-    let settings =
-        Settings::from_lookup(|name| map.get(name).cloned()).expect("configuración de prueba");
-    AppState::new(settings, BaseModels::embedded().expect("modelos base")).expect("estado")
+    let settings = Settings::from_lookup(|name| map.get(name).cloned()).expect("test settings");
+    AppState::new(settings, BaseModels::embedded().expect("base models")).expect("state")
 }
 
 pub fn state() -> AppState {
@@ -83,7 +82,7 @@ pub fn differences(path: &str, expected: &Value, actual: &Value, out: &mut Vec<S
         }
         (Value::Array(a), Value::Array(b)) => {
             if a.len() != b.len() {
-                out.push(format!("{path}: {} elementos ≠ {}", a.len(), b.len()));
+                out.push(format!("{path}: {} items ≠ {}", a.len(), b.len()));
                 return;
             }
             for (i, (x, y)) in a.iter().zip(b).enumerate() {
@@ -97,7 +96,7 @@ pub fn differences(path: &str, expected: &Value, actual: &Value, out: &mut Vec<S
             for key in keys {
                 match (a.get(key), b.get(key)) {
                     (Some(x), Some(y)) => differences(&format!("{path}.{key}"), x, y, out),
-                    _ => out.push(format!("{path}.{key}: falta de un lado")),
+                    _ => out.push(format!("{path}.{key}: missing on one side")),
                 }
             }
         }

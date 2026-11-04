@@ -1,7 +1,8 @@
 //! Paridad con el servicio en Python: las mismas peticiones deben dar las mismas respuestas.
 //!
 //! Los casos los genera `tools/generate_parity_fixtures.py` contra SmartPot-AI. En las peticiones inválidas se exige el
-//! mismo código, el mismo `detail` y los mismos campos con error (el texto de cada error está en español aquí).
+//! mismo código, el mismo `detail` y los mismos campos con error. Los textos de los casos se regeneraron en inglés con
+//! `tests/regenerate.rs`, sin tocar números ni estructura.
 
 mod common;
 
@@ -34,7 +35,7 @@ async fn compare(path: &str, cases: &Value) -> Vec<String> {
         let expected_status = case["status"].as_u64().unwrap() as u16;
         if status.as_u16() != expected_status {
             failures.push(format!(
-                "caso {i}: código {status} ≠ {expected_status}: {body}"
+                "case {i}: status {status} ≠ {expected_status}: {body}"
             ));
             continue;
         }
@@ -42,14 +43,14 @@ async fn compare(path: &str, cases: &Value) -> Vec<String> {
             let expected = &case["response"];
             if body["detail"] != expected["detail"] || error_fields(&body) != error_fields(expected)
             {
-                failures.push(format!("caso {i}: errores {body} ≠ {expected}"));
+                failures.push(format!("case {i}: errors {body} ≠ {expected}"));
             }
             continue;
         }
         let mut found = Vec::new();
         differences("", &case["response"], &body, &mut found);
         if !found.is_empty() {
-            failures.push(format!("caso {i}: {}", found.join("; ")));
+            failures.push(format!("case {i}: {}", found.join("; ")));
         }
     }
     failures
@@ -61,7 +62,7 @@ async fn insights_match_the_python_service() {
     let failures = compare("/v1/insights", &cases).await;
     assert!(
         failures.is_empty(),
-        "{} de {} casos distintos:\n{}",
+        "{} of {} cases differ:\n{}",
         failures.len(),
         cases.as_array().unwrap().len(),
         failures.join("\n")
@@ -75,7 +76,7 @@ async fn fleet_matches_the_python_service() {
     let failures = compare("/v1/fleet", &cases).await;
     assert!(
         failures.is_empty(),
-        "{} casos distintos:
+        "{} differing cases:
 {}",
         failures.len(),
         failures.join(

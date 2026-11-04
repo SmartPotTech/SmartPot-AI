@@ -27,7 +27,7 @@ fn base_models_match_scikit_learn() {
         let ph = models.ph_correction_probability(&values).unwrap();
         assert!(
             close(ventilation, golden["ventilation"][i].as_f64().unwrap()),
-            "ventilación {i}"
+            "ventilation {i}"
         );
         assert!(
             close(ph, golden["ph_correction"][i].as_f64().unwrap()),
@@ -46,7 +46,7 @@ fn base_models_match_scikit_learn() {
                 models.anomaly_decision(&x),
                 golden["anomaly_decision"][i].as_f64().unwrap()
             ),
-            "atípico {i}"
+            "anomaly {i}"
         );
     }
     for (name, value) in &models.metrics {

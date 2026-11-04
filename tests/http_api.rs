@@ -28,13 +28,13 @@ async fn health_is_public_and_the_rest_needs_the_token() {
         "GET",
         "/v1/crop-profiles",
         None,
-        Some("otro-token-que-no-es-el-de-la-api"),
+        Some("another-token-that-is-not-the-api-one"),
     )
     .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
-    assert_eq!(body["detail"], "Token de servicio inválido");
+    assert_eq!(body["detail"], "Invalid service token");
 
-    let (status, body) = call(&app, "GET", "/v1/nada", None, Some(TOKEN)).await;
+    let (status, body) = call(&app, "GET", "/v1/nothing", None, Some(TOKEN)).await;
     assert_eq!(
         (status, body["detail"].as_str()),
         (StatusCode::NOT_FOUND, Some("Not Found"))
@@ -51,7 +51,7 @@ async fn profiles_by_species() {
     assert_eq!(all.as_array().unwrap().len(), 6);
     let (status, basil) = call(&app, "GET", "/v1/profiles/basil", None, Some(TOKEN)).await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(basil["name"], "Albahaca");
+    assert_eq!(basil["name"], "Basil");
     assert_eq!(basil["ranges"]["soilMoisture"]["min"], 50.0);
     let (status, _) = call(&app, "GET", "/v1/profiles/CACTUS", None, Some(TOKEN)).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
@@ -97,7 +97,7 @@ async fn invalid_json_is_unprocessable() {
         .method("POST")
         .uri("/v1/fleet")
         .header("authorization", format!("Bearer {TOKEN}"))
-        .body(axum::body::Body::from("{no es json"))
+        .body(axum::body::Body::from("{not json"))
         .unwrap();
     let response = tower::ServiceExt::oneshot(app, request).await.unwrap();
     assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
@@ -195,7 +195,7 @@ async fn mock_trainer() -> (String, Seen) {
             "/v1/learning/train",
             post(|State(seen): State<Seen>, headers: HeaderMap, body: Bytes| async move {
                 record(&seen, "POST", "/v1/learning/train".into(), &body, &headers);
-                (StatusCode::NOT_FOUND, Json(json!({"detail": "No hay lecturas de BASIL"})))
+                (StatusCode::NOT_FOUND, Json(json!({"detail": "No readings for BASIL"})))
             }),
         )
         .with_state(Arc::clone(&seen));
@@ -210,7 +210,7 @@ async fn learning_routes_are_forwarded_to_the_trainer_byte_for_byte() {
     let (url, seen) = mock_trainer().await;
     let app = router(state_with(&[
         ("SMARTPOT_TRAINER_URL", &url),
-        ("SMARTPOT_TRAINER_TOKEN", "token-propio-del-trainer-123"),
+        ("SMARTPOT_TRAINER_TOKEN", "trainer-own-token-123"),
     ]));
 
     let batch = json!({"readings": [{"cropId": "a", "cropType": "LETTUCE", "measuredAt": "2026-11-02T10:00:00.123456-05:00",
@@ -240,7 +240,7 @@ async fn learning_routes_are_forwarded_to_the_trainer_byte_for_byte() {
     assert_eq!(
         status,
         StatusCode::UNPROCESSABLE_ENTITY,
-        "un id que cambia la ruta no llega al Trainer"
+        "an id that changes the path never reaches the Trainer"
     );
     let (status, body) = call(
         &app,
@@ -261,18 +261,18 @@ async fn learning_routes_are_forwarded_to_the_trainer_byte_for_byte() {
     .await;
     assert_eq!(
         (status, body["detail"].as_str()),
-        (StatusCode::NOT_FOUND, Some("No hay lecturas de BASIL"))
+        (StatusCode::NOT_FOUND, Some("No readings for BASIL"))
     );
 
     let seen = seen.lock().unwrap().clone();
     assert_eq!(
         seen[0].2,
         serde_json::to_string(&batch).unwrap(),
-        "el cuerpo viaja sin reinterpretar las fechas"
+        "the body travels without reinterpreting dates"
     );
     assert!(seen
         .iter()
-        .all(|(_, _, _, auth)| auth == "Bearer token-propio-del-trainer-123"));
+        .all(|(_, _, _, auth)| auth == "Bearer trainer-own-token-123"));
     assert_eq!(seen.len(), 4);
     assert_eq!(seen[2].1, "/v1/learning/crops/66f5a1000000000000000101");
     assert_eq!(seen[3].2, r#"{"cropType":"BASIL"}"#);
@@ -283,7 +283,7 @@ async fn learning_routes_are_forwarded_to_the_trainer_byte_for_byte() {
     let message: &Value = &body["learning"]["message"];
     assert_eq!(body["learning"]["readings"], 42);
     assert!(
-        message.as_str().unwrap().contains("empieza con 150"),
+        message.as_str().unwrap().contains("starts at 150"),
         "{message}"
     );
 }
