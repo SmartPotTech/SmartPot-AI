@@ -1,13 +1,168 @@
 # SmartPot-IA-Rust
 
-## Estado del Proyecto
+[English](#english) | [Español](#español)
+
+---
+
+<a id="english"></a>
+
+## English
+
+### Project Status
 
 [![Rust CI](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/ci.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/ci.yml)
 [![CodeQL Advanced](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/codeql.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/codeql.yml)
 [![Publish Docker Images](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/packaging.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/packaging.yml)
 [![Snyk Security Scan](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/snyk.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/snyk.yml)
 
-## Descripción
+### Description
+
+SmartPot-IA-Rust is the **intelligent assistant for the new SmartPot stack** (`demo-beta`): it receives the latest crop reading, historical telemetry, actuator states, placement, and outdoor weather, and returns a comprehensive diagnosis. It handles inference; model training is performed by [SmartPot-Trainer](https://github.com/SmartPotTech/SmartPot-Trainer). The legacy stack (production, `demo`, and `dev`) continues using [SmartPot-AI](https://github.com/SmartPotTech/SmartPot-AI) in Python.
+
+It implements **the exact same contract** as SmartPot-AI, field by field and text by text: the API switches transparently.
+
+| Technique | Problem Addressed | Location |
+|---|---|---|
+| **Expert system** | 21 forward-chaining rules (thermal stress, fungi, nutrient lockout, sensor failure, rain, trends…) | `src/engine/rules.rs`, `expert.rs` |
+| **Fuzzy logic** | Health index from 0 to 100 (zero-order Sugeno, branchless trapezoids, critical worst-case rule) | `src/engine/fuzzy.rs` |
+| **Forecasting** | Per-variable Theil-Sen trend estimation (median via partial selection in O(M)) and hours to threshold limit | `src/engine/forecast.rs` |
+| **Base models** | Logistic regression, MLP neural network, and Isolation Forest evaluated natively | `src/engine/models.rs`, `src/ml/` |
+| **Reactive agent** | Actuator action dispatch with nighttime rest enforcement from 22:00 to 06:00 | `src/engine/agent.rs` |
+| **Placement advice** | Microclimate suitability evaluation and relocation advice | `src/engine/placement.rs` |
+| **Fleet analysis** | Account ranking, shared issues, K-Means clustering with silhouette-optimized k, and bulk actions | `src/engine/fleet.rs`, `src/ml/kmeans.rs` |
+| **Learned models** | Trainer champion models (K-Means, Isolation Forest, LoRA) with Ed25519 signing and hot reloading | `src/learning/` |
+
+It also includes foliar VPD (Buck 1981) and a 1D Kalman filter with 3σ gating (`src/engine/vpd.rs`, `ekf.rs`) as verified utilities; they do not alter API responses to preserve strict parity.
+
+### Parity with SmartPot-AI
+
+Parity is validated using the Python service itself as an oracle (`tests/fixtures`, regenerable via `tools/` and `tests/regenerate.rs`):
+
+| Test Suite | Cases | Result |
+|---|---|---|
+| `POST /v1/insights` | 418 requests (405 valid, 13 invalid), covering nocturnal zeros, missing sensors, history, placement, weather, and rare rules | Identical responses |
+| `POST /v1/fleet` | 156 fleets from 1 to 12 crops (150 valid) | Identical responses, including clusters |
+| Learned models | 40 evaluations using models trained by SmartPot-Trainer | Identical responses |
+| Base models | 400 + 400 inputs tested against scikit-learn | Difference ≤ 1e-12 |
+
+To achieve this, Rust mirrors Python operations in identical order: round-half-to-even on IEEE-754 floats, Neumaier compensated summation (`sum()`, Python 3.12+), pairwise summation (NumPy), conversion to `f32` before tree threshold comparisons (scikit-learn), and K-Means with MT19937 random generator seeded identically.
+
+The parity fixture expected responses are regenerated in English via `SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored` (`tests/regenerate.rs`), which fails if any non-textual data changes (status codes, numbers, JSON keys, list lengths, or enum codes).
+
+### Contract
+
+REST server listening on port `8000` (HTTP/1.0, HTTP/1.1, and HTTP/2 without TLS). `/health` is public; all `/v1/*` routes require `Authorization: Bearer <SMARTPOT_AI_TOKEN>`, verified in constant time.
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/health` | Service status (`UP`), version, learning state, and loaded learned crop species |
+| POST | `/v1/insights` | Evaluates a crop reading (`InsightRequest` → `InsightResponse`) |
+| POST | `/v1/fleet` | Analyzes all crops in an account (`FleetRequest` → `FleetResponse`) |
+| GET | `/v1/crop-profiles`, `/v1/profiles`, `/v1/profiles/{cropType}` | Crop agronomic knowledge base by species |
+| GET | `/v1/models` | Base model benchmark metrics |
+| POST | `/v1/learning/reload` | Hot-reloads models trained by Trainer (`{"cropType": "LETTUCE"}` or all) |
+| POST, GET, POST, DELETE, POST | `/v1/learning/readings`, `/status`, `/train`, `/crops/{cropId}`, `/prune` | Transparently proxied to SmartPot-Trainer |
+
+Supported crop species: `LETTUCE`, `TOMATO`, `STRAWBERRY`, `BASIL`, `SPINACH`, and `PEPPER` (unrecognized species yield HTTP 422). Supported actuators: `WATER_PUMP`, `UV_LIGHT`, `FAN`, `HUMIDIFIER`, `PH_DOSER`, and `NUTRIENT_DOSER`.
+
+**gRPC** (`proto/smartpot/v1/ai.proto`, identical to `.github/proto`): `EvaluateInsight` and `AnalyzeFleet` transmit the REST JSON payload inside `JsonBody`, preserving `0.0` (frost, nighttime) and missing sensors accurately. Listens on UNIX domain socket `AI_GRPC_SOCKET` (permissions `0666` for containers sharing the volume) and/or TCP port `GRPC_TCP_PORT`, authenticated via metadata `authorization: Bearer <token>`.
+
+Error formats match FastAPI: 401 `{"detail": "Invalid service token"}`, 422 `{"detail": "Invalid data", "errors": [{"field", "message"}]}`, 404, and 405.
+
+### Continual Learning
+
+SmartPot-Trainer trains per species and outputs to the shared directory (`DATA_DIR/models`):
+
+- `{SPECIES}_inference.json`: Champion models (scaling and parameters), K-Means, Isolation Forest, LoRA (`W = W0 + (α/r)·B·A`), and 16 control cases evaluated with scikit-learn.
+- `{SPECIES}_manifest.json`: BLAKE2b hash of each file and Ed25519 signature of the canonical JSON.
+
+Upon receiving `POST /v1/learning/reload` (called by Trainer upon completing a cycle), the service reads the bundle, verifies the manifest, and updates the active species atomically without interrupting ongoing evaluations (`ArcSwap`). When `TRUSTED_MODEL_PUBLIC_KEY_HEX` is set, only models signed by that key are accepted (closed-fail security: missing manifest, invalid signature, or hash mismatch triggers immediate rejection). Control cases are validated during reload; any model disagreeing with scikit-learn is automatically disabled.
+
+When `SMARTPOT_TRAINER_URL` is unset, learning routes return a safe disabled state. If the Trainer is unresponsive, ingestion, forget, and prune endpoints return an empty success response rather than tripping the API circuit breaker; inference never depends on Trainer availability.
+
+### Environment Variables
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `SMARTPOT_AI_TOKEN` | — | Service token (minimum 24 characters). Required |
+| `PORT` | `8000` | REST HTTP port |
+| `AI_GRPC_SOCKET` (or `GRPC_UDS_PATH`) | empty | gRPC UNIX domain socket path |
+| `GRPC_TCP_PORT` | `0` | gRPC TCP port (0 disables TCP) |
+| `SMARTPOT_TRAINER_URL` | empty | SmartPot-Trainer service base URL |
+| `SMARTPOT_TRAINER_TOKEN` | `SMARTPOT_AI_TOKEN` | Bearer token for calling Trainer |
+| `DATA_DIR` | `data` | Shared data directory; models are loaded from `DATA_DIR/models` |
+| `TRUSTED_MODEL_PUBLIC_KEY_HEX` | empty | Ed25519 public key of SmartPot-Trainer for model verification |
+| `LEARNING_MIN_SAMPLES` | `200` | Sample threshold for first training, used in advisory messages |
+| `RUST_LOG` | `info` | Tracing and logging filter |
+
+### One-Command Deployment
+
+The container image is published at `ghcr.io/smartpottech/smartpot-ia-rust`. The complete `demo-beta` stack can be launched without cloning the source code:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/SmartPotTech/.github/main/docker/demo-beta/compose.yaml | docker compose -f - up -d --wait
+```
+
+Open http://localhost:5173 and log in with `demo@smartpot.app` / `SmartPot2026`. Stop with `docker compose -p smartpot-demo-beta down`. Further details in the [demo-beta documentation](https://github.com/SmartPotTech/.github/tree/main/docker/demo-beta).
+
+### Development and Testing
+
+Prerequisites: Rust 1.88+ (built-in protobuf compilation via protox; external `protoc` not required).
+
+```bash
+cp .env.example .env    # configure SMARTPOT_AI_TOKEN
+cargo fmt --all -- --check
+cargo clippy --all-targets -- -D warnings
+cargo test
+cargo run --release
+```
+
+The test suite covers agronomic profiles, fuzzy logic, Theil-Sen forecasting, expert rules, nighttime rest agent rules, K-Means clustering, LoRA adapters, VPD calculations, 1D Kalman filtering, Ed25519 signatures, BLAKE2b digests, REST API endpoints, gRPC via TCP and UNIX socket, Trainer reverse proxy, and parity with Python.
+
+#### Regenerating Parity Fixtures and Base Models
+
+With sibling repositories present:
+
+```bash
+uv run --project ../SmartPot-AI python tools/export_base_models.py ../SmartPot-AI
+uv run --project ../SmartPot-AI python tools/generate_parity_fixtures.py ../SmartPot-AI
+uv run --project ../SmartPot-Trainer python tools/generate_learned_fixtures.py train ../SmartPot-Trainer
+SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored
+```
+
+`models/base_models.json` is embedded directly in the compiled binary: base models initialize at startup in milliseconds without disk I/O.
+
+#### Docker Image
+
+```bash
+docker build -t smartpot-ia-rust .
+docker pull ghcr.io/smartpottech/smartpot-ia-rust:latest
+```
+
+Multi-stage build based on `rust:1.98-bookworm` and `debian:bookworm-slim`, running under unprivileged user `10001`. Supports `read_only: true`, `cap_drop: ALL`, and `no-new-privileges: true`. Health checks use the binary itself (`smartpot-ia --healthcheck`), eliminating `curl` dependencies.
+
+### Documentation
+
+[`docs/SmartPot_IA_Rust_Documentation.md`](docs/SmartPot_IA_Rust_Documentation.md) details internal architecture, inference reasoning pipelines, numeric parity details, and continual learning lifecycles, with diagrams in [`docs/diagrams`](docs/diagrams).
+
+### License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+<a id="español"></a>
+
+## Español
+
+### Estado del Proyecto
+
+[![Rust CI](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/ci.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/ci.yml)
+[![CodeQL Advanced](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/codeql.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/codeql.yml)
+[![Publish Docker Images](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/packaging.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/packaging.yml)
+[![Snyk Security Scan](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/snyk.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/snyk.yml)
+
+### Descripción
 
 SmartPot-IA-Rust es el **asistente inteligente del stack nuevo** de SmartPot (`demo-beta`): recibe la última lectura
 de un cultivo, su historial, los actuadores, el lugar y el clima de afuera, y devuelve el diagnóstico completo. Es la
@@ -30,9 +185,9 @@ Habla **el mismo contrato** que SmartPot-AI, campo por campo y texto por texto: 
 También trae el VPD foliar (Buck 1981) y un filtro de Kalman 1D con compuerta de 3σ (`src/engine/vpd.rs`,
 `ekf.rs`) como utilidades probadas; no cambian la respuesta, para no romper la paridad.
 
-## Paridad con SmartPot-AI
+### Paridad con SmartPot-AI
 
-La paridad se comprueba con el propio servicio en Python como oráculo (`tests/fixtures`, regenerables con `tools/`):
+La paridad se comprueba con el propio servicio en Python como oráculo (`tests/fixtures`, regenerables con `tools/` y `tests/regenerate.rs`):
 
 | Prueba | Casos | Resultado |
 |---|---|---|
@@ -45,7 +200,9 @@ Para lograrlo, Rust repite las operaciones de Python en el mismo orden: `round` 
 de `sum()` (Python 3.12+), la suma por pares de NumPy, la conversión a `f32` de los árboles de scikit-learn y, en la
 flota, el K-Means de scikit-learn con su generador MT19937 y la misma semilla.
 
-## Contrato
+Los textos esperados de los casos de paridad se regeneran en inglés mediante `SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored` (`tests/regenerate.rs`), garantizando que no cambie ningún código de estado, número, clave JSON, tamaño de lista ni código enum.
+
+### Contrato
 
 REST en el puerto `8000` (HTTP/1.0, HTTP/1.1 y HTTP/2 sin TLS). `/health` es público; todo `/v1/*` exige
 `Authorization: Bearer <SMARTPOT_AI_TOKEN>`, comparado en tiempo constante.
@@ -60,18 +217,17 @@ REST en el puerto `8000` (HTTP/1.0, HTTP/1.1 y HTTP/2 sin TLS). `/health` es pú
 | POST | `/v1/learning/reload` | Recarga en caliente los modelos del Trainer (`{"cropType": "LETTUCE"}` o todos) |
 | POST, GET, POST, DELETE, POST | `/v1/learning/readings`, `/status`, `/train`, `/crops/{cropId}`, `/prune` | Se reenvían tal cual a SmartPot-Trainer |
 
-Especies: `LETTUCE`, `TOMATO`, `STRAWBERRY`, `BASIL`, `SPINACH` y `PEPPER` (otra especie responde 422, como en
-Python). Actuadores: `WATER_PUMP`, `UV_LIGHT`, `FAN`, `HUMIDIFIER`, `PH_DOSER` y `NUTRIENT_DOSER`.
+Especies: `LETTUCE`, `TOMATO`, `STRAWBERRY`, `BASIL`, `SPINACH` y `PEPPER` (otra especie responde 422). Actuadores: `WATER_PUMP`, `UV_LIGHT`, `FAN`, `HUMIDIFIER`, `PH_DOSER` y `NUTRIENT_DOSER`.
 
 **gRPC** (`proto/smartpot/v1/ai.proto`, el mismo de `.github/proto`): `EvaluateInsight` y `AnalyzeFleet` llevan el
 JSON de REST en `JsonBody`, así un `0.0` (helada, noche) llega como `0.0` y un sensor ausente como ausente, y la
 respuesta es la de REST byte a byte. Escucha en el socket UNIX `AI_GRPC_SOCKET` (permisos 0666 para los contenedores
 que comparten el volumen) y/o en TCP `GRPC_TCP_PORT`, con el metadato `authorization: Bearer <token>`.
 
-Errores con la forma de FastAPI: 401 `{"detail": "Token de servicio inválido"}`, 422
-`{"detail": "Datos inválidos", "errors": [{"field", "message"}]}`, 404 y 405.
+Errores estandarizados en formato FastAPI: 401 `{"detail": "Invalid service token"}`, 422
+`{"detail": "Invalid data", "errors": [{"field", "message"}]}`, 404 y 405.
 
-## Aprendizaje continuo
+### Aprendizaje continuo
 
 SmartPot-Trainer entrena por especie y escribe en la carpeta compartida (`DATA_DIR/models`):
 
@@ -88,7 +244,7 @@ Sin `SMARTPOT_TRAINER_URL`, las rutas de aprendizaje responden un estado deshabi
 responde, lecturas, olvido y poda devuelven un resultado vacío en vez de un error, para no abrir el circuit breaker de
 la API; la evaluación nunca depende del Trainer.
 
-## Variables de entorno
+### Variables de entorno
 
 | Variable | Por defecto | Uso |
 |---|---|---|
@@ -103,7 +259,7 @@ la API; la evaluación nunca depende del Trainer.
 | `LEARNING_MIN_SAMPLES` | `200` | Lecturas del primer entrenamiento, para el mensaje mientras el Trainer no informa |
 | `RUST_LOG` | `info` | Nivel de registro |
 
-## Despliegue en un comando
+### Despliegue en un comando
 
 La imagen es pública: `ghcr.io/smartpottech/smartpot-ia-rust`. El stack nuevo completo, con este servicio, se levanta
 sin descargar el código:
@@ -116,7 +272,7 @@ Abre http://localhost:5173 e ingresa con `demo@smartpot.app` / `SmartPot2026`. S
 `docker compose -p smartpot-demo-beta down`. Más detalle en la
 [demo beta](https://github.com/SmartPotTech/.github/tree/main/docker/demo-beta).
 
-## Desarrollo y pruebas
+### Desarrollo y pruebas
 
 Requisitos: Rust 1.88 o superior (no hace falta `protoc`: el contrato se compila con protox).
 
@@ -132,7 +288,7 @@ Las pruebas cubren perfiles, lógica difusa, Theil-Sen, reglas, descanso nocturn
 filtro de Kalman, la firma Ed25519 y el hash BLAKE2b, REST, gRPC por TCP y por socket UNIX, el proxy al Trainer y la
 paridad con Python.
 
-### Regenerar los casos de paridad y los modelos base
+#### Regenerar los casos de paridad y los modelos base
 
 Con los repositorios clonados uno junto al otro:
 
@@ -140,13 +296,13 @@ Con los repositorios clonados uno junto al otro:
 uv run --project ../SmartPot-AI python tools/export_base_models.py ../SmartPot-AI
 uv run --project ../SmartPot-AI python tools/generate_parity_fixtures.py ../SmartPot-AI
 uv run --project ../SmartPot-Trainer python tools/generate_learned_fixtures.py train ../SmartPot-Trainer
-uv run --project ../SmartPot-AI python tools/generate_learned_fixtures.py expect ../SmartPot-AI
+SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored
 ```
 
 `models/base_models.json` queda dentro del binario: los modelos base cargan al arrancar en unos milisegundos, sin
 entrenar.
 
-### Imagen Docker
+#### Imagen Docker
 
 ```bash
 docker build -t smartpot-ia-rust .
@@ -158,12 +314,12 @@ Compilación en `rust:1.98-bookworm` y ejecución en `debian:bookworm-slim` actu
 (`smartpot-ia --healthcheck`), sin `curl`. Cada cambio en `main` pasa por el CI y publica la imagen en GHCR (y en
 Docker Hub si el repositorio tiene credenciales).
 
-## Documentación
+### Documentación
 
 [`docs/SmartPot_IA_Rust_Documentation.md`](docs/SmartPot_IA_Rust_Documentation.md) explica la arquitectura, cómo razona
 una evaluación, la paridad numérica y el ciclo de los modelos aprendidos, con sus diagramas en
 [`docs/diagrams`](docs/diagrams).
 
-## Licencia
+### Licencia
 
 Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
