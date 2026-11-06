@@ -1,4 +1,4 @@
-# SmartPot-IA-Rust
+# SmartPot-AI
 
 [English](#english) | [Español](#español)
 
@@ -13,11 +13,11 @@
 | Field | Value |
 | --- | --- |
 | Project | SmartPot · [smartpot.app](https://smartpot.app) |
-| Component | [SmartPot-IA-Rust](https://github.com/SmartPotTech/SmartPot-IA-Rust) |
-| Version | 1.0.0 · November 2026 |
+| Component | [SmartPot-AI](https://github.com/SmartPotTech/SmartPot-AI) |
+| Version | 2.0.0 · November 2026 |
 | Language & Runtime | Rust 1.88+ (2021 edition) · Tokio · Axum 0.8 · Tonic 0.14 · zero `unsafe` |
-| Scope | Architecture, evaluation reasoning flow, SmartPot-AI parity, base & learned models, REST & gRPC contract, security, testing, and operations |
-| Status | New stack (`demo-beta`); legacy stack continues with SmartPot-AI in Python |
+| Scope | Architecture, evaluation reasoning flow, parity verification, base & learned models, REST & gRPC contract, security, testing, and operations |
+| Status | Canonical production inference service (Stack B). Legacy Python service archived in SmartPot-AI-Python |
 
 ---
 
@@ -25,14 +25,14 @@
 
 #### In Simple Terms
 
-SmartPot-IA-Rust is the **reasoning engine** in the new stack: the API sends the latest telemetry for a crop, and the AI returns its health condition, active stress factors, forecasts for upcoming hours, and recommended actions. It does not train models: it uses models trained by [SmartPot-Trainer](https://github.com/SmartPotTech/SmartPot-Trainer) along with base models embedded directly inside the binary.
+SmartPot-AI is the **reasoning and agronomic inference engine** in SmartPot production: the API sends the latest telemetry for a crop, and the AI returns its health condition, active stress factors, forecasts for upcoming hours, and recommended actions. It does not train models: it uses models trained by [SmartPot-Trainer](https://github.com/SmartPotTech/SmartPot-Trainer) along with base models embedded directly inside the binary.
 
-It replaces [SmartPot-AI](https://github.com/SmartPotTech/SmartPot-AI) in the new stack without the API or PWA noticing the change: identical routes, fields, status codes, and standardized error and diagnostic output. SmartPot-AI remains frozen for the legacy stack (production, `demo`, and `dev`) until phased out.
+It replaces the legacy Python service ([SmartPot-AI-Python](https://github.com/SmartPotTech/SmartPot-AI-Python)) in production: identical routes, fields, status codes, and standardized error and diagnostic output.
 
-| Component | Legacy Stack | New Stack |
+| Component | Legacy Stack A (Deprecated) | Production Stack B (Canonical) |
 | --- | --- | --- |
-| Inference | SmartPot-AI (Python, FastAPI, scikit-learn) | **SmartPot-IA-Rust** |
-| Training | Inside SmartPot-AI (SQLite) | SmartPot-Trainer (Python) |
+| Inference | SmartPot-AI-Python (FastAPI, scikit-learn) | **SmartPot-AI** (Rust 1.88+, Axum, Tonic) |
+| Training | Inside SmartPot-AI (SQLite) | SmartPot-Trainer (Python, TimescaleDB, Ed25519) |
 | API Transport | REST | REST or gRPC (UNIX socket or TCP) |
 | Learned Models | `joblib` (pickle) | Native JSON signed with Ed25519 |
 
@@ -42,10 +42,10 @@ It replaces [SmartPot-AI](https://github.com/SmartPotTech/SmartPot-AI) in the ne
 ```mermaid
 %%{init: {"theme": "base", "fontFamily": "Segoe UI, Arial, sans-serif", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "15px", "primaryColor": "#DDF5EA", "primaryTextColor": "#17261F", "primaryBorderColor": "#067A52", "secondaryColor": "#E3F2FB", "secondaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "tertiaryBorderColor": "#D5E3DC", "lineColor": "#5B6B63", "textColor": "#17261F", "mainBkg": "#DDF5EA", "nodeBorder": "#067A52", "clusterBkg": "#F7FAF8", "clusterBorder": "#D5E3DC", "edgeLabelBackground": "#FFFFFF", "actorBkg": "#067A52", "actorBorder": "#0B3D2B", "actorTextColor": "#FFFFFF", "actorLineColor": "#5B6B63", "signalColor": "#17261F", "signalTextColor": "#17261F", "labelBoxBkgColor": "#0B3D2B", "labelBoxBorderColor": "#0B3D2B", "labelTextColor": "#FFFFFF", "loopTextColor": "#0B3D2B", "noteBkgColor": "#FDF4DD", "noteBorderColor": "#C98D12", "noteTextColor": "#17261F", "activationBkgColor": "#DDF5EA", "activationBorderColor": "#067A52", "attributeBackgroundColorOdd": "#FFFFFF", "attributeBackgroundColorEven": "#F2F7F4"}, "layout": "elk", "elk": {"nodePlacementStrategy": "BRANDES_KOEPF", "mergeEdges": false, "cycleBreakingStrategy": "GREEDY"}}}%%
 flowchart LR
-  api["SmartPot-API-Go<br/>AI client"]
+  api["SmartPot-API<br/>AI client"]
   trainer["SmartPot-Trainer<br/>Python training service"]
   shared[("Shared Volume<br/>DATA_DIR/models")]
-  subgraph ia["SmartPot-IA-Rust · Rust 1.88+ / Tokio"]
+  subgraph ia["SmartPot-AI · Rust 1.88+ / Tokio"]
     direction TB
     rest["http.rs · Axum :8000<br/>REST, constant-time token check"]
     grpc["grpc.rs · Tonic<br/>UNIX socket & TCP, same JSON"]
@@ -107,7 +107,7 @@ flowchart TB
   fuzzy["Fuzzy Logic<br/>health index 0 to 100"]
   agent["Reactive Agent<br/>rest period 22:00 to 06:00"]
   place["Placement Advice"]
-  response["InsightResponse<br/>matching SmartPot-AI contract"]
+  response["InsightResponse<br/>canonical REST & gRPC contract"]
   request --> validate --> diagnosis
   diagnosis --> forecast & base & learned & fuzzy
   forecast & base & learned & diagnosis --> memory
@@ -166,8 +166,8 @@ The parity fixture expected responses are regenerated in English via `SMARTPOT_R
 ```mermaid
 %%{init: {"theme": "base", "fontFamily": "Segoe UI, Arial, sans-serif", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "15px", "primaryColor": "#DDF5EA", "primaryTextColor": "#17261F", "primaryBorderColor": "#067A52", "secondaryColor": "#E3F2FB", "secondaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "tertiaryBorderColor": "#D5E3DC", "lineColor": "#5B6B63", "textColor": "#17261F", "mainBkg": "#DDF5EA", "nodeBorder": "#067A52", "clusterBkg": "#F7FAF8", "clusterBorder": "#D5E3DC", "edgeLabelBackground": "#FFFFFF", "actorBkg": "#067A52", "actorBorder": "#0B3D2B", "actorTextColor": "#FFFFFF", "actorLineColor": "#5B6B63", "signalColor": "#17261F", "signalTextColor": "#17261F", "labelBoxBkgColor": "#0B3D2B", "labelBoxBorderColor": "#0B3D2B", "labelTextColor": "#FFFFFF", "loopTextColor": "#0B3D2B", "noteBkgColor": "#FDF4DD", "noteBorderColor": "#C98D12", "noteTextColor": "#17261F", "activationBkgColor": "#DDF5EA", "activationBorderColor": "#067A52", "attributeBackgroundColorOdd": "#FFFFFF", "attributeBackgroundColorEven": "#F2F7F4"}}}%%
 sequenceDiagram
-  participant API as SmartPot-API-Go
-  participant IA as SmartPot-IA-Rust
+  participant API as SmartPot-API
+  participant IA as SmartPot-AI
   participant Trainer as SmartPot-Trainer
   participant Folder as DATA_DIR/models
   API->>IA: POST /v1/learning/readings
@@ -260,11 +260,11 @@ In `demo-beta`, `ai-smartpot` runs `ghcr.io/smartpottech/smartpot-ia-rust`, shar
 | Campo | Valor |
 | --- | --- |
 | Proyecto | SmartPot · [smartpot.app](https://smartpot.app) |
-| Componente | [SmartPot-IA-Rust](https://github.com/SmartPotTech/SmartPot-IA-Rust) |
-| Versión | 1.0.0 · noviembre 2026 |
+| Componente | [SmartPot-AI](https://github.com/SmartPotTech/SmartPot-AI) |
+| Versión | 2.0.0 · noviembre 2026 |
 | Lenguaje y runtime | Rust 1.88+ (edición 2021) · Tokio · Axum 0.8 · Tonic 0.14 · sin `unsafe` |
-| Alcance | Arquitectura, cómo razona una evaluación, paridad con SmartPot-AI, modelos base y aprendidos, contrato REST y gRPC, seguridad, pruebas y operación |
-| Estado | Stack nuevo (`demo-beta`); el stack actual sigue con SmartPot-AI en Python |
+| Alcance | Arquitectura, razonamiento agronómico, paridad, modelos base y aprendidos, contrato REST y gRPC, seguridad, pruebas y operación |
+| Estado | Servicio canónico de inferencia en producción (Stack B). Implementación histórica en Python archivada en SmartPot-AI-Python |
 
 ---
 
@@ -272,19 +272,18 @@ In `demo-beta`, `ai-smartpot` runs `ghcr.io/smartpottech/smartpot-ia-rust`, shar
 
 #### En palabras simples
 
-SmartPot-IA-Rust es la parte que **piensa** en el stack nuevo: la API le manda la lectura de un cultivo y la IA le
+SmartPot-AI es la parte que **piensa** y razona agronómicamente en la producción de SmartPot: la API le manda la lectura de un cultivo y la IA le
 devuelve cómo está la planta, qué la afecta, qué va a pasar en las próximas horas y qué hacer. No entrena: usa los
 modelos que entrena [SmartPot-Trainer](https://github.com/SmartPotTech/SmartPot-Trainer) y los modelos base que vienen
 dentro del binario.
 
-Reemplaza a [SmartPot-AI](https://github.com/SmartPotTech/SmartPot-AI) en el stack nuevo sin que la API ni la PWA
-noten la diferencia: mismas rutas, mismos campos, mismos códigos y mismos textos estandarizados en inglés. SmartPot-AI queda
-congelado para el stack actual (producción, `demo` y `dev`) hasta su retiro.
+Reemplaza a la implementación legada [SmartPot-AI-Python](https://github.com/SmartPotTech/SmartPot-AI-Python) en producción sin que la API ni la PWA
+noten la diferencia: mismas rutas, mismos campos, mismos códigos y mismos textos estandarizados en inglés.
 
-| Pieza | Stack actual | Stack nuevo |
+| Pieza | Stack A Legado (Deprecado) | Stack B Producción (Canónico) |
 | --- | --- | --- |
-| Inferencia | SmartPot-AI (Python, FastAPI, scikit-learn) | **SmartPot-IA-Rust** |
-| Entrenamiento | Dentro de SmartPot-AI (SQLite) | SmartPot-Trainer (Python) |
+| Inferencia | SmartPot-AI-Python (FastAPI, scikit-learn) | **SmartPot-AI** (Rust 1.88+, Tokio, Axum, Tonic) |
+| Entrenamiento | Dentro de SmartPot-AI (SQLite) | SmartPot-Trainer (Python, TimescaleDB, Ed25519) |
 | Transporte con la API | REST | REST o gRPC (socket UNIX o TCP) |
 | Modelos aprendidos | `joblib` (pickle) | JSON nativo firmado con Ed25519 |
 
@@ -294,10 +293,10 @@ congelado para el stack actual (producción, `demo` y `dev`) hasta su retiro.
 ```mermaid
 %%{init: {"theme": "base", "fontFamily": "Segoe UI, Arial, sans-serif", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "15px", "primaryColor": "#DDF5EA", "primaryTextColor": "#17261F", "primaryBorderColor": "#067A52", "secondaryColor": "#E3F2FB", "secondaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "tertiaryBorderColor": "#D5E3DC", "lineColor": "#5B6B63", "textColor": "#17261F", "mainBkg": "#DDF5EA", "nodeBorder": "#067A52", "clusterBkg": "#F7FAF8", "clusterBorder": "#D5E3DC", "edgeLabelBackground": "#FFFFFF", "actorBkg": "#067A52", "actorBorder": "#0B3D2B", "actorTextColor": "#FFFFFF", "actorLineColor": "#5B6B63", "signalColor": "#17261F", "signalTextColor": "#17261F", "labelBoxBkgColor": "#0B3D2B", "labelBoxBorderColor": "#0B3D2B", "labelTextColor": "#FFFFFF", "loopTextColor": "#0B3D2B", "noteBkgColor": "#FDF4DD", "noteBorderColor": "#C98D12", "noteTextColor": "#17261F", "activationBkgColor": "#DDF5EA", "activationBorderColor": "#067A52", "attributeBackgroundColorOdd": "#FFFFFF", "attributeBackgroundColorEven": "#F2F7F4"}, "layout": "elk", "elk": {"nodePlacementStrategy": "BRANDES_KOEPF", "mergeEdges": false, "cycleBreakingStrategy": "GREEDY"}}}%%
 flowchart LR
-  api["SmartPot-API-Go<br/>cliente de la IA"]
+  api["SmartPot-API<br/>cliente de la IA"]
   trainer["SmartPot-Trainer<br/>entrenamiento en Python"]
   shared[("Volumen compartido<br/>DATA_DIR/models")]
-  subgraph ia["SmartPot-IA-Rust · Rust 1.88+ / Tokio"]
+  subgraph ia["SmartPot-AI · Rust 1.88+ / Tokio"]
     direction TB
     rest["http.rs · Axum :8000<br/>REST, token en tiempo constante"]
     grpc["grpc.rs · Tonic<br/>socket UNIX y TCP, mismo JSON"]
@@ -361,7 +360,7 @@ flowchart TB
   fuzzy["Lógica difusa<br/>índice de salud 0 a 100"]
   agent["Agente reactivo<br/>descanso de 22:00 a 6:00"]
   place["Consejo de lugar"]
-  response["InsightResponse<br/>mismo JSON que SmartPot-AI"]
+  response["InsightResponse<br/>contrato canónico REST / gRPC"]
   request --> validate --> diagnosis
   diagnosis --> forecast & base & learned & fuzzy
   forecast & base & learned & diagnosis --> memory
@@ -437,8 +436,8 @@ escribirlo, el script comprueba que el bosque exportado da lo mismo que scikit-l
 ```mermaid
 %%{init: {"theme": "base", "fontFamily": "Segoe UI, Arial, sans-serif", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "15px", "primaryColor": "#DDF5EA", "primaryTextColor": "#17261F", "primaryBorderColor": "#067A52", "secondaryColor": "#E3F2FB", "secondaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "tertiaryBorderColor": "#D5E3DC", "lineColor": "#5B6B63", "textColor": "#17261F", "mainBkg": "#DDF5EA", "nodeBorder": "#067A52", "clusterBkg": "#F7FAF8", "clusterBorder": "#D5E3DC", "edgeLabelBackground": "#FFFFFF", "actorBkg": "#067A52", "actorBorder": "#0B3D2B", "actorTextColor": "#FFFFFF", "actorLineColor": "#5B6B63", "signalColor": "#17261F", "signalTextColor": "#17261F", "labelBoxBkgColor": "#0B3D2B", "labelBoxBorderColor": "#0B3D2B", "labelTextColor": "#FFFFFF", "loopTextColor": "#0B3D2B", "noteBkgColor": "#FDF4DD", "noteBorderColor": "#C98D12", "noteTextColor": "#17261F", "activationBkgColor": "#DDF5EA", "activationBorderColor": "#067A52", "attributeBackgroundColorOdd": "#FFFFFF", "attributeBackgroundColorEven": "#F2F7F4"}}}%%
 sequenceDiagram
-  participant API as SmartPot-API-Go
-  participant IA as SmartPot-IA-Rust
+  participant API as SmartPot-API
+  participant IA as SmartPot-AI
   participant Trainer as SmartPot-Trainer
   participant Carpeta as DATA_DIR/models
   API->>IA: POST /v1/learning/readings

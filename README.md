@@ -1,4 +1,4 @@
-# SmartPot-IA-Rust
+# SmartPot-AI
 
 [English](#english) | [Español](#español)
 
@@ -10,14 +10,14 @@
 
 ### Project Status
 
-[![Rust CI](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/ci.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/ci.yml)
-[![CodeQL Advanced](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/codeql.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/codeql.yml)
-[![Publish Docker Images](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/packaging.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/packaging.yml)
-[![Snyk Security Scan](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/snyk.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/snyk.yml)
+[![Rust CI](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/ci.yml)
+[![CodeQL Advanced](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/codeql.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/codeql.yml)
+[![Publish Docker Images](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/packaging.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/packaging.yml)
+[![Snyk Security Scan](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/snyk.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/snyk.yml)
 
 ### Description
 
-SmartPot-IA-Rust is the **intelligent assistant for the new SmartPot stack** (`demo-beta`): it receives the latest crop reading, historical telemetry, actuator states, placement, and outdoor weather, and returns a comprehensive diagnosis. It handles inference; model training is performed by [SmartPot-Trainer](https://github.com/SmartPotTech/SmartPot-Trainer). The legacy stack (production, `demo`, and `dev`) continues using [SmartPot-AI](https://github.com/SmartPotTech/SmartPot-AI) in Python.
+SmartPot-AI is the **intelligent inference engine of SmartPot**, written in **Rust 1.88+** with **Axum** and **Tonic (gRPC)**: it receives the latest crop reading, historical telemetry, actuator states, placement, and outdoor weather, and returns a comprehensive diagnosis. It handles high-throughput inference; continuous model training is performed decoupled by [SmartPot-Trainer](https://github.com/SmartPotTech/SmartPot-Trainer). The legacy monolithic Python service has been archived as `SmartPot-AI-Python`.
 
 It implements **the exact same contract** as SmartPot-AI, field by field and text by text: the API switches transparently.
 
@@ -157,37 +157,37 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 ### Estado del Proyecto
 
-[![Rust CI](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/ci.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/ci.yml)
-[![CodeQL Advanced](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/codeql.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/codeql.yml)
-[![Publish Docker Images](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/packaging.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/packaging.yml)
-[![Snyk Security Scan](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/snyk.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-IA-Rust/actions/workflows/snyk.yml)
+[![Rust CI](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/ci.yml)
+[![CodeQL Advanced](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/codeql.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/codeql.yml)
+[![Publish Docker Images](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/packaging.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/packaging.yml)
+[![Snyk Security Scan](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/snyk.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-AI/actions/workflows/snyk.yml)
 
 ### Descripción
 
-SmartPot-IA-Rust es el **asistente inteligente del stack nuevo** de SmartPot (`demo-beta`): recibe la última lectura
-de un cultivo, su historial, los actuadores, el lugar y el clima de afuera, y devuelve el diagnóstico completo. Es la
-inferencia; el entrenamiento lo hace [SmartPot-Trainer](https://github.com/SmartPotTech/SmartPot-Trainer). El stack
-actual (producción, `demo` y `dev`) sigue con [SmartPot-AI](https://github.com/SmartPotTech/SmartPot-AI) en Python.
+SmartPot-AI es el **motor inteligente de inferencia y diagnóstico agronómico** en producción de SmartPot: recibe la última lectura
+de un cultivo, su historial, los actuadores, el lugar y el clima de afuera, y devuelve el diagnóstico agronómico completo. Es el servicio
+de inferencia; el reentrenamiento y aprendizaje continuo lo ejecuta [SmartPot-Trainer](https://github.com/SmartPotTech/SmartPot-Trainer).
+La implementación histórica en Python se conserva archivada en [SmartPot-AI-Python](https://github.com/SmartPotTech/SmartPot-AI-Python).
 
-Habla **el mismo contrato** que SmartPot-AI, campo por campo y texto por texto: la API no nota el cambio.
+Mantiene **paridad estricta** con el contrato de la plataforma, campo por campo y texto por texto: la API consume sus endpoints de manera transparente.
 
 | Técnica | Qué resuelve | Dónde vive |
 |---|---|---|
 | **Sistema experto** | 21 reglas con encadenamiento hacia adelante (estrés térmico, hongos, bloqueo de nutrientes, falla de sensor, lluvia, tendencia…) | `src/engine/rules.rs`, `expert.rs` |
 | **Lógica difusa** | Índice de salud de 0 a 100 (Sugeno de orden cero, trapecios sin ramas, peor caso crítico) | `src/engine/fuzzy.rs` |
 | **Pronóstico** | Tendencia por variable con Theil-Sen (mediana por selección parcial en O(M)) y horas hasta el límite | `src/engine/forecast.rs` |
-| **Modelos base** | Regresión logística, red MLP e Isolation Forest de SmartPot-AI, evaluados de forma nativa | `src/engine/models.rs`, `src/ml/` |
+| **Modelos base** | Regresión logística, red MLP e Isolation Forest evaluados de forma nativa en Rust | `src/engine/models.rs`, `src/ml/` |
 | **Agente reactivo** | Acciones sobre los actuadores del cultivo; respeta el descanso nocturno de 22:00 a 6:00 | `src/engine/agent.rs` |
 | **Consejo de lugar** | Si el lugar le sirve a la especie y cuándo conviene moverla | `src/engine/placement.rs` |
 | **Análisis de flota** | Ranking, problemas compartidos, grupos K-Means con k por silueta y acciones en bloque | `src/engine/fleet.rs`, `src/ml/kmeans.rs` |
 | **Lo aprendido** | Modelos del Trainer (campeones, K-Means, Isolation Forest, LoRA) con firma Ed25519 y recarga en caliente | `src/learning/` |
 
 También trae el VPD foliar (Buck 1981) y un filtro de Kalman 1D con compuerta de 3σ (`src/engine/vpd.rs`,
-`ekf.rs`) como utilidades probadas; no cambian la respuesta, para no romper la paridad.
+`ekf.rs`) como utilidades probadas; no cambian la respuesta, para mantener estricta paridad.
 
-### Paridad con SmartPot-AI
+### Paridad con la Implementación Histórica Python
 
-La paridad se comprueba con el propio servicio en Python como oráculo (`tests/fixtures`, regenerables con `tools/` y `tests/regenerate.rs`):
+La paridad se comprobó con el oráculo en Python (`tests/fixtures`, regenerables con `tools/` y `tests/regenerate.rs`):
 
 | Prueba | Casos | Resultado |
 |---|---|---|
@@ -261,16 +261,15 @@ la API; la evaluación nunca depende del Trainer.
 
 ### Despliegue en un comando
 
-La imagen es pública: `ghcr.io/smartpottech/smartpot-ia-rust`. El stack nuevo completo, con este servicio, se levanta
-sin descargar el código:
+La imagen es pública: `ghcr.io/smartpottech/smartpot-ai`. El entorno de demostración se levanta sin descargar el código fuente:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SmartPotTech/.github/main/docker/demo-beta/compose.yaml | docker compose -f - up -d --wait
+curl -fsSL https://raw.githubusercontent.com/SmartPotTech/.github/main/docker/demo/compose.yaml | docker compose -f - up -d --wait
 ```
 
 Abre http://localhost:5173 e ingresa con `demo@smartpot.app` / `SmartPot2026`. Se detiene con
-`docker compose -p smartpot-demo-beta down`. Más detalle en la
-[demo beta](https://github.com/SmartPotTech/.github/tree/main/docker/demo-beta).
+`docker compose -p smartpot-demo down`. Más detalle en la
+[demo local](https://github.com/SmartPotTech/.github/tree/main/docker/demo).
 
 ### Desarrollo y pruebas
 
@@ -293,8 +292,8 @@ paridad con Python.
 Con los repositorios clonados uno junto al otro:
 
 ```bash
-uv run --project ../SmartPot-AI python tools/export_base_models.py ../SmartPot-AI
-uv run --project ../SmartPot-AI python tools/generate_parity_fixtures.py ../SmartPot-AI
+uv run --project ../SmartPot-AI-Python python tools/export_base_models.py ../SmartPot-AI-Python
+uv run --project ../SmartPot-AI-Python python tools/generate_parity_fixtures.py ../SmartPot-AI-Python
 uv run --project ../SmartPot-Trainer python tools/generate_learned_fixtures.py train ../SmartPot-Trainer
 SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored
 ```
@@ -305,13 +304,13 @@ entrenar.
 #### Imagen Docker
 
 ```bash
-docker build -t smartpot-ia-rust .
-docker pull ghcr.io/smartpottech/smartpot-ia-rust:latest
+docker build -t smartpot-ai .
+docker pull ghcr.io/smartpottech/smartpot-ai:latest
 ```
 
 Compilación en `rust:1.98-bookworm` y ejecución en `debian:bookworm-slim` actualizado, con el usuario sin privilegios
 `10001`. Admite `read_only: true`, `cap_drop: ALL` y `no-new-privileges:true`; la sonda de salud es el propio binario
-(`smartpot-ia --healthcheck`), sin `curl`. Cada cambio en `main` pasa por el CI y publica la imagen en GHCR (y en
+(`smartpot-ai --healthcheck`), sin `curl`. Cada cambio en `main` pasa por el CI y publica la imagen en GHCR (y en
 Docker Hub si el repositorio tiene credenciales).
 
 ### Documentación

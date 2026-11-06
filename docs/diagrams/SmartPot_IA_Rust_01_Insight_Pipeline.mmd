@@ -11,7 +11,7 @@ flowchart TB
   fuzzy["Lógica difusa<br/>índice de salud 0 a 100"]
   agent["Agente reactivo<br/>descanso de 22:00 a 6:00"]
   place["Consejo de lugar"]
-  response["InsightResponse<br/>mismo JSON que SmartPot-AI"]
+  response["InsightResponse<br/>contrato canónico REST / gRPC"]
   request --> validate --> diagnosis
   diagnosis --> forecast & base & learned & fuzzy
   forecast & base & learned & diagnosis --> memory
