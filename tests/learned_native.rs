@@ -56,6 +56,7 @@ async fn native_trainer_export_loads_without_disabled_models() {
     assert_eq!(loaded.trained_cards(), 3);
     assert!(loaded.states.is_some());
     assert!(loaded.anomaly.is_some());
+    assert!(loaded.lora.contains_key("needs_water"));
 }
 
 #[tokio::test]

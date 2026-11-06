@@ -1,14 +1,19 @@
 {
   "artifacts": {
     "LETTUCE_inference.json": {
-      "blake2b": "5bc3b2bb0ee15d424a5c6f570c5eb272568ea7d1d5ce21bf8a49c5caa4c80889",
+      "blake2b": "316c9e4c35ac5e602aec5617e4f032240269d5b3a09b75dc2a4446d563986996",
       "format": "SMARTPOT_JSON",
-      "size_bytes": 1679421
+      "size_bytes": 1679907
+    },
+    "LETTUCE_lora.json": {
+      "blake2b": "75087e3819ee1be242a6a1e59eaab0cc771f2e2572549181c3d4f702509b77c3",
+      "format": "LORA_JSON",
+      "size_bytes": 1325
     }
   },
-  "created_at": 1793992700.5537715,
+  "created_at": 1793994407.260458,
   "crop_type": "LETTUCE",
   "public_key_hex": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
   "schema_version": "1.0",
-  "signature_hex": "86d87a56d35da7aa2a285a9ae71ab647d4bd2ebc2900b539606a928b8f674b0148fe2dd56591eede7bcf0c87938e0a87d522e4a8c536b67f351a597a05ad100d"
+  "signature_hex": "5f0c31d02d0ce9d5badb11b5944d33edbfaad41368ae10a62678dadd6354a711aedd5929ddc3750e2b2cdc0844732bfabfd2a88e567206f2504ca8cc8a6a7302"
 }

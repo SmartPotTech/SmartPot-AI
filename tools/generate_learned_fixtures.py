@@ -24,6 +24,7 @@ def train(trainer: Path) -> None:
     from cryptography.hazmat.primitives.asymmetric import ed25519  # noqa: PLC0415
 
     from app.learning.exporter import export_crop_models  # noqa: PLC0415
+    from app.learning.lora import LowRankCropAdapter  # noqa: PLC0415
     from app.learning.service import fit_type  # noqa: PLC0415
     from app.learning.store import ReadingStore  # noqa: PLC0415
     from tests.learning_data import lettuce_series  # noqa: PLC0415
@@ -32,6 +33,8 @@ def train(trainer: Path) -> None:
     store = ReadingStore(None)
     store.add(readings)
     state = fit_type("LETTUCE", store.load("LETTUCE", 12_000), 100, None)
+    # Un adaptador LoRA válido comprueba que Rust deserializa la forma exacta del contrato.
+    state.lora_adapters["needs_water"] = LowRankCropAdapter(d_in=10, rank=2)
     store.close()
 
     TARGET.mkdir(parents=True, exist_ok=True)
