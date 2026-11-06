@@ -2,6 +2,7 @@
 
 pub mod insights;
 
+use chrono::{DateTime, Timelike, Utc};
 use serde_json::{json, Value};
 
 use crate::engine::fleet;
@@ -29,6 +30,12 @@ fn now() -> f64 {
     chrono::Utc::now().timestamp_micros() as f64 / 1e6
 }
 
+/// Hora local de una marca temporal; `None` si el instante no es representable.
+pub fn local_hour(micros: i64, timezone: chrono_tz::Tz) -> Option<u8> {
+    DateTime::<Utc>::from_timestamp_micros(micros)
+        .map(|moment| moment.with_timezone(&timezone).hour() as u8)
+}
+
 /// `POST /v1/insights` (y `EvaluateInsight` por gRPC).
 pub fn insight(state: &AppState, body: &[u8]) -> Result<Vec<u8>, Invalid> {
     let value: Value = serde_json::from_slice(body).map_err(|_| Invalid::json())?;
@@ -38,8 +45,19 @@ pub fn insight(state: &AppState, body: &[u8]) -> Result<Vec<u8>, Invalid> {
 }
 
 /// `POST /v1/fleet` (y `AnalyzeFleet` por gRPC).
-pub fn fleet(body: &[u8]) -> Result<Vec<u8>, Invalid> {
+pub fn fleet(state: &AppState, body: &[u8]) -> Result<Vec<u8>, Invalid> {
     let value: Value = serde_json::from_slice(body).map_err(|_| Invalid::json())?;
     let request = parse_fleet(&value).map_err(Invalid)?;
-    Ok(serde_json::to_vec(&fleet::analyze(&request)).expect("the response always serializes"))
+    let hour = request.local_hour.or_else(|| {
+        request
+            .crops
+            .iter()
+            .filter_map(|crop| crop.measures.as_ref().and_then(|m| m.measured_at))
+            .max()
+            .and_then(|micros| local_hour(micros, state.settings.timezone))
+    });
+    Ok(
+        serde_json::to_vec(&fleet::analyze(&request, hour))
+            .expect("the response always serializes"),
+    )
 }

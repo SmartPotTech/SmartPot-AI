@@ -41,7 +41,8 @@ impl SmartPotAiService for AiService {
         &self,
         request: Request<JsonBody>,
     ) -> Result<Response<JsonBody>, Status> {
-        let json = services::fleet(&request.into_inner().json).map_err(|e| invalid(&e))?;
+        let json =
+            services::fleet(&self.state, &request.into_inner().json).map_err(|e| invalid(&e))?;
         Ok(Response::new(JsonBody { json }))
     }
 }

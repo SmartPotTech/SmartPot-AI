@@ -106,13 +106,17 @@ pub fn decide(
     }
 
     let light = find(Parameter::Brightness);
-    if resting && light.is_some_and(|d| matches!(d.status, Status::Optimal | Status::High)) {
-        propose(
-            "UV_LIGHT",
-            "DEACTIVATE",
-            None,
-            "It is nighttime: turning off the UV light to respect the plant's rest period.",
-        );
+    if resting {
+        // Defensa en profundidad: de noche nunca se enciende la luz, aunque el diagnóstico llegue
+        // incoherente con `LOW` en lugar de `REST`. Solo se apaga si hay una lectura que lo justifique.
+        if light.is_some_and(|d| matches!(d.status, Status::Optimal | Status::High | Status::Low)) {
+            propose(
+                "UV_LIGHT",
+                "DEACTIVATE",
+                None,
+                "It is nighttime: turning off the UV light to respect the plant's rest period.",
+            );
+        }
     } else if status(light, Status::Low) {
         propose(
             "UV_LIGHT",
@@ -175,11 +179,8 @@ pub fn decide(
         );
     }
 
-    // Como en Python, `prediccion or 1.0`: sin predicción (o con 0 exacto) se asume que hace falta corregir.
-    let ph_need = predictions
-        .ph_correction
-        .filter(|p| *p != 0.0)
-        .unwrap_or(1.0);
+    // Sin predicción se asume la corrección por defecto; `Some(0.0)` significa que el modelo no la ve.
+    let ph_need = predictions.ph_correction.unwrap_or(1.0);
     if status(find(Parameter::Ph), Status::High) && ph_need >= 0.5 {
         propose(
             "PH_DOSER",
@@ -268,6 +269,90 @@ mod tests {
         );
         assert_eq!(actions[0].actuator, "UV_LIGHT");
         assert_eq!(actions[0].action, "DEACTIVATE");
+    }
+
+    fn diagnosis(parameter: Parameter, status: Status, value: f64) -> ParameterDiagnosis {
+        ParameterDiagnosis {
+            parameter,
+            value,
+            status,
+            severity: Severity::Warning,
+            deviation: 1.0,
+            message: String::new(),
+            recommendation: None,
+        }
+    }
+
+    #[test]
+    fn night_guard_blocks_an_incoherent_low_light_diagnosis() {
+        let low = diagnosis(Parameter::Brightness, Status::Low, 0.0);
+        let actions = decide(
+            &[low],
+            Predictions::default(),
+            Facts::default(),
+            &all(),
+            true,
+            &[],
+        );
+        assert!(
+            actions
+                .iter()
+                .all(|a| !(a.actuator == "UV_LIGHT" && a.action == "ACTIVATE")),
+            "{actions:?}"
+        );
+    }
+
+    #[test]
+    fn a_zero_ph_prediction_never_doses() {
+        let high = diagnosis(Parameter::Ph, Status::High, 8.0);
+        let none = decide(
+            std::slice::from_ref(&high),
+            Predictions::default(),
+            Facts::default(),
+            &all(),
+            false,
+            &[],
+        );
+        assert!(none.iter().any(|a| a.actuator == "PH_DOSER"));
+
+        let zero = decide(
+            std::slice::from_ref(&high),
+            Predictions {
+                ph_correction: Some(0.0),
+                ..Predictions::default()
+            },
+            Facts::default(),
+            &all(),
+            false,
+            &[],
+        );
+        assert!(zero.iter().all(|a| a.actuator != "PH_DOSER"));
+
+        let just_below = decide(
+            std::slice::from_ref(&high),
+            Predictions {
+                ph_correction: Some(0.4999),
+                ..Predictions::default()
+            },
+            Facts::default(),
+            &all(),
+            false,
+            &[],
+        );
+        assert!(just_below.iter().all(|a| a.actuator != "PH_DOSER"));
+
+        let threshold = decide(
+            std::slice::from_ref(&high),
+            Predictions {
+                ph_correction: Some(0.5),
+                ..Predictions::default()
+            },
+            Facts::default(),
+            &all(),
+            false,
+            &[],
+        );
+        assert!(threshold.iter().any(|a| a.actuator == "PH_DOSER"));
     }
 
     #[test]

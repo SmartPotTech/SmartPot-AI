@@ -194,8 +194,70 @@ impl Bundle {
             )));
         }
         bundle.crop_type = bundle.crop_type.to_uppercase();
+        bundle.validate_checks()?;
         bundle.validate_and_check();
         Ok(bundle)
+    }
+
+    /// El contrato exige exactamente 16 vectores de control y una expectativa para cada modelo.
+    fn validate_checks(&self) -> Result<(), ModelError> {
+        const CONTROL_CASES: usize = 16;
+        if self.checks.len() != CONTROL_CASES {
+            return Err(ModelError(format!(
+                "expected {CONTROL_CASES} control cases, got {}",
+                self.checks.len()
+            )));
+        }
+        for (index, check) in self.checks.iter().enumerate() {
+            if check.x.len() != FEATURES || check.x.iter().any(|value| !value.is_finite()) {
+                return Err(ModelError(format!(
+                    "control case {index} does not have {FEATURES} finite features"
+                )));
+            }
+            let expectations = [
+                check.needs_water,
+                check.overheat,
+                check.moisture_1h,
+                check.anomaly,
+            ];
+            if expectations
+                .iter()
+                .flatten()
+                .any(|value| !value.is_finite())
+            {
+                return Err(ModelError(format!(
+                    "control case {index} has a non-finite expectation"
+                )));
+            }
+        }
+        for card in &self.cards {
+            if card.estimator.is_none() {
+                continue;
+            }
+            let expected = self.checks.iter().any(|check| match card.task.as_str() {
+                "needs_water" => check.needs_water.is_some(),
+                "overheat" => check.overheat.is_some(),
+                "moisture_1h" => check.moisture_1h.is_some(),
+                _ => false,
+            });
+            if !expected {
+                return Err(ModelError(format!(
+                    "control cases do not cover the {} model",
+                    card.task
+                )));
+            }
+        }
+        if self.states.is_some() && !self.checks.iter().any(|check| check.state.is_some()) {
+            return Err(ModelError(
+                "control cases do not cover the operating states".into(),
+            ));
+        }
+        if self.anomaly.is_some() && !self.checks.iter().any(|check| check.anomaly.is_some()) {
+            return Err(ModelError(
+                "control cases do not cover the anomaly detector".into(),
+            ));
+        }
+        Ok(())
     }
 
     /// Valida cada modelo y lo contrasta con los casos de control; lo que falle se deshabilita.
@@ -278,5 +340,50 @@ impl Bundle {
 
     pub fn trained_cards(&self) -> usize {
         self.cards.iter().filter(|c| c.usable()).count()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn payload(checks: serde_json::Value) -> Vec<u8> {
+        serde_json::to_vec(&json!({
+            "schema": SCHEMA,
+            "crop_type": "LETTUCE",
+            "features": FEATURES,
+            "checks": checks,
+        }))
+        .unwrap()
+    }
+
+    fn row() -> serde_json::Value {
+        json!({"x": vec![0.5; FEATURES]})
+    }
+
+    #[test]
+    fn exactly_sixteen_control_cases_are_required() {
+        let good: Vec<serde_json::Value> = (0..16).map(|_| row()).collect();
+        assert!(Bundle::parse(&payload(json!(good))).is_ok());
+
+        for count in [0usize, 15, 17] {
+            let bad: Vec<serde_json::Value> = (0..count).map(|_| row()).collect();
+            assert!(
+                Bundle::parse(&payload(json!(bad))).is_err(),
+                "{count} cases were accepted"
+            );
+        }
+    }
+
+    #[test]
+    fn control_cases_need_ten_finite_features() {
+        let mut good: Vec<serde_json::Value> = (0..16).map(|_| row()).collect();
+        good[0] = json!({"x": vec![0.5; 9]});
+        assert!(Bundle::parse(&payload(json!(good))).is_err());
+
+        let mut good: Vec<serde_json::Value> = (0..16).map(|_| row()).collect();
+        good[0] = json!({"x": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, null]});
+        assert!(Bundle::parse(&payload(json!(good))).is_err());
     }
 }

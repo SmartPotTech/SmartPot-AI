@@ -1,4 +1,4 @@
-//! Déficit de presión de vapor (VPD) foliar con la ecuación de Buck (1981).
+//! Déficit de presión de vapor (VPD) foliar con la ecuación de Buck (1996).
 //!
 //! `T_hoja = T_aire + ΔT` (ΔT ≈ -1,5 °C con transpiración activa) y `VPD_hoja = e_s(T_hoja) - e_a(T_aire, HR)`.
 //! Es una utilidad del motor: el contrato de la evaluación no la expone para mantener la paridad con el servicio en

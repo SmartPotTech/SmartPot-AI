@@ -25,6 +25,8 @@ pub struct Settings {
     pub trusted_key: Option<VerifyingKey>,
     /// Lecturas con las que el Trainer hace el primer entrenamiento (para el mensaje cuando aún no informa).
     pub min_samples: i64,
+    /// Zona horaria para derivar la hora local cuando el request solo trae `measuredAt`.
+    pub timezone: chrono_tz::Tz,
 }
 
 fn clean(value: Option<String>) -> Option<String> {
@@ -90,6 +92,10 @@ impl Settings {
                 .ok_or("LEARNING_MIN_SAMPLES must be an integer of at least 50")?,
             None => 200,
         };
+        let timezone = clean(get("AI_TIMEZONE"))
+            .unwrap_or_else(|| "America/Bogota".into())
+            .parse::<chrono_tz::Tz>()
+            .map_err(|_| "AI_TIMEZONE must be a valid IANA time zone".to_string())?;
         Ok(Self {
             token,
             http_port,
@@ -100,6 +106,7 @@ impl Settings {
             models_dir,
             trusted_key,
             min_samples,
+            timezone,
         })
     }
 }
@@ -126,6 +133,18 @@ mod tests {
         assert_eq!(ok.grpc_tcp_port, 0);
         assert!(ok.grpc_socket.is_none() && ok.trainer_url.is_none());
         assert_eq!(ok.trainer_token, "a-sufficiently-long-service-token");
+        assert_eq!(ok.timezone, chrono_tz::America::Bogota);
+        assert!(settings(&[
+            ("SMARTPOT_AI_TOKEN", "a-sufficiently-long-service-token"),
+            ("AI_TIMEZONE", "Not/AZone")
+        ])
+        .is_err());
+        let madrid = settings(&[
+            ("SMARTPOT_AI_TOKEN", "a-sufficiently-long-service-token"),
+            ("AI_TIMEZONE", "Europe/Madrid"),
+        ])
+        .unwrap();
+        assert_eq!(madrid.timezone, chrono_tz::Europe::Madrid);
     }
 
     #[test]

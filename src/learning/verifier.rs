@@ -85,7 +85,7 @@ fn python_string(text: &str, out: &mut String) {
             '\t' => out.push_str("\\t"),
             '\u{08}' => out.push_str("\\b"),
             '\u{0c}' => out.push_str("\\f"),
-            c if c < ' ' || !c.is_ascii() => {
+            c if c < ' ' || c == '\u{007f}' || !c.is_ascii() => {
                 let mut units = [0u16; 2];
                 for unit in c.encode_utf16(&mut units) {
                     let _ = write!(out, "\\u{unit:04x}");
@@ -230,6 +230,10 @@ mod tests {
         let plant = char::from_u32(0x1F331).unwrap().to_string();
         let escaped = format!("\"{}{}\"", escape(0xd83c), escape(0xdf31));
         assert_eq!(python_canonical(&json!(plant)), escaped);
+        assert_eq!(
+            python_canonical(&json!("\u{007f}")),
+            format!("\"{}u007f\"", '\\')
+        );
     }
 
     #[test]

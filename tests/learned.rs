@@ -176,6 +176,32 @@ async fn without_a_trusted_key_only_integrity_is_checked() {
 }
 
 #[tokio::test]
+async fn the_native_trainer_export_passes_all_sixteen_controls() {
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("learned_native");
+    let key = std::fs::read_to_string(dir.join("trusted_key.txt"))
+        .unwrap()
+        .trim()
+        .to_string();
+    let bundle: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir.join("LETTUCE_inference.json")).unwrap())
+            .unwrap();
+    assert_eq!(bundle["checks"].as_array().unwrap().len(), 16);
+
+    let path = dir.to_string_lossy().to_string();
+    let state = state_with(&[
+        ("MODELS_DIR", path.as_str()),
+        ("TRUSTED_MODEL_PUBLIC_KEY_HEX", key.as_str()),
+    ]);
+    let report = state.learned.reload(Some("LETTUCE".into())).await;
+    assert_eq!(report.reloaded, ["LETTUCE"], "{report:?}");
+    assert!(report.rejected.is_empty(), "{report:?}");
+    assert!(report.disabled.is_empty(), "{report:?}");
+}
+
+#[tokio::test]
 async fn a_model_that_disagrees_with_scikit_learn_is_disabled() {
     let dir = copy_fixtures(&["LETTUCE_inference.json"]);
     let path = dir.path().join("LETTUCE_inference.json");

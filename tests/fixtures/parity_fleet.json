@@ -225,10 +225,16 @@
           "label": "Very humid air",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
             "66f5a1000000000000000004"
           ],
           "description": "On average: very humid air."
+        },
+        {
+          "label": "High pH and waterlogged substrate",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: high pH, waterlogged substrate."
         }
       ],
       "actions": [
@@ -901,15 +907,6 @@
       "sharedIssues": [],
       "groups": [
         {
-          "label": "Very humid air and high pH",
-          "cropIds": [
-            "66f5a1000000000000000008",
-            "66f5a1000000000000000010",
-            "66f5a1000000000000000011"
-          ],
-          "description": "On average: very humid air, high pH, low nutrients."
-        },
-        {
           "label": "Dry air",
           "cropIds": [
             "66f5a1000000000000000000"
@@ -917,15 +914,42 @@
           "description": "On average: dry air."
         },
         {
+          "label": "Low temperature and very humid air",
+          "cropIds": [
+            "66f5a1000000000000000011"
+          ],
+          "description": "On average: low temperature, very humid air, high pH, low nutrients."
+        },
+        {
+          "label": "Very humid air and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000008",
+            "66f5a1000000000000000010"
+          ],
+          "description": "On average: very humid air, low nutrients."
+        },
+        {
+          "label": "Waterlogged substrate",
+          "cropIds": [
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000009"
+          ],
+          "description": "On average: waterlogged substrate."
+        },
+        {
+          "label": "Low temperature and low pH",
+          "cropIds": [
+            "66f5a1000000000000000007"
+          ],
+          "description": "On average: low temperature, low pH, low nutrients."
+        },
+        {
           "label": "Within range",
           "cropIds": [
             "66f5a1000000000000000001",
             "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
             "66f5a1000000000000000004",
-            "66f5a1000000000000000005",
-            "66f5a1000000000000000007",
-            "66f5a1000000000000000009"
+            "66f5a1000000000000000005"
           ],
           "description": "Group variables are, on average, within their optimal range."
         }
@@ -1521,27 +1545,51 @@
       ],
       "groups": [
         {
-          "label": "Low temperature and low pH",
-          "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000010"
-          ],
-          "description": "On average: low temperature, low pH."
-        },
-        {
-          "label": "Excess nutrients",
+          "label": "Dry air and excess nutrients",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000005",
-            "66f5a1000000000000000006",
-            "66f5a1000000000000000007",
-            "66f5a1000000000000000008",
             "66f5a1000000000000000011"
           ],
-          "description": "On average: excess nutrients."
+          "description": "On average: dry air, excess nutrients."
+        },
+        {
+          "label": "High pH and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: high pH, excess nutrients."
+        },
+        {
+          "label": "Low temperature and low pH",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: low temperature, low pH, low nutrients, waterlogged substrate."
+        },
+        {
+          "label": "Low pH and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: low pH, dry substrate."
+        },
+        {
+          "label": "High temperature",
+          "cropIds": [
+            "66f5a1000000000000000004",
+            "66f5a1000000000000000006",
+            "66f5a1000000000000000007",
+            "66f5a1000000000000000008"
+          ],
+          "description": "On average: high temperature."
+        },
+        {
+          "label": "Low temperature and waterlogged substrate",
+          "cropIds": [
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000010"
+          ],
+          "description": "On average: low temperature, waterlogged substrate."
         }
       ],
       "actions": [
@@ -2574,26 +2622,50 @@
       ],
       "groups": [
         {
+          "label": "Very humid air and low pH",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: very humid air, low pH, excess nutrients, dry substrate."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000002",
+            "66f5a1000000000000000004",
+            "66f5a1000000000000000008"
+          ],
+          "description": "On average: low temperature, dry air, dry substrate."
+        },
+        {
           "label": "Very humid air and low nutrients",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000001",
-            "66f5a1000000000000000007",
-            "66f5a1000000000000000010"
+            "66f5a1000000000000000007"
           ],
           "description": "On average: very humid air, low nutrients, dry substrate."
         },
         {
-          "label": "Dry air and dry substrate",
+          "label": "Very humid air and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000002",
+            "66f5a1000000000000000010"
+          ],
+          "description": "On average: very humid air, dry substrate."
+        },
+        {
+          "label": "Low temperature and low pH",
+          "cropIds": [
+            "66f5a1000000000000000006"
+          ],
+          "description": "On average: low temperature, low pH."
+        },
+        {
+          "label": "Dry substrate",
+          "cropIds": [
             "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000006",
-            "66f5a1000000000000000008",
             "66f5a1000000000000000009"
           ],
-          "description": "On average: dry air, dry substrate."
+          "description": "On average: dry substrate."
         }
       ],
       "actions": [
@@ -3003,12 +3075,11 @@
           "description": "On average: high pH, dry substrate."
         },
         {
-          "label": "High temperature",
+          "label": "High temperature and very humid air",
           "cropIds": [
-            "66f5a1000000000000000003",
             "66f5a1000000000000000007"
           ],
-          "description": "On average: high temperature."
+          "description": "On average: high temperature, very humid air."
         },
         {
           "label": "High pH and low nutrients",
@@ -3024,6 +3095,13 @@
             "66f5a1000000000000000005"
           ],
           "description": "On average: low temperature, very humid air, low pH."
+        },
+        {
+          "label": "Dry air",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: dry air."
         }
       ],
       "actions": [
@@ -3517,22 +3595,40 @@
       ],
       "groups": [
         {
-          "label": "High pH and low nutrients",
+          "label": "Low nutrients and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000003",
             "66f5a1000000000000000005"
           ],
-          "description": "On average: high pH, low nutrients, dry substrate."
+          "description": "On average: low nutrients, dry substrate."
+        },
+        {
+          "label": "High pH and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: high pH, low nutrients."
         },
         {
           "label": "Dry substrate",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
             "66f5a1000000000000000004"
           ],
           "description": "On average: dry substrate."
+        },
+        {
+          "label": "High temperature and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: high temperature, dry substrate."
+        },
+        {
+          "label": "Dry air and low pH",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: dry air, low pH, excess nutrients, dry substrate."
         }
       ],
       "actions": [
@@ -3798,10 +3894,16 @@
         {
           "label": "Low temperature and low pH",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000002"
+            "66f5a1000000000000000001"
           ],
           "description": "On average: low temperature, low pH, low nutrients, dry substrate."
+        },
+        {
+          "label": "Low temperature and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: low temperature, dry substrate."
         },
         {
           "label": "High temperature and dry substrate",
@@ -4060,12 +4162,11 @@
       "sharedIssues": [],
       "groups": [
         {
-          "label": "Low temperature and dry air",
+          "label": "Dry air and waterlogged substrate",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000004"
+            "66f5a1000000000000000001"
           ],
-          "description": "On average: low temperature, dry air, waterlogged substrate."
+          "description": "On average: dry air, waterlogged substrate."
         },
         {
           "label": "Excess nutrients",
@@ -4081,6 +4182,13 @@
             "66f5a1000000000000000000"
           ],
           "description": "On average: low pH, dry substrate."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: low temperature, dry air."
         }
       ],
       "actions": [
@@ -4625,8 +4733,7 @@
         {
           "label": "Very humid air and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000003"
+            "66f5a1000000000000000001"
           ],
           "description": "On average: very humid air, dry substrate."
         },
@@ -4638,13 +4745,26 @@
           "description": "On average: low pH, excess nutrients, dry substrate."
         },
         {
+          "label": "Very humid air and low pH",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: very humid air, low pH."
+        },
+        {
           "label": "Dry substrate",
           "cropIds": [
             "66f5a1000000000000000004",
-            "66f5a1000000000000000006",
-            "66f5a1000000000000000007"
+            "66f5a1000000000000000006"
           ],
           "description": "On average: dry substrate."
+        },
+        {
+          "label": "Dry air and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000007"
+          ],
+          "description": "On average: dry air, low nutrients, dry substrate."
         }
       ],
       "actions": [
@@ -5321,15 +5441,27 @@
           "description": "On average: dry air, high pH, dry substrate."
         },
         {
-          "label": "Low temperature and dry substrate",
+          "label": "Low temperature and low nutrients",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: low temperature, low nutrients, dry substrate."
+        },
+        {
+          "label": "Low temperature and high pH",
+          "cropIds": [
             "66f5a1000000000000000006"
           ],
-          "description": "On average: low temperature, dry substrate."
+          "description": "On average: low temperature, high pH, low nutrients, dry substrate."
+        },
+        {
+          "label": "Dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000001",
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: dry substrate."
         }
       ],
       "actions": [
@@ -5616,20 +5748,26 @@
       ],
       "groups": [
         {
-          "label": "Low pH and dry substrate",
-          "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000002"
-          ],
-          "description": "On average: low pH, dry substrate."
-        },
-        {
           "label": "High temperature and low nutrients",
           "cropIds": [
             "66f5a1000000000000000000",
             "66f5a1000000000000000003"
           ],
           "description": "On average: high temperature, low nutrients."
+        },
+        {
+          "label": "Dry air and low pH",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: dry air, low pH, excess nutrients."
+        },
+        {
+          "label": "Dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: dry substrate."
         }
       ],
       "actions": [
@@ -6512,10 +6650,16 @@
           "label": "Low temperature and dry substrate",
           "cropIds": [
             "66f5a1000000000000000001",
-            "66f5a1000000000000000003",
             "66f5a1000000000000000004"
           ],
           "description": "On average: low temperature, dry substrate."
+        },
+        {
+          "label": "Low temperature and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: low temperature, excess nutrients, dry substrate."
         },
         {
           "label": "Low nutrients",
@@ -6978,6 +7122,14 @@
       ],
       "groups": [
         {
+          "label": "Dry air and high pH",
+          "cropIds": [
+            "66f5a1000000000000000001",
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: dry air, high pH, excess nutrients, dry substrate."
+        },
+        {
           "label": "Low temperature and low pH",
           "cropIds": [
             "66f5a1000000000000000002"
@@ -6985,13 +7137,11 @@
           "description": "On average: low temperature, low pH."
         },
         {
-          "label": "High pH and dry substrate",
+          "label": "High temperature and very humid air",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000003"
+            "66f5a1000000000000000000"
           ],
-          "description": "On average: high pH, dry substrate."
+          "description": "On average: high temperature, very humid air."
         }
       ],
       "actions": [
@@ -7263,12 +7413,18 @@
           "description": "On average: high pH, excess nutrients, dry substrate."
         },
         {
-          "label": "Low temperature and low pH",
+          "label": "Low pH and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000003"
           ],
-          "description": "On average: low temperature, low pH, dry substrate."
+          "description": "On average: low pH, dry substrate."
+        },
+        {
+          "label": "Low temperature and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: low temperature, dry substrate."
         }
       ],
       "actions": [
@@ -7815,6 +7971,13 @@
           "description": "On average: low temperature, high pH, low nutrients, dry substrate."
         },
         {
+          "label": "Dry air",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: dry air."
+        },
+        {
           "label": "Low temperature and excess nutrients",
           "cropIds": [
             "66f5a1000000000000000004",
@@ -7822,6 +7985,13 @@
             "66f5a1000000000000000010"
           ],
           "description": "On average: low temperature, excess nutrients."
+        },
+        {
+          "label": "High temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: high temperature, dry air, dry substrate."
         },
         {
           "label": "Low pH and low nutrients",
@@ -7832,15 +8002,13 @@
           "description": "On average: low pH, low nutrients."
         },
         {
-          "label": "High temperature and dry air",
+          "label": "Low pH and excess nutrients",
           "cropIds": [
             "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000005",
             "66f5a1000000000000000006",
             "66f5a1000000000000000007"
           ],
-          "description": "On average: high temperature, dry air."
+          "description": "On average: low pH, excess nutrients."
         }
       ],
       "actions": [
@@ -8398,6 +8566,14 @@
       ],
       "groups": [
         {
+          "label": "Dry air and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000006"
+          ],
+          "description": "On average: dry air, excess nutrients."
+        },
+        {
           "label": "Low temperature and dry air",
           "cropIds": [
             "66f5a1000000000000000005"
@@ -8405,17 +8581,33 @@
           "description": "On average: low temperature, dry air, low pH, dry substrate."
         },
         {
-          "label": "Within range",
+          "label": "Low temperature and high pH",
           "cropIds": [
-            "66f5a1000000000000000000",
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: low temperature, high pH, dry substrate."
+        },
+        {
+          "label": "High temperature and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: high temperature, low nutrients."
+        },
+        {
+          "label": "Dry substrate",
+          "cropIds": [
             "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000006",
             "66f5a1000000000000000007"
           ],
-          "description": "Group variables are, on average, within their optimal range."
+          "description": "On average: dry substrate."
+        },
+        {
+          "label": "Very humid air",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: very humid air."
         }
       ],
       "actions": [
@@ -8997,24 +9189,48 @@
       ],
       "groups": [
         {
-          "label": "High temperature and high pH",
+          "label": "Dry air and low pH",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000007"
+            "66f5a1000000000000000005"
           ],
-          "description": "On average: high temperature, high pH, low nutrients, dry substrate."
+          "description": "On average: dry air, low pH, low nutrients, dry substrate."
         },
         {
-          "label": "Dry air and low nutrients",
+          "label": "High temperature and very humid air",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: high temperature, very humid air, high pH, low nutrients, dry substrate."
+        },
+        {
+          "label": "Dry air and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000009"
+          ],
+          "description": "On average: dry air, dry substrate."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: low temperature, dry air, high pH."
+        },
+        {
+          "label": "High temperature and high pH",
+          "cropIds": [
+            "66f5a1000000000000000007"
+          ],
+          "description": "On average: high temperature, high pH, dry substrate."
+        },
+        {
+          "label": "Dry air and high pH",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000005",
-            "66f5a1000000000000000009",
             "66f5a1000000000000000010"
           ],
-          "description": "On average: dry air, low nutrients, dry substrate."
+          "description": "On average: dry air, high pH, dry substrate."
         }
       ],
       "actions": [
@@ -9630,6 +9846,13 @@
       "sharedIssues": [],
       "groups": [
         {
+          "label": "High pH and waterlogged substrate",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: high pH, waterlogged substrate."
+        },
+        {
           "label": "Dry air and low pH",
           "cropIds": [
             "66f5a1000000000000000003"
@@ -9637,12 +9860,11 @@
           "description": "On average: dry air, low pH, excess nutrients."
         },
         {
-          "label": "High pH",
+          "label": "Low temperature and dry air",
           "cropIds": [
-            "66f5a1000000000000000002",
             "66f5a1000000000000000004"
           ],
-          "description": "On average: high pH."
+          "description": "On average: low temperature, dry air."
         },
         {
           "label": "Low pH and low nutrients",
@@ -9990,15 +10212,33 @@
           "description": "On average: low temperature, high pH, waterlogged substrate."
         },
         {
-          "label": "Low nutrients",
+          "label": "Low pH and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: low pH, dry substrate."
+        },
+        {
+          "label": "Very humid air and high pH",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: very humid air, high pH, low nutrients."
+        },
+        {
+          "label": "Low temperature and low nutrients",
+          "cropIds": [
             "66f5a1000000000000000005"
           ],
-          "description": "On average: low nutrients."
+          "description": "On average: low temperature, low nutrients."
+        },
+        {
+          "label": "Within range",
+          "cropIds": [
+            "66f5a1000000000000000002",
+            "66f5a1000000000000000003"
+          ],
+          "description": "Group variables are, on average, within their optimal range."
         }
       ],
       "actions": [
@@ -10843,6 +11083,13 @@
       ],
       "groups": [
         {
+          "label": "Dry air and high pH",
+          "cropIds": [
+            "66f5a1000000000000000007"
+          ],
+          "description": "On average: dry air, high pH, dry substrate."
+        },
+        {
           "label": "Low pH and low nutrients",
           "cropIds": [
             "66f5a1000000000000000003",
@@ -10851,22 +11098,33 @@
           "description": "On average: low pH, low nutrients, dry substrate."
         },
         {
-          "label": "Dry air and high pH",
+          "label": "Dry air and excess nutrients",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000007"
+            "66f5a1000000000000000001"
           ],
-          "description": "On average: dry air, high pH, excess nutrients, dry substrate."
+          "description": "On average: dry air, excess nutrients, dry substrate."
         },
         {
-          "label": "Very humid air and dry substrate",
+          "label": "Low temperature and very humid air",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000005",
             "66f5a1000000000000000006"
           ],
-          "description": "On average: very humid air, dry substrate."
+          "description": "On average: low temperature, very humid air, dry substrate."
+        },
+        {
+          "label": "Very humid air and high pH",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: very humid air, high pH, dry substrate."
+        },
+        {
+          "label": "Dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000000",
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: dry substrate."
         }
       ],
       "actions": [
@@ -11443,21 +11701,39 @@
             "66f5a1000000000000000006",
             "66f5a1000000000000000009"
           ],
-          "description": "On average: low temperature, dry air, excess nutrients."
+          "description": "On average: low temperature, dry air, dry substrate."
         },
         {
           "label": "Low pH and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
             "66f5a1000000000000000005",
             "66f5a1000000000000000007",
-            "66f5a1000000000000000008",
-            "66f5a1000000000000000010",
-            "66f5a1000000000000000011"
+            "66f5a1000000000000000010"
           ],
           "description": "On average: low pH, dry substrate."
+        },
+        {
+          "label": "High temperature and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000011"
+          ],
+          "description": "On average: high temperature, dry substrate."
+        },
+        {
+          "label": "Low nutrients and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: low nutrients, dry substrate."
+        },
+        {
+          "label": "Dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000001",
+            "66f5a1000000000000000004",
+            "66f5a1000000000000000008"
+          ],
+          "description": "On average: dry substrate."
         }
       ],
       "actions": [
@@ -12054,24 +12330,48 @@
       "sharedIssues": [],
       "groups": [
         {
-          "label": "Dry air and low pH",
+          "label": "Low pH and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000007"
+          ],
+          "description": "On average: low pH, excess nutrients, dry substrate."
+        },
+        {
+          "label": "Low pH and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000008"
+          ],
+          "description": "On average: low pH, low nutrients."
+        },
+        {
+          "label": "Dry air",
           "cropIds": [
             "66f5a1000000000000000001",
-            "66f5a1000000000000000007",
-            "66f5a1000000000000000008",
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: dry air."
+        },
+        {
+          "label": "Excess nutrients and waterlogged substrate",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: excess nutrients, waterlogged substrate."
+        },
+        {
+          "label": "Dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000000",
+            "66f5a1000000000000000005",
             "66f5a1000000000000000009",
             "66f5a1000000000000000010"
           ],
-          "description": "On average: dry air, low pH, dry substrate."
+          "description": "On average: dry substrate."
         },
         {
           "label": "High pH",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
             "66f5a1000000000000000004",
-            "66f5a1000000000000000005",
             "66f5a1000000000000000006",
             "66f5a1000000000000000011"
           ],
@@ -12500,12 +12800,24 @@
         {
           "label": "Low pH",
           "cropIds": [
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: low pH."
+        },
+        {
+          "label": "Very humid air and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: very humid air, low nutrients."
+        },
+        {
+          "label": "Dry air and low pH",
+          "cropIds": [
             "66f5a1000000000000000004",
             "66f5a1000000000000000005"
           ],
-          "description": "On average: low pH."
+          "description": "On average: dry air, low pH."
         }
       ],
       "actions": [
@@ -13623,23 +13935,41 @@
         {
           "label": "Low temperature and very humid air",
           "cropIds": [
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000006",
             "66f5a1000000000000000009",
+            "66f5a1000000000000000004",
             "66f5a1000000000000000010"
           ],
-          "description": "On average: low temperature, very humid air, low pH, excess nutrients."
+          "description": "On average: low temperature, very humid air, low pH."
+        },
+        {
+          "label": "Dry air and high pH",
+          "cropIds": [
+            "66f5a1000000000000000008"
+          ],
+          "description": "On average: dry air, high pH."
         },
         {
           "label": "High temperature and dry air",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000007",
-            "66f5a1000000000000000008"
+            "66f5a1000000000000000000"
           ],
           "description": "On average: high temperature, dry air, excess nutrients."
+        },
+        {
+          "label": "Excess nutrients and waterlogged substrate",
+          "cropIds": [
+            "66f5a1000000000000000002",
+            "66f5a1000000000000000007"
+          ],
+          "description": "On average: excess nutrients, waterlogged substrate."
+        },
+        {
+          "label": "Low pH and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000006"
+          ],
+          "description": "On average: low pH, excess nutrients."
         }
       ],
       "actions": [
@@ -14825,21 +15155,39 @@
         {
           "label": "Excess nutrients and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000005",
             "66f5a1000000000000000006"
           ],
           "description": "On average: excess nutrients, dry substrate."
         },
         {
-          "label": "Dry substrate",
+          "label": "Low nutrients and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: low nutrients, dry substrate."
+        },
+        {
+          "label": "Low temperature and low pH",
+          "cropIds": [
+            "66f5a1000000000000000007"
+          ],
+          "description": "On average: low temperature, low pH, low nutrients, dry substrate."
+        },
+        {
+          "label": "Excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: excess nutrients."
+        },
+        {
+          "label": "Within range",
           "cropIds": [
             "66f5a1000000000000000000",
             "66f5a1000000000000000001",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000007"
+            "66f5a1000000000000000003"
           ],
-          "description": "On average: dry substrate."
+          "description": "Group variables are, on average, within their optimal range."
         }
       ],
       "actions": [
@@ -15224,12 +15572,18 @@
           "description": "On average: high pH, excess nutrients, dry substrate."
         },
         {
+          "label": "Dry air and low pH",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: dry air, low pH, dry substrate."
+        },
+        {
           "label": "High temperature and dry air",
           "cropIds": [
-            "66f5a1000000000000000001",
             "66f5a1000000000000000005"
           ],
-          "description": "On average: high temperature, dry air, low pH, dry substrate."
+          "description": "On average: high temperature, dry air, dry substrate."
         },
         {
           "label": "Dry substrate",
@@ -15774,23 +16128,35 @@
           "description": "On average: low temperature, low pH, dry substrate."
         },
         {
-          "label": "Very humid air",
+          "label": "Within range",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000001",
             "66f5a1000000000000000005",
             "66f5a1000000000000000007"
           ],
-          "description": "On average: very humid air."
+          "description": "Group variables are, on average, within their optimal range."
         },
         {
           "label": "Dry substrate",
           "cropIds": [
             "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
             "66f5a1000000000000000010"
           ],
           "description": "On average: dry substrate."
+        },
+        {
+          "label": "Very humid air",
+          "cropIds": [
+            "66f5a1000000000000000000",
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: very humid air."
+        },
+        {
+          "label": "Low nutrients and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: low nutrients, dry substrate."
         }
       ],
       "actions": [
@@ -16828,27 +17194,51 @@
       ],
       "groups": [
         {
-          "label": "Low temperature and high pH",
-          "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000006"
-          ],
-          "description": "On average: low temperature, high pH, excess nutrients."
-        },
-        {
           "label": "Low temperature and very humid air",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000007",
-            "66f5a1000000000000000008",
+            "66f5a1000000000000000007"
+          ],
+          "description": "On average: low temperature, very humid air, low nutrients."
+        },
+        {
+          "label": "Very humid air and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000006",
             "66f5a1000000000000000009",
-            "66f5a1000000000000000010",
             "66f5a1000000000000000011"
           ],
-          "description": "On average: low temperature, very humid air, dry substrate."
+          "description": "On average: very humid air, dry substrate."
+        },
+        {
+          "label": "Low temperature and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: low temperature, excess nutrients, waterlogged substrate."
+        },
+        {
+          "label": "Low temperature and high pH",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: low temperature, high pH, waterlogged substrate."
+        },
+        {
+          "label": "Dry air and high pH",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: dry air, high pH, excess nutrients."
+        },
+        {
+          "label": "Low temperature",
+          "cropIds": [
+            "66f5a1000000000000000001",
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000008",
+            "66f5a1000000000000000010"
+          ],
+          "description": "On average: low temperature."
         }
       ],
       "actions": [
@@ -17537,29 +17927,47 @@
       "sharedIssues": [],
       "groups": [
         {
+          "label": "High temperature and high pH",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: high temperature, high pH."
+        },
+        {
           "label": "Low temperature and excess nutrients",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000004"
           ],
           "description": "On average: low temperature, excess nutrients, dry substrate."
         },
         {
-          "label": "Very humid air and high pH",
+          "label": "Low pH and waterlogged substrate",
           "cropIds": [
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000003"
+            "66f5a1000000000000000005"
           ],
-          "description": "On average: very humid air, high pH."
+          "description": "On average: low pH, waterlogged substrate."
         },
         {
-          "label": "Low pH",
+          "label": "Excess nutrients and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: excess nutrients, dry substrate."
+        },
+        {
+          "label": "High temperature and low pH",
           "cropIds": [
             "66f5a1000000000000000001",
-            "66f5a1000000000000000005",
             "66f5a1000000000000000006"
           ],
-          "description": "On average: low pH."
+          "description": "On average: high temperature, low pH, dry substrate."
+        },
+        {
+          "label": "Low temperature and very humid air",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: low temperature, very humid air, high pH."
         }
       ],
       "actions": [
@@ -18514,27 +18922,45 @@
         {
           "label": "Low temperature and low pH",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000005"
+            "66f5a1000000000000000000"
           ],
-          "description": "On average: low temperature, low pH, dry substrate."
+          "description": "On average: low temperature, low pH, low nutrients, dry substrate."
         },
         {
-          "label": "High temperature and low pH",
+          "label": "High temperature and dry air",
           "cropIds": [
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000007"
+            "66f5a1000000000000000004"
           ],
-          "description": "On average: high temperature, low pH, dry substrate."
+          "description": "On average: high temperature, dry air, low pH, excess nutrients, dry substrate."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: low temperature, dry air, low pH, excess nutrients, dry substrate."
         },
         {
           "label": "Very humid air and high pH",
           "cropIds": [
             "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
             "66f5a1000000000000000003"
           ],
-          "description": "On average: very humid air, high pH."
+          "description": "On average: very humid air, high pH, dry substrate."
+        },
+        {
+          "label": "High temperature and low pH",
+          "cropIds": [
+            "66f5a1000000000000000007"
+          ],
+          "description": "On average: high temperature, low pH."
+        },
+        {
+          "label": "High pH",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: high pH."
         }
       ],
       "actions": [
@@ -19167,22 +19593,40 @@
       ],
       "groups": [
         {
+          "label": "Low pH and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: low pH, excess nutrients, dry substrate."
+        },
+        {
+          "label": "Low temperature and high pH",
+          "cropIds": [
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000006"
+          ],
+          "description": "On average: low temperature, high pH, excess nutrients, dry substrate."
+        },
+        {
           "label": "Dry air and high pH",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000011"
+            "66f5a1000000000000000004"
           ],
           "description": "On average: dry air, high pH, low nutrients, dry substrate."
+        },
+        {
+          "label": "High temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000000",
+            "66f5a1000000000000000011"
+          ],
+          "description": "On average: high temperature, dry air, low nutrients, dry substrate."
         },
         {
           "label": "Low temperature and dry substrate",
           "cropIds": [
             "66f5a1000000000000000001",
             "66f5a1000000000000000002",
-            "66f5a1000000000000000005",
-            "66f5a1000000000000000006",
             "66f5a1000000000000000007",
             "66f5a1000000000000000008",
             "66f5a1000000000000000009",
@@ -19883,12 +20327,11 @@
       "sharedIssues": [],
       "groups": [
         {
-          "label": "Dry substrate",
+          "label": "High temperature and high pH",
           "cropIds": [
-            "66f5a1000000000000000007",
-            "66f5a1000000000000000009"
+            "66f5a1000000000000000002"
           ],
-          "description": "On average: dry substrate."
+          "description": "On average: high temperature, high pH, low nutrients."
         },
         {
           "label": "Dry air",
@@ -19898,25 +20341,32 @@
           "description": "On average: dry air."
         },
         {
-          "label": "High temperature and high pH",
+          "label": "Low temperature and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000006",
-            "66f5a1000000000000000010"
+            "66f5a1000000000000000007",
+            "66f5a1000000000000000009",
+            "66f5a1000000000000000011"
           ],
-          "description": "On average: high temperature, high pH."
+          "description": "On average: low temperature, dry substrate."
         },
         {
           "label": "Excess nutrients",
           "cropIds": [
-            "66f5a1000000000000000004",
             "66f5a1000000000000000005",
-            "66f5a1000000000000000008",
-            "66f5a1000000000000000011"
+            "66f5a1000000000000000008"
           ],
           "description": "On average: excess nutrients."
+        },
+        {
+          "label": "High temperature",
+          "cropIds": [
+            "66f5a1000000000000000000",
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000004",
+            "66f5a1000000000000000006",
+            "66f5a1000000000000000010"
+          ],
+          "description": "On average: high temperature."
         }
       ],
       "actions": [
@@ -20370,16 +20820,40 @@
           "description": "On average: very humid air, low pH, excess nutrients, waterlogged substrate."
         },
         {
-          "label": "Dry air and low pH",
+          "label": "Dry air and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000005",
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: dry air, dry substrate."
+        },
+        {
+          "label": "Low pH and excess nutrients",
+          "cropIds": [
             "66f5a1000000000000000007"
           ],
-          "description": "On average: dry air, low pH, dry substrate."
+          "description": "On average: low pH, excess nutrients, dry substrate."
+        },
+        {
+          "label": "Low pH and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: low pH, dry substrate."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000002",
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: low temperature, dry air, low pH."
+        },
+        {
+          "label": "High pH",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: high pH."
         }
       ],
       "actions": [
@@ -21283,6 +21757,14 @@
       ],
       "groups": [
         {
+          "label": "Low pH and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: low pH, low nutrients."
+        },
+        {
           "label": "High temperature and dry air",
           "cropIds": [
             "66f5a1000000000000000000"
@@ -21290,15 +21772,25 @@
           "description": "On average: high temperature, dry air, high pH."
         },
         {
-          "label": "Low pH and low nutrients",
+          "label": "Low temperature and low nutrients",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000005"
+            "66f5a1000000000000000004"
           ],
-          "description": "On average: low pH, low nutrients."
+          "description": "On average: low temperature, low nutrients."
+        },
+        {
+          "label": "Dry air and low pH",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: dry air, low pH, low nutrients."
+        },
+        {
+          "label": "Within range",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "Group variables are, on average, within their optimal range."
         }
       ],
       "actions": [
@@ -21597,14 +22089,26 @@
           "description": "On average: low temperature, low nutrients."
         },
         {
+          "label": "High temperature and very humid air",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: high temperature, very humid air, dry substrate."
+        },
+        {
           "label": "Within range",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004"
+            "66f5a1000000000000000003"
           ],
           "description": "Group variables are, on average, within their optimal range."
+        },
+        {
+          "label": "Low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: low nutrients."
         }
       ],
       "actions": [
@@ -22199,23 +22703,47 @@
       ],
       "groups": [
         {
-          "label": "Very humid air and low pH",
+          "label": "Low nutrients and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000002",
             "66f5a1000000000000000003"
           ],
-          "description": "On average: very humid air, low pH, low nutrients, dry substrate."
+          "description": "On average: low nutrients, dry substrate."
         },
         {
-          "label": "High pH and dry substrate",
+          "label": "Very humid air and low pH",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: very humid air, low pH, dry substrate."
+        },
+        {
+          "label": "High pH",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: high pH."
+        },
+        {
+          "label": "High pH and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: high pH, low nutrients, dry substrate."
+        },
+        {
+          "label": "Excess nutrients and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000006"
+          ],
+          "description": "On average: excess nutrients, dry substrate."
+        },
+        {
+          "label": "Dry substrate",
           "cropIds": [
             "66f5a1000000000000000001",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000005",
-            "66f5a1000000000000000006",
             "66f5a1000000000000000007"
           ],
-          "description": "On average: high pH, dry substrate."
+          "description": "On average: dry substrate."
         }
       ],
       "actions": [
@@ -22641,22 +23169,40 @@
         {
           "label": "Low temperature and dry air",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
             "66f5a1000000000000000004",
-            "66f5a1000000000000000007"
+            "66f5a1000000000000000003"
           ],
-          "description": "On average: low temperature, dry air, high pH, dry substrate."
+          "description": "On average: low temperature, dry air, low nutrients, dry substrate."
         },
         {
           "label": "Low pH and low nutrients",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000005",
             "66f5a1000000000000000006"
           ],
-          "description": "On average: low pH, low nutrients, dry substrate."
+          "description": "On average: low pH, low nutrients."
+        },
+        {
+          "label": "High pH and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000007"
+          ],
+          "description": "On average: high pH, dry substrate."
+        },
+        {
+          "label": "Dry air and high pH",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: dry air, high pH, excess nutrients, dry substrate."
+        },
+        {
+          "label": "Low pH and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000000",
+            "66f5a1000000000000000002",
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: low pH, dry substrate."
         }
       ],
       "actions": [
@@ -23413,20 +23959,44 @@
       ],
       "groups": [
         {
-          "label": "Dry air and low pH",
+          "label": "Low temperature and dry air",
           "cropIds": [
-            "66f5a1000000000000000002",
             "66f5a1000000000000000006"
           ],
-          "description": "On average: dry air, low pH, dry substrate."
+          "description": "On average: low temperature, dry air, low pH, low nutrients, dry substrate."
+        },
+        {
+          "label": "High temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: high temperature, dry air, low pH, dry substrate."
+        },
+        {
+          "label": "Low nutrients and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: low nutrients, dry substrate."
+        },
+        {
+          "label": "Low temperature and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000001",
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: low temperature, dry substrate."
+        },
+        {
+          "label": "High temperature and low pH",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: high temperature, low pH, dry substrate."
         },
         {
           "label": "Dry substrate",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
             "66f5a1000000000000000007"
           ],
           "description": "On average: dry substrate."
@@ -24344,12 +24914,18 @@
           "description": "On average: low nutrients, dry substrate."
         },
         {
-          "label": "Low pH and dry substrate",
+          "label": "Low temperature and low pH",
           "cropIds": [
-            "66f5a1000000000000000003",
             "66f5a1000000000000000004"
           ],
-          "description": "On average: low pH, dry substrate."
+          "description": "On average: low temperature, low pH, dry substrate."
+        },
+        {
+          "label": "Very humid air and low pH",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: very humid air, low pH, low nutrients, dry substrate."
         }
       ],
       "actions": [
@@ -24606,11 +25182,17 @@
           "description": "On average: low temperature, very humid air, excess nutrients."
         },
         {
+          "label": "Low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: low nutrients."
+        },
+        {
           "label": "Within range",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004"
+            "66f5a1000000000000000003"
           ],
           "description": "Group variables are, on average, within their optimal range."
         }
@@ -24985,19 +25567,31 @@
         {
           "label": "Low temperature and very humid air",
           "cropIds": [
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004"
+            "66f5a1000000000000000003"
           ],
           "description": "On average: low temperature, very humid air, excess nutrients, dry substrate."
         },
         {
           "label": "Dry air and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000001",
             "66f5a1000000000000000002"
           ],
           "description": "On average: dry air, dry substrate."
+        },
+        {
+          "label": "Low temperature and low pH",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: low temperature, low pH, dry substrate."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: low temperature, dry air, low nutrients, dry substrate."
         }
       ],
       "actions": [
@@ -26098,14 +26692,38 @@
           "description": "On average: low temperature, high pH, dry substrate."
         },
         {
+          "label": "Low pH and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: low pH, low nutrients."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: low temperature, dry air."
+        },
+        {
+          "label": "High temperature and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000006"
+          ],
+          "description": "On average: high temperature, dry substrate."
+        },
+        {
+          "label": "Dry air and low pH",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: dry air, low pH, excess nutrients."
+        },
+        {
           "label": "Within range",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000005",
-            "66f5a1000000000000000006"
+            "66f5a1000000000000000004"
           ],
           "description": "Group variables are, on average, within their optimal range."
         }
@@ -27578,13 +28196,26 @@
       ],
       "groups": [
         {
-          "label": "Dry air and dry substrate",
+          "label": "High temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: high temperature, dry air, dry substrate."
+        },
+        {
+          "label": "High temperature and low pH",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: high temperature, low pH, dry substrate."
+        },
+        {
+          "label": "Dry air and high pH",
           "cropIds": [
             "66f5a1000000000000000004",
-            "66f5a1000000000000000005",
             "66f5a1000000000000000006"
           ],
-          "description": "On average: dry air, dry substrate."
+          "description": "On average: dry air, high pH, dry substrate."
         },
         {
           "label": "Dry air and low pH",
@@ -27594,14 +28225,19 @@
           "description": "On average: dry air, low pH, low nutrients, dry substrate."
         },
         {
-          "label": "Low pH and dry substrate",
+          "label": "Very humid air and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
             "66f5a1000000000000000007"
           ],
-          "description": "On average: low pH, dry substrate."
+          "description": "On average: very humid air, dry substrate."
+        },
+        {
+          "label": "Low temperature and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: low temperature, excess nutrients, dry substrate."
         }
       ],
       "actions": [
@@ -28004,20 +28640,32 @@
         {
           "label": "Very humid air and high pH",
           "cropIds": [
-            "66f5a1000000000000000005"
+            "66f5a1000000000000000005",
+            "66f5a1000000000000000003"
           ],
-          "description": "On average: very humid air, high pH, low nutrients."
+          "description": "On average: very humid air, high pH."
         },
         {
-          "label": "Low nutrients",
+          "label": "Dry air and low nutrients",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: dry air, low nutrients, waterlogged substrate."
+        },
+        {
+          "label": "Low nutrients and waterlogged substrate",
+          "cropIds": [
             "66f5a1000000000000000006",
             "66f5a1000000000000000007"
           ],
-          "description": "On average: low nutrients."
+          "description": "On average: low nutrients, waterlogged substrate."
+        },
+        {
+          "label": "Dry air and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: dry air, dry substrate."
         }
       ],
       "actions": [
@@ -28322,12 +28970,24 @@
           "description": "On average: low temperature, dry air, low nutrients."
         },
         {
+          "label": "High temperature",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: high temperature."
+        },
+        {
+          "label": "Very humid air and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: very humid air, low nutrients."
+        },
+        {
           "label": "Within range",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000005"
+            "66f5a1000000000000000001"
           ],
           "description": "Group variables are, on average, within their optimal range."
         }
@@ -28696,13 +29356,11 @@
       "sharedIssues": [],
       "groups": [
         {
-          "label": "Very humid air",
+          "label": "High pH",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000004"
+            "66f5a1000000000000000002"
           ],
-          "description": "On average: very humid air."
+          "description": "On average: high pH."
         },
         {
           "label": "Dry air and excess nutrients",
@@ -28713,12 +29371,32 @@
           "description": "On average: dry air, excess nutrients."
         },
         {
-          "label": "Very humid air and low nutrients",
+          "label": "High temperature and very humid air",
           "cropIds": [
-            "66f5a1000000000000000001",
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: high temperature, very humid air, low nutrients, dry substrate."
+        },
+        {
+          "label": "Excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: excess nutrients."
+        },
+        {
+          "label": "Very humid air",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: very humid air."
+        },
+        {
+          "label": "Low nutrients and dry substrate",
+          "cropIds": [
             "66f5a1000000000000000005"
           ],
-          "description": "On average: very humid air, low nutrients, dry substrate."
+          "description": "On average: low nutrients, dry substrate."
         }
       ],
       "actions": [
@@ -29106,10 +29784,16 @@
         {
           "label": "Low temperature and low pH",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000003"
           ],
           "description": "On average: low temperature, low pH, waterlogged substrate."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: low temperature, dry air."
         }
       ],
       "actions": [
@@ -29889,11 +30573,17 @@
         {
           "label": "Low pH and low nutrients",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
             "66f5a1000000000000000003"
           ],
-          "description": "On average: low pH, low nutrients."
+          "description": "On average: low pH, low nutrients, dry substrate."
+        },
+        {
+          "label": "Low pH",
+          "cropIds": [
+            "66f5a1000000000000000000",
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: low pH."
         }
       ],
       "actions": [
@@ -30441,15 +31131,33 @@
           "description": "On average: low temperature, low pH, excess nutrients, waterlogged substrate."
         },
         {
+          "label": "Very humid air and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: very humid air, low nutrients, waterlogged substrate."
+        },
+        {
           "label": "Very humid air",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000005"
+            "66f5a1000000000000000004"
           ],
           "description": "On average: very humid air."
+        },
+        {
+          "label": "Very humid air and high pH",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: very humid air, high pH."
+        },
+        {
+          "label": "Low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: low nutrients."
         }
       ],
       "actions": [
@@ -30963,7 +31671,6 @@
         {
           "label": "Low pH and low nutrients",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000003"
           ],
           "description": "On average: low pH, low nutrients, dry substrate."
@@ -30975,6 +31682,13 @@
             "66f5a1000000000000000002"
           ],
           "description": "On average: high temperature, dry air, low nutrients."
+        },
+        {
+          "label": "Dry air and low pH",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: dry air, low pH, dry substrate."
         }
       ],
       "actions": [
@@ -31294,12 +32008,18 @@
           "description": "On average: very humid air, high pH, low nutrients, dry substrate."
         },
         {
-          "label": "Low temperature and excess nutrients",
+          "label": "Low temperature and very humid air",
           "cropIds": [
-            "66f5a1000000000000000001",
             "66f5a1000000000000000004"
           ],
-          "description": "On average: low temperature, excess nutrients."
+          "description": "On average: low temperature, very humid air."
+        },
+        {
+          "label": "Excess nutrients and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: excess nutrients, dry substrate."
         }
       ],
       "actions": [
@@ -31819,19 +32539,32 @@
       "sharedIssues": [],
       "groups": [
         {
-          "label": "Low temperature and dry air",
-          "cropIds": [
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000011"
-          ],
-          "description": "On average: low temperature, dry air."
-        },
-        {
           "label": "Very humid air and high pH",
           "cropIds": [
             "66f5a1000000000000000000"
           ],
           "description": "On average: very humid air, high pH, low nutrients, dry substrate."
+        },
+        {
+          "label": "Excess nutrients and waterlogged substrate",
+          "cropIds": [
+            "66f5a1000000000000000010"
+          ],
+          "description": "On average: excess nutrients, waterlogged substrate."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: low temperature, dry air."
+        },
+        {
+          "label": "Low temperature",
+          "cropIds": [
+            "66f5a1000000000000000011"
+          ],
+          "description": "On average: low temperature."
         },
         {
           "label": "Low nutrients",
@@ -31847,8 +32580,7 @@
           "cropIds": [
             "66f5a1000000000000000004",
             "66f5a1000000000000000006",
-            "66f5a1000000000000000008",
-            "66f5a1000000000000000010"
+            "66f5a1000000000000000008"
           ],
           "description": "Group variables are, on average, within their optimal range."
         }
@@ -32357,6 +33089,13 @@
       ],
       "groups": [
         {
+          "label": "Very humid air and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: very humid air, excess nutrients."
+        },
+        {
           "label": "Very humid air and dry substrate",
           "cropIds": [
             "66f5a1000000000000000001"
@@ -32364,13 +33103,12 @@
           "description": "On average: very humid air, dry substrate."
         },
         {
-          "label": "Very humid air and excess nutrients",
+          "label": "Within range",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000004"
+            "66f5a1000000000000000002"
           ],
-          "description": "On average: very humid air, excess nutrients."
+          "description": "Group variables are, on average, within their optimal range."
         }
       ],
       "actions": [
@@ -32969,22 +33707,34 @@
       ],
       "groups": [
         {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: low temperature, dry air, low nutrients."
+        },
+        {
           "label": "Dry air and low pH",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004"
+            "66f5a1000000000000000004",
+            "66f5a1000000000000000001"
           ],
           "description": "On average: dry air, low pH, dry substrate."
         },
         {
-          "label": "Low temperature and low nutrients",
+          "label": "Low pH and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: low pH, dry substrate."
+        },
+        {
+          "label": "Within range",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
             "66f5a1000000000000000005"
           ],
-          "description": "On average: low temperature, low nutrients."
+          "description": "Group variables are, on average, within their optimal range."
         }
       ],
       "actions": [
@@ -33339,22 +34089,40 @@
       ],
       "groups": [
         {
-          "label": "Low temperature and dry air",
+          "label": "Dry air and high pH",
           "cropIds": [
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000005"
+            "66f5a1000000000000000002"
           ],
-          "description": "On average: low temperature, dry air, high pH, dry substrate."
+          "description": "On average: dry air, high pH, dry substrate."
         },
         {
           "label": "Low pH and dry substrate",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000001",
             "66f5a1000000000000000003",
             "66f5a1000000000000000004"
           ],
           "description": "On average: low pH, dry substrate."
+        },
+        {
+          "label": "Low temperature and high pH",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: low temperature, high pH, dry substrate."
+        },
+        {
+          "label": "High temperature and low nutrients",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: high temperature, low nutrients, dry substrate."
+        },
+        {
+          "label": "Dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: dry substrate."
         }
       ],
       "actions": [
@@ -34256,20 +35024,16 @@
         {
           "label": "Low temperature and low nutrients",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004"
+            "66f5a1000000000000000001"
           ],
           "description": "On average: low temperature, low nutrients, waterlogged substrate."
         },
         {
           "label": "High temperature and very humid air",
           "cropIds": [
-            "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000006"
+            "66f5a1000000000000000002"
           ],
-          "description": "On average: high temperature, very humid air, excess nutrients, dry substrate."
+          "description": "On average: high temperature, very humid air, high pH, dry substrate."
         },
         {
           "label": "Dry air and low pH",
@@ -34278,6 +35042,28 @@
             "66f5a1000000000000000007"
           ],
           "description": "On average: dry air, low pH."
+        },
+        {
+          "label": "Low temperature and very humid air",
+          "cropIds": [
+            "66f5a1000000000000000004",
+            "66f5a1000000000000000006"
+          ],
+          "description": "On average: low temperature, very humid air."
+        },
+        {
+          "label": "High temperature and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: high temperature, excess nutrients, dry substrate."
+        },
+        {
+          "label": "High pH and waterlogged substrate",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: high pH, waterlogged substrate."
         }
       ],
       "actions": [
@@ -35615,11 +36401,17 @@
       ],
       "groups": [
         {
+          "label": "Low temperature and high pH",
+          "cropIds": [
+            "66f5a1000000000000000004"
+          ],
+          "description": "On average: low temperature, high pH, excess nutrients, dry substrate."
+        },
+        {
           "label": "Low pH and dry substrate",
           "cropIds": [
             "66f5a1000000000000000001",
-            "66f5a1000000000000000006",
-            "66f5a1000000000000000008"
+            "66f5a1000000000000000006"
           ],
           "description": "On average: low pH, dry substrate."
         },
@@ -35631,11 +36423,23 @@
           "description": "On average: very humid air, low nutrients, dry substrate."
         },
         {
+          "label": "High temperature and low pH",
+          "cropIds": [
+            "66f5a1000000000000000008"
+          ],
+          "description": "On average: high temperature, low pH, dry substrate."
+        },
+        {
+          "label": "Dry air",
+          "cropIds": [
+            "66f5a1000000000000000002"
+          ],
+          "description": "On average: dry air."
+        },
+        {
           "label": "Dry substrate",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000004",
             "66f5a1000000000000000005",
             "66f5a1000000000000000010",
             "66f5a1000000000000000011"
@@ -36004,22 +36808,40 @@
       ],
       "groups": [
         {
-          "label": "Low temperature and dry air",
+          "label": "Dry air and excess nutrients",
           "cropIds": [
-            "66f5a1000000000000000002",
-            "66f5a1000000000000000005"
+            "66f5a1000000000000000002"
           ],
-          "description": "On average: low temperature, dry air, excess nutrients, dry substrate."
+          "description": "On average: dry air, excess nutrients, dry substrate."
         },
         {
-          "label": "Dry substrate",
+          "label": "High pH and dry substrate",
           "cropIds": [
             "66f5a1000000000000000000",
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000003",
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: high pH, dry substrate."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: low temperature, dry air, dry substrate."
+        },
+        {
+          "label": "Low pH and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: low pH, dry substrate."
+        },
+        {
+          "label": "Low nutrients and dry substrate",
+          "cropIds": [
             "66f5a1000000000000000004"
           ],
-          "description": "On average: dry substrate."
+          "description": "On average: low nutrients, dry substrate."
         }
       ],
       "actions": [
@@ -37080,16 +37902,34 @@
           "description": "On average: very humid air, low nutrients, waterlogged substrate."
         },
         {
-          "label": "Low temperature",
+          "label": "Very humid air and low pH",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000002",
-            "66f5a1000000000000000003",
-            "66f5a1000000000000000004",
-            "66f5a1000000000000000005",
             "66f5a1000000000000000006"
           ],
-          "description": "On average: low temperature."
+          "description": "On average: very humid air, low pH, dry substrate."
+        },
+        {
+          "label": "Low temperature and high pH",
+          "cropIds": [
+            "66f5a1000000000000000005"
+          ],
+          "description": "On average: low temperature, high pH."
+        },
+        {
+          "label": "Very humid air",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: very humid air."
+        },
+        {
+          "label": "Within range",
+          "cropIds": [
+            "66f5a1000000000000000003",
+            "66f5a1000000000000000004"
+          ],
+          "description": "Group variables are, on average, within their optimal range."
         }
       ],
       "actions": [
@@ -37684,13 +38524,13 @@
       ],
       "groups": [
         {
-          "label": "High pH and dry substrate",
+          "label": "High temperature and very humid air",
           "cropIds": [
-            "66f5a1000000000000000009",
-            "66f5a1000000000000000010",
+            "66f5a1000000000000000001",
+            "66f5a1000000000000000004",
             "66f5a1000000000000000011"
           ],
-          "description": "On average: high pH, dry substrate."
+          "description": "On average: high temperature, very humid air, high pH, dry substrate."
         },
         {
           "label": "Low pH and low nutrients",
@@ -37700,22 +38540,28 @@
           "description": "On average: low pH, low nutrients, waterlogged substrate."
         },
         {
-          "label": "High temperature and very humid air",
+          "label": "High pH",
           "cropIds": [
-            "66f5a1000000000000000001",
-            "66f5a1000000000000000004"
+            "66f5a1000000000000000009",
+            "66f5a1000000000000000010"
           ],
-          "description": "On average: high temperature, very humid air, excess nutrients, dry substrate."
+          "description": "On average: high pH."
         },
         {
-          "label": "Dry air",
+          "label": "High temperature and dry air",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000002",
             "66f5a1000000000000000007",
             "66f5a1000000000000000008"
           ],
-          "description": "On average: dry air."
+          "description": "On average: high temperature, dry air."
+        },
+        {
+          "label": "Low temperature and dry air",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: low temperature, dry air, low pH."
         }
       ],
       "actions": [
@@ -38615,9 +39461,15 @@
       ],
       "groups": [
         {
+          "label": "High temperature and excess nutrients",
+          "cropIds": [
+            "66f5a1000000000000000001"
+          ],
+          "description": "On average: high temperature, excess nutrients, dry substrate."
+        },
+        {
           "label": "Dry air and excess nutrients",
           "cropIds": [
-            "66f5a1000000000000000001",
             "66f5a1000000000000000002",
             "66f5a1000000000000000003"
           ],
@@ -39044,6 +39896,20 @@
       ],
       "groups": [
         {
+          "label": "High pH",
+          "cropIds": [
+            "66f5a1000000000000000003"
+          ],
+          "description": "On average: high pH."
+        },
+        {
+          "label": "Very humid air and dry substrate",
+          "cropIds": [
+            "66f5a1000000000000000000"
+          ],
+          "description": "On average: very humid air, dry substrate."
+        },
+        {
           "label": "High temperature and low pH",
           "cropIds": [
             "66f5a1000000000000000002"
@@ -39053,9 +39919,7 @@
         {
           "label": "Dry substrate",
           "cropIds": [
-            "66f5a1000000000000000000",
             "66f5a1000000000000000001",
-            "66f5a1000000000000000003",
             "66f5a1000000000000000004"
           ],
           "description": "On average: dry substrate."

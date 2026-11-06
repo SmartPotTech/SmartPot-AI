@@ -25,6 +25,8 @@ use crate::schema::response::{
 
 /// Tope de tamaño de un archivo de modelos.
 const MAX_BUNDLE_BYTES: u64 = 64 * 1024 * 1024;
+/// Tope del manifiesto firmado: un JSON pequeño no puede agotar la memoria.
+const MAX_MANIFEST_BYTES: u64 = 1024 * 1024;
 
 pub fn bundle_name(crop_type: &str) -> String {
     format!("{crop_type}_inference.json")
@@ -131,7 +133,14 @@ impl Registry {
         }
         let bytes =
             std::fs::read(&path).map_err(|e| format!("could not read {}: {e}", path.display()))?;
-        match std::fs::read(dir.join(manifest_name(crop_type))) {
+        let manifest_path = dir.join(manifest_name(crop_type));
+        match std::fs::metadata(&manifest_path) {
+            Ok(metadata) if metadata.len() > MAX_MANIFEST_BYTES => {
+                return Err("manifest file exceeds maximum allowed size".into())
+            }
+            _ => {}
+        }
+        match std::fs::read(&manifest_path) {
             Ok(manifest) => {
                 let verdict = verifier::verify(
                     &manifest,

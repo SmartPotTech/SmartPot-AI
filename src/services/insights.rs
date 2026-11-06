@@ -35,7 +35,14 @@ fn seconds(micros: Micros) -> f64 {
 pub fn analyze(state: &AppState, request: &InsightRequest, now: f64) -> InsightResponse {
     let profile = request.profile;
     let values = &request.measures.values;
-    let diagnosis = diagnose(profile, values, request.local_hour);
+    // La hora explícita manda; si falta, se deriva de measuredAt con la zona configurada.
+    let local_hour = request.local_hour.or_else(|| {
+        request
+            .measures
+            .measured_at
+            .and_then(|micros| super::local_hour(micros, state.settings.timezone))
+    });
+    let diagnosis = diagnose(profile, values, local_hour);
 
     let timed: Vec<(Micros, crate::domain::Values)> = request
         .history
@@ -50,7 +57,7 @@ pub fn analyze(state: &AppState, request: &InsightRequest, now: f64) -> InsightR
     };
     let reading = LiveReading {
         values,
-        hour: request.local_hour,
+        hour: local_hour,
         moment: request.measures.measured_at.map_or(now, seconds),
         history: timed.iter().map(|(at, v)| (seconds(*at), *v)).collect(),
     };
@@ -118,7 +125,7 @@ pub fn analyze(state: &AppState, request: &InsightRequest, now: f64) -> InsightR
         },
         facts,
         &actuators,
-        is_rest_hour(request.local_hour),
+        is_rest_hour(local_hour),
         &forecasts,
     );
     let sunny = request

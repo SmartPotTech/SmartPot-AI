@@ -123,8 +123,8 @@ async fn insights(State(state): State<AppState>, body: Bytes) -> Response {
     }
 }
 
-async fn fleet(body: Bytes) -> Response {
-    match services::fleet(&body) {
+async fn fleet(State(state): State<AppState>, body: Bytes) -> Response {
+    match services::fleet(&state, &body) {
         Ok(bytes) => json_response(StatusCode::OK, bytes),
         Err(error) => invalid(&error),
     }
@@ -209,13 +209,20 @@ async fn reload(State(state): State<AppState>, body: Bytes) -> Response {
         );
     }
     let report = state.learned.reload(crop_type.clone()).await;
-    if crop_type.is_some() {
-        if let Some(rejected) = report.rejected.first() {
-            return detail(
-                StatusCode::BAD_REQUEST,
-                format!("Model verification failed: {}", rejected.reason),
-            );
-        }
+    if !report.rejected.is_empty() {
+        let reason = report
+            .rejected
+            .first()
+            .map(|rejection| rejection.reason.clone())
+            .unwrap_or_default();
+        return json_value(
+            StatusCode::BAD_REQUEST,
+            &json!({
+                "detail": format!("Model verification failed: {reason}"),
+                "rejected": report.rejected,
+                "disabled": report.disabled,
+            }),
+        );
     }
     json_value(
         StatusCode::OK,
@@ -229,38 +236,39 @@ fn passthrough(forwarded: Forwarded) -> Response {
 }
 
 async fn readings(State(state): State<AppState>, body: Bytes) -> Response {
-    if let Some(trainer) = &state.trainer {
-        if let Some(forwarded) = trainer
-            .forward(
-                Method::POST,
-                "/v1/learning/readings",
-                Some(body.clone()),
-                TRAINER_TIMEOUT,
-            )
-            .await
-        {
-            return passthrough(forwarded);
+    let Some(trainer) = &state.trainer else {
+        return detail(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Continuous learning is unavailable: SmartPot-Trainer is not configured",
+        );
+    };
+    let Some(forwarded) = trainer
+        .forward(
+            Method::POST,
+            "/v1/learning/readings",
+            Some(body),
+            TRAINER_TIMEOUT,
+        )
+        .await
+    else {
+        return detail(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Continuous learning is unavailable: SmartPot-Trainer did not respond",
+        );
+    };
+    if forwarded.status.is_success() {
+        if let Ok(value) = serde_json::from_slice::<Value>(&forwarded.body) {
+            let received = value.get("received").and_then(Value::as_u64).unwrap_or(0);
+            let stored = value.get("stored").and_then(Value::as_u64).unwrap_or(0);
+            if received > 0 && stored == 0 {
+                return detail(
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    "SmartPot-Trainer accepted the batch but stored no readings",
+                );
+            }
         }
     }
-    // Sin Trainer (o sin respuesta) las lecturas no se guardan aquí: la base sigue teniéndolas y la API no se frena.
-    let value: Value = match serde_json::from_slice(&body) {
-        Ok(value) => value,
-        Err(_) => return invalid(&Invalid::json()),
-    };
-    match value.get("readings").and_then(Value::as_array) {
-        Some(items) if items.len() <= 2000 => json_value(
-            StatusCode::OK,
-            &json!({"received": items.len(), "stored": 0, "total": 0}),
-        ),
-        Some(_) => invalid(&Invalid(vec![crate::schema::FieldError {
-            field: "readings".into(),
-            message: "Must have at most 2000 items".into(),
-        }])),
-        None => invalid(&Invalid(vec![crate::schema::FieldError {
-            field: "readings".into(),
-            message: "Required field".into(),
-        }])),
-    }
+    passthrough(forwarded)
 }
 
 /// Estado seguro cuando el aprendizaje no está disponible.

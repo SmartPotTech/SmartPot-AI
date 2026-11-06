@@ -6,6 +6,11 @@
 //! heredado), datos centrados, distancias como `‖x‖² - 2·x·c + ‖c‖²`, iteraciones de Lloyd con promedio por recíproco,
 //! reubicación de grupos vacíos, tolerancia relativa a la varianza y la corrida de menor inercia. La silueta usa la
 //! misma fórmula de distancias que `sklearn.metrics.silhouette_score`.
+//!
+//! Las funciones públicas devuelven `Result`: datos vacíos, filas de distinta longitud, valores no
+//! finitos o un `k` fuera de rango se rechazan sin entrar en pánico.
+
+use crate::ml::ModelError;
 
 /// MT19937 con la semilla y la conversión a `f64` de `numpy.random.RandomState`.
 #[derive(Debug, Clone)]
@@ -297,8 +302,25 @@ fn same_clustering(a: &[usize], b: &[usize], k: usize) -> bool {
 }
 
 /// `KMeans(n_clusters=k, n_init=n_init, random_state=seed).fit(data)`.
-pub fn fit(data: &[Vec<f64>], k: usize, n_init: usize, seed: u32) -> Clustering {
-    assert!(!data.is_empty() && k >= 1 && k <= data.len());
+pub fn fit(
+    data: &[Vec<f64>],
+    k: usize,
+    n_init: usize,
+    seed: u32,
+) -> Result<Clustering, ModelError> {
+    if data.is_empty() {
+        return Err(ModelError("kmeans requires at least one row".into()));
+    }
+    let dims = data[0].len();
+    if dims == 0 || data.iter().any(|row| row.len() != dims) {
+        return Err(ModelError("kmeans rows have different lengths".into()));
+    }
+    if data.iter().flatten().any(|value| !value.is_finite()) {
+        return Err(ModelError("kmeans data contains non-finite values".into()));
+    }
+    if k == 0 || k > data.len() {
+        return Err(ModelError("kmeans requires 1 <= k <= rows".into()));
+    }
     let tolerance = tolerance(data);
     let means = column_means(data);
     let centered: Vec<Vec<f64>> = data
@@ -325,16 +347,34 @@ pub fn fit(data: &[Vec<f64>], k: usize, n_init: usize, seed: u32) -> Clustering 
             *v += m;
         }
     }
-    best
+    Ok(best)
 }
 
-/// `silhouette_score` euclidiano: un grupo de un solo punto aporta 0.
-pub fn silhouette(data: &[Vec<f64>], labels: &[usize]) -> f64 {
+/// `silhouette_score` euclidiano; exige al menos dos grupos con dos o más puntos.
+pub fn silhouette(data: &[Vec<f64>], labels: &[usize]) -> Result<f64, ModelError> {
+    if data.is_empty() || data.len() != labels.len() {
+        return Err(ModelError("silhouette requires one label per row".into()));
+    }
     let n = data.len();
+    let dims = data[0].len();
+    if dims == 0 || data.iter().any(|row| row.len() != dims) {
+        return Err(ModelError("silhouette rows have different lengths".into()));
+    }
     let k = labels.iter().copied().max().map_or(0, |m| m + 1);
+    if k < 2 || k >= data.len() {
+        return Err(ModelError(
+            "silhouette requires at least two clusters".into(),
+        ));
+    }
     let mut frequencies = vec![0.0f64; k];
     for &l in labels {
         frequencies[l] += 1.0;
+    }
+    if frequencies.iter().any(|count| *count < 1.0) || data.iter().flatten().any(|v| !v.is_finite())
+    {
+        return Err(ModelError(
+            "silhouette requires finite rows and non-empty clusters".into(),
+        ));
     }
     let norms: Vec<f64> = data.iter().map(|x| dot(x, x)).collect();
     let mut samples = Vec::with_capacity(n);
@@ -349,7 +389,12 @@ pub fn silhouette(data: &[Vec<f64>], labels: &[usize]) -> f64 {
             clusters[labels[j]] += distance;
         }
         let own = labels[i];
-        let intra = clusters[own] / (frequencies[own] - 1.0);
+        // Un grupo de un solo punto aporta 0, como en scikit-learn.
+        let intra = if frequencies[own] > 1.0 {
+            clusters[own] / (frequencies[own] - 1.0)
+        } else {
+            0.0
+        };
         clusters[own] = f64::INFINITY;
         let inter = clusters
             .iter()
@@ -359,7 +404,7 @@ pub fn silhouette(data: &[Vec<f64>], labels: &[usize]) -> f64 {
         let value = (inter - intra) / intra.max(inter);
         samples.push(if value.is_nan() { 0.0 } else { value });
     }
-    crate::numeric::mean(&samples)
+    Ok(crate::numeric::mean(&samples))
 }
 
 #[cfg(test)]
@@ -392,21 +437,35 @@ mod tests {
     #[test]
     fn finds_separated_groups_and_is_deterministic() {
         let data = blobs();
-        let first = fit(&data, 3, 10, 42);
-        let second = fit(&data, 3, 10, 42);
+        let first = fit(&data, 3, 10, 42).unwrap();
+        let second = fit(&data, 3, 10, 42).unwrap();
         assert_eq!(first.labels, second.labels);
         for block in first.labels.chunks(20) {
             assert!(block.iter().all(|l| *l == block[0]));
         }
-        assert!(silhouette(&data, &first.labels) > 0.8);
+        assert!(silhouette(&data, &first.labels).unwrap() > 0.8);
     }
 
     #[test]
     fn silhouette_prefers_the_true_number_of_groups() {
         let data = blobs();
         let scores: Vec<f64> = (2..=4)
-            .map(|k| silhouette(&data, &fit(&data, k, 10, 42).labels))
+            .map(|k| silhouette(&data, &fit(&data, k, 10, 42).unwrap().labels).unwrap())
             .collect();
         assert!(scores[1] > scores[0] && scores[1] > scores[2], "{scores:?}");
+    }
+
+    #[test]
+    fn invalid_inputs_are_errors_instead_of_panics() {
+        assert!(fit(&[], 1, 10, 42).is_err());
+        let data = blobs();
+        assert!(fit(&data, 0, 10, 42).is_err());
+        assert!(fit(&data, data.len() + 1, 10, 42).is_err());
+        assert!(fit(&[vec![0.0, 1.0], vec![0.0]], 1, 10, 42).is_err());
+        assert!(fit(&[vec![0.0, f64::NAN]], 1, 10, 42).is_err());
+        assert!(silhouette(&[], &[]).is_err());
+        assert!(silhouette(&data, &[0]).is_err());
+        assert!(silhouette(&data, &vec![0; data.len()]).is_err());
+        assert!(silhouette(&data, &vec![0; data.len() - 1]).is_err());
     }
 }

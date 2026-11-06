@@ -58,14 +58,14 @@ struct CropResult {
     rank: Option<usize>,
 }
 
-pub fn analyze(request: &FleetRequest) -> FleetResponse {
-    let resting = is_rest_hour(request.local_hour);
+pub fn analyze(request: &FleetRequest, local_hour: Option<u8>) -> FleetResponse {
+    let resting = is_rest_hour(local_hour);
     let mut results: Vec<CropResult> = request
         .crops
         .iter()
         .map(|crop| {
             let diagnosis = match &crop.measures {
-                Some(m) => diagnose(crop.profile, &m.values, request.local_hour),
+                Some(m) => diagnose(crop.profile, &m.values, local_hour),
                 None => Vec::new(),
             };
             let health = (!diagnosis.is_empty()).then(|| {
@@ -204,7 +204,13 @@ fn groups(request: &FleetRequest, results: &[CropResult]) -> Vec<CropGroup> {
     let crops: Vec<_> = request
         .crops
         .iter()
-        .filter(|c| c.measures.is_some())
+        .filter(|crop| {
+            crop.measures.as_ref().is_some_and(|measures| {
+                GROUP_PARAMETERS
+                    .iter()
+                    .any(|parameter| measures.values[parameter.index()].is_some())
+            })
+        })
         .collect();
     if crops.len() < 3 {
         return Vec::new();
@@ -247,17 +253,21 @@ fn groups(request: &FleetRequest, results: &[CropResult]) -> Vec<CropGroup> {
     }
 
     let mut best: Option<(f64, kmeans::Clustering)> = None;
-    let upper = 4.min(distinct - 1).min(ids.len() - 1);
+    let upper = 6.min(distinct - 1).min(ids.len() - 1);
     for k in 2..=upper {
-        let model = kmeans::fit(&data, k, 10, SEED);
-        let score = kmeans::silhouette(&data, &model.labels);
+        let Ok(model) = kmeans::fit(&data, k, 10, SEED) else {
+            continue;
+        };
+        let Ok(score) = kmeans::silhouette(&data, &model.labels) else {
+            continue;
+        };
         if best.as_ref().is_none_or(|(s, _)| score > *s) {
             best = Some((score, model));
         }
     }
-    let model = best
-        .map(|(_, m)| m)
-        .unwrap_or_else(|| kmeans::fit(&data, 2, 10, SEED));
+    let Some((_, model)) = best else {
+        return Vec::new();
+    };
 
     let mut merged: Vec<CropGroup> = Vec::new();
     for (cluster, center) in model.centers.iter().enumerate() {

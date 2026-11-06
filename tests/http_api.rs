@@ -91,6 +91,52 @@ async fn zero_is_a_reading_and_null_is_a_missing_sensor() {
 }
 
 #[tokio::test]
+async fn measured_at_derives_the_local_hour_and_explicit_hour_wins() {
+    let app = router(state());
+    // 04:00 UTC = 23:00 in America/Bogota: la luz baja es descanso nocturno.
+    let derived = json!({
+        "cropType": "LETTUCE",
+        "measures": {"brightness": 0.0, "measuredAt": "2026-11-02T04:00:00Z"},
+        "actuators": ["UV_LIGHT"],
+    });
+    let (status, body) = call(&app, "POST", "/v1/insights", Some(&derived), Some(TOKEN)).await;
+    assert_eq!(status, StatusCode::OK);
+    let brightness = body["diagnosis"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|item| item["parameter"] == "brightness")
+        .unwrap();
+    assert_eq!(brightness["status"], "REST");
+    assert!(body["actions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|action| action["actuator"] != "UV_LIGHT"));
+
+    // La hora explícita manda sobre measuredAt.
+    let explicit = json!({
+        "cropType": "LETTUCE",
+        "measures": {"brightness": 0.0, "measuredAt": "2026-11-02T04:00:00Z"},
+        "localHour": 12,
+        "actuators": ["UV_LIGHT"],
+    });
+    let (_, body) = call(&app, "POST", "/v1/insights", Some(&explicit), Some(TOKEN)).await;
+    let brightness = body["diagnosis"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|item| item["parameter"] == "brightness")
+        .unwrap();
+    assert_eq!(brightness["status"], "LOW");
+    assert!(body["actions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|action| action["actuator"] == "UV_LIGHT" && action["action"] == "ACTIVATE"));
+}
+
+#[tokio::test]
 async fn invalid_json_is_unprocessable() {
     let app = router(state());
     let request = axum::http::Request::builder()
@@ -119,8 +165,8 @@ async fn learning_without_trainer_answers_a_safe_disabled_state() {
         Some(TOKEN),
     )
     .await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(body, json!({"received": 1, "stored": 0, "total": 0}));
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    assert!(body["detail"].as_str().unwrap().contains("Trainer"));
     let (status, body) = call(
         &app,
         "DELETE",
