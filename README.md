@@ -32,7 +32,7 @@ It implements **the exact same contract** as SmartPot-AI, field by field and tex
 | **Fleet analysis** | Account ranking, shared issues, K-Means clustering with silhouette-optimized k, and bulk actions | `src/engine/fleet.rs`, `src/ml/kmeans.rs` |
 | **Learned models** | Trainer champion models (K-Means, Isolation Forest, LoRA) with Ed25519 signing and hot reloading | `src/learning/` |
 
-It also includes foliar VPD (Buck 1981) and a 1D Kalman filter with 3σ gating (`src/engine/vpd.rs`, `ekf.rs`) as verified utilities; they do not alter API responses to preserve strict parity.
+It also includes foliar VPD (Buck 1996) and a 1D Kalman filter with 3σ gating (`src/engine/vpd.rs`, `ekf.rs`) as verified utilities; they do not alter API responses to preserve strict parity.
 
 ### Parity with SmartPot-AI
 
@@ -47,7 +47,7 @@ Parity is validated using the Python service itself as an oracle (`tests/fixture
 
 To achieve this, Rust mirrors Python operations in identical order: round-half-to-even on IEEE-754 floats, Neumaier compensated summation (`sum()`, Python 3.12+), pairwise summation (NumPy), conversion to `f32` before tree threshold comparisons (scikit-learn), and K-Means with MT19937 random generator seeded identically.
 
-The parity fixture expected responses are regenerated in English via `SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored` (`tests/regenerate.rs`), which fails if any non-textual data changes (status codes, numbers, JSON keys, list lengths, or enum codes).
+The parity fixture expected responses are regenerated in English via `SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored` (`tests/regenerate.rs`). Run it only after a deliberate contract change and review the diff: the fleet fixtures changed when the F-08/F-22 grouping rules were corrected.
 
 ### Contract
 
@@ -78,6 +78,8 @@ SmartPot-Trainer trains per species and outputs to the shared directory (`DATA_D
 
 Upon receiving `POST /v1/learning/reload` (called by Trainer upon completing a cycle), the service reads the bundle, verifies the manifest, and updates the active species atomically without interrupting ongoing evaluations (`ArcSwap`). When `TRUSTED_MODEL_PUBLIC_KEY_HEX` is set, only models signed by that key are accepted (closed-fail security: missing manifest, invalid signature, or hash mismatch triggers immediate rejection). Control cases are validated during reload; any model disagreeing with scikit-learn is automatically disabled.
 
+**Hardening (November 2026).** Reload now requires exactly 16 finite control cases with 10 features and at least one expectation per trained model; a manifest larger than 1 MiB is rejected before it is read. `POST /v1/learning/reload` returns `400` with the `rejected` detail even for a global reload, and `POST /v1/learning/readings` returns `503` instead of silently reporting `stored: 0` when the Trainer is unavailable. The reactive agent blocks `UV_LIGHT ACTIVATE` whenever `resting` is true, `Some(0.0)` pH corrections never dose, and `localHour` is derived from `measuredAt` with `AI_TIMEZONE` when the request omits it.
+
 When `SMARTPOT_TRAINER_URL` is unset, learning routes return a safe disabled state. If the Trainer is unresponsive, ingestion, forget, and prune endpoints return an empty success response rather than tripping the API circuit breaker; inference never depends on Trainer availability.
 
 ### Environment Variables
@@ -92,6 +94,7 @@ When `SMARTPOT_TRAINER_URL` is unset, learning routes return a safe disabled sta
 | `SMARTPOT_TRAINER_TOKEN` | `SMARTPOT_AI_TOKEN` | Bearer token for calling Trainer |
 | `DATA_DIR` | `data` | Shared data directory; models are loaded from `DATA_DIR/models` |
 | `TRUSTED_MODEL_PUBLIC_KEY_HEX` | empty | Ed25519 public key of SmartPot-Trainer for model verification |
+| `AI_TIMEZONE` | `America/Bogota` | IANA zone used to derive `localHour` from `measuredAt` |
 | `LEARNING_MIN_SAMPLES` | `200` | Sample threshold for first training, used in advisory messages |
 | `RUST_LOG` | `info` | Tracing and logging filter |
 
@@ -182,7 +185,7 @@ Mantiene **paridad estricta** con el contrato de la plataforma, campo por campo 
 | **Análisis de flota** | Ranking, problemas compartidos, grupos K-Means con k por silueta y acciones en bloque | `src/engine/fleet.rs`, `src/ml/kmeans.rs` |
 | **Lo aprendido** | Modelos del Trainer (campeones, K-Means, Isolation Forest, LoRA) con firma Ed25519 y recarga en caliente | `src/learning/` |
 
-También trae el VPD foliar (Buck 1981) y un filtro de Kalman 1D con compuerta de 3σ (`src/engine/vpd.rs`,
+También trae el VPD foliar (Buck 1996) y un filtro de Kalman 1D con compuerta de 3σ (`src/engine/vpd.rs`,
 `ekf.rs`) como utilidades probadas; no cambian la respuesta, para mantener estricta paridad.
 
 ### Paridad con la Implementación Histórica Python
@@ -200,7 +203,7 @@ Para lograrlo, Rust repite las operaciones de Python en el mismo orden: `round` 
 de `sum()` (Python 3.12+), la suma por pares de NumPy, la conversión a `f32` de los árboles de scikit-learn y, en la
 flota, el K-Means de scikit-learn con su generador MT19937 y la misma semilla.
 
-Los textos esperados de los casos de paridad se regeneran en inglés mediante `SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored` (`tests/regenerate.rs`), garantizando que no cambie ningún código de estado, número, clave JSON, tamaño de lista ni código enum.
+Los casos de paridad se regeneran en inglés mediante `SMARTPOT_REGENERATE_FIXTURES=1 cargo test --test regenerate -- --ignored` (`tests/regenerate.rs`). Úsalo solo tras un cambio deliberado del contrato y revisa el diff: los fixtures de flota cambiaron al corregir las reglas de agrupación F-08/F-22.
 
 ### Contrato
 
@@ -240,8 +243,11 @@ cambia la especie de una vez, sin pausar evaluaciones (`ArcSwap`). Con `TRUSTED_
 firmado con esa clave (falla cerrada: sin manifiesto, con otra firma o con otro hash, rechaza). Al cargar evalúa los
 casos de control: un modelo que no da lo mismo que en Python se deshabilita.
 
+**Endurecimiento (noviembre de 2026).** La recarga exige exactamente 16 casos de control finitos con 10 features y al menos una expectativa por modelo entrenado; un manifiesto de más de 1 MiB se rechaza antes de leerlo. `POST /v1/learning/reload` devuelve `400` con el detalle de `rejected` incluso en una recarga global, y `POST /v1/learning/readings` devuelve `503` en lugar de informar `stored: 0` en silencio cuando el Trainer no está disponible. El agente reactivo bloquea `UV_LIGHT ACTIVATE` si `resting` es verdadero, una corrección de pH `Some(0.0)` nunca dosifica, y `localHour` se deriva de `measuredAt` con `AI_TIMEZONE` cuando falta en la petición.
+
 Sin `SMARTPOT_TRAINER_URL`, las rutas de aprendizaje responden un estado deshabilitado seguro. Si el Trainer no
-responde, lecturas, olvido y poda devuelven un resultado vacío en vez de un error, para no abrir el circuit breaker de
+responde, `POST /v1/learning/readings` devuelve `503` para que la API reencole el lote y no se pierdan lecturas en
+silencio; olvido y poda conservan su contrato. Esto evita abrir el circuit breaker de
 la API; la evaluación nunca depende del Trainer.
 
 ### Variables de entorno
@@ -256,6 +262,7 @@ la API; la evaluación nunca depende del Trainer.
 | `SMARTPOT_TRAINER_TOKEN` | `SMARTPOT_AI_TOKEN` | Token para llamar al Trainer |
 | `DATA_DIR` | `data` | Carpeta compartida; los modelos se leen de `DATA_DIR/models` (vacío = sin modelos) |
 | `TRUSTED_MODEL_PUBLIC_KEY_HEX` | vacío | Clave pública Ed25519 del Trainer |
+| `AI_TIMEZONE` | `America/Bogota` | Zona IANA para derivar `localHour` desde `measuredAt` |
 | `LEARNING_MIN_SAMPLES` | `200` | Lecturas del primer entrenamiento, para el mensaje mientras el Trainer no informa |
 | `RUST_LOG` | `info` | Nivel de registro |
 

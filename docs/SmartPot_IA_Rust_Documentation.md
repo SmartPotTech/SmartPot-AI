@@ -195,13 +195,14 @@ The Trainer writes `{SPECIES}_inference.json` (`smartpot.learned-models/1` schem
 | Operational clusters | Scaler, K-Means cluster centers, and state descriptions |
 | Anomalies | Isolation Forest with leaf depth values |
 | LoRA | `W0`, `B`, `A`, biases, and update counters; effective weight `W = W0 + (α/r)·B·A` |
-| Control cases | 16 fixed input vectors with scikit-learn reference predictions |
+| Control cases | Exactly 16 valid input vectors (10 finite features) with scikit-learn reference predictions; a bundle with any missing, malformed or duplicated case is rejected |
 
 along with `{SPECIES}_manifest.json` containing the 256-bit BLAKE2b hash of each file and the Ed25519 signature over canonical Python JSON (`sort_keys`, compact separators, escaped non-ASCII). Rust reconstructs the exact canonical bytes for verification.
 
 During hot reload:
 
 1. With `TRUSTED_MODEL_PUBLIC_KEY_HEX`: missing manifest, mismatched hash, or invalid signature causes bundle rejection (HTTP 400). Without a trusted key, file integrity is validated against the manifest.
+2. `POST /v1/learning/reload` returns 400 with the `rejected` detail for a global reload too; `POST /v1/learning/readings` returns 503 when the Trainer is unavailable or stores nothing, so the API requeues the batch.
 2. Every model is structurally validated (dimensions, finite floats, tree child indices strictly greater than node index to guarantee termination) and evaluated against control cases. Any model diverging from scikit-learn is disabled.
 3. The species registry is updated atomically.
 
@@ -219,7 +220,7 @@ Learning proxy: readings ingestion, status, training triggers, crop deletion, an
 | --- | --- |
 | Memory safety | `#![deny(unsafe_code)]` enforced across library and binary |
 | Authentication | 24+ character service token across REST and gRPC, verified in constant time |
-| Model safety | Zero pickle deserialization: parameters parsed from validated JSON; Ed25519 (`verify_strict`) and BLAKE2b anti-tampering verification; 64 MB size limit |
+| Model safety | Zero pickle deserialization: parameters parsed from validated JSON; Ed25519 (`verify_strict`) and BLAKE2b anti-tampering verification; 64 MB bundle and 1 MB manifest limits |
 | Input validation | Physical range boundaries and array caps (500 history points, 50 fleet crops, 20 actuators); 4 MB body limit |
 | Container isolation | Unprivileged user `10001`, compatible with `read_only`, `cap_drop: ALL`, and `no-new-privileges: true`; self-contained healthcheck binary |
 | Dependencies | Automated `cargo audit`, Snyk, CodeQL, and Dependabot across cargo, Docker, and GitHub Actions |
@@ -244,7 +245,7 @@ Quality gates: `cargo fmt --all -- --check`, `cargo clippy --all-targets -- -D w
 | `SMARTPOT_AI_TOKEN` | Service authentication token (required) |
 | `PORT`, `AI_GRPC_SOCKET`, `GRPC_TCP_PORT` | Transport listeners |
 | `SMARTPOT_TRAINER_URL`, `SMARTPOT_TRAINER_TOKEN` | Trainer proxy configuration |
-| `DATA_DIR`, `TRUSTED_MODEL_PUBLIC_KEY_HEX` | Model repository directory and public signing key |
+| `DATA_DIR`, `TRUSTED_MODEL_PUBLIC_KEY_HEX`, `AI_TIMEZONE` | Model repository directory, public signing key, and IANA zone for deriving `localHour` |
 | `LEARNING_MIN_SAMPLES`, `RUST_LOG` | Advisory sample count threshold and tracing filter |
 
 In `demo-beta`, `ai-smartpot` runs `ghcr.io/smartpottech/smartpot-ia-rust`, sharing the models volume with Trainer (read-only) and the gRPC socket volume with the API. `/health` reports binary version, active learning mode, loaded species models, and whether cryptographic signatures are required.
@@ -465,7 +466,7 @@ El Trainer escribe `{ESPECIE}_inference.json` (formato `smartpot.learned-models/
 | Estados de operación | Escalado, centros de K-Means y descripción de cada estado |
 | Atípicos | Isolation Forest con el valor de cada hoja |
 | LoRA | `W0`, `B`, `A`, sesgos y actualizaciones; peso efectivo `W = W0 + (α/r)·B·A` |
-| Casos de control | 16 filas fijas con lo que respondió scikit-learn |
+| Casos de control | Exactamente 16 filas válidas (10 features finitas) con lo que respondió scikit-learn; un bundle con casos faltantes, mal formados o duplicados se rechaza |
 
 y `{ESPECIE}_manifest.json` con el hash BLAKE2b (256 bits) de cada archivo y la firma Ed25519 del JSON canónico de
 Python (`sort_keys`, sin espacios, caracteres no ASCII escapados). La IA reconstruye esos bytes exactos para verificar.
@@ -473,8 +474,9 @@ Python (`sort_keys`, sin espacios, caracteres no ASCII escapados). La IA reconst
 Al recargar:
 
 1. Con `TRUSTED_MODEL_PUBLIC_KEY_HEX`: sin manifiesto, con un hash distinto o con una firma de otra clave, el paquete
-   se rechaza (y `POST /v1/learning/reload` de una especie responde 400). Sin clave de confianza se comprueba el hash
-   si hay manifiesto, porque la clave que trae el propio manifiesto no prueba nada.
+   se rechaza (y `POST /v1/learning/reload` responde 400, también en la recarga global). Sin clave de confianza se
+   comprueba el hash si hay manifiesto, porque la clave que trae el propio manifiesto no prueba nada. Las lecturas
+   devuelven 503 si el Trainer no responde o no guarda nada, para que la API reencole el lote.
 2. Cada modelo se valida (dimensiones, valores finitos, árboles cuyos hijos están después de su padre, así recorrerlos
    siempre termina) y se evalúa con los casos de control. Un modelo que no coincide con scikit-learn se deshabilita y
    la evaluación sigue sin él.
@@ -503,7 +505,7 @@ vez de un error.
 | --- | --- |
 | Memoria | `#![deny(unsafe_code)]` en la biblioteca y el binario |
 | Autenticación | Token de al menos 24 caracteres en REST y gRPC, comparación en tiempo constante |
-| Modelos | Sin pickle: solo parámetros en JSON validados; firma Ed25519 (`verify_strict`) y BLAKE2b; tope de 64 MB por archivo |
+| Modelos | Sin pickle: solo parámetros en JSON validados; firma Ed25519 (`verify_strict`) y BLAKE2b; topes de 64 MB para el bundle y 1 MB para el manifiesto |
 | Entradas | Validación de rangos y tamaños como en Python (500 lecturas de historial, 50 cultivos, 20 actuadores); cuerpos de hasta 4 MB |
 | Contenedor | Usuario 10001 sin privilegios, compatible con `read_only`, `cap_drop: ALL` y `no-new-privileges`; sonda de salud sin `curl` |
 | Dependencias | `cargo audit` en el CI (SARIF a la pestaña de seguridad), Snyk, CodeQL, revisión de dependencias y Dependabot (cargo, Docker y Actions) |
@@ -528,7 +530,7 @@ vez de un error.
 | `SMARTPOT_AI_TOKEN` | Token de servicio (obligatorio) |
 | `PORT`, `AI_GRPC_SOCKET`, `GRPC_TCP_PORT` | Transportes |
 | `SMARTPOT_TRAINER_URL`, `SMARTPOT_TRAINER_TOKEN` | Proxy de aprendizaje |
-| `DATA_DIR`, `TRUSTED_MODEL_PUBLIC_KEY_HEX` | Modelos aprendidos y su clave de confianza |
+| `DATA_DIR`, `TRUSTED_MODEL_PUBLIC_KEY_HEX`, `AI_TIMEZONE` | Modelos aprendidos, su clave de confianza y la zona IANA para derivar `localHour` |
 | `LEARNING_MIN_SAMPLES`, `RUST_LOG` | Mensaje de aprendizaje y nivel de registro |
 
 En `demo-beta` el servicio `ai-smartpot` usa `ghcr.io/smartpottech/smartpot-ia-rust`, comparte con el Trainer el
