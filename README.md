@@ -148,6 +148,8 @@ Multi-stage build based on `rust:1.98-bookworm` and `debian:bookworm-slim`, runn
 
 [`docs/SmartPot_IA_Rust_Documentation.md`](docs/SmartPot_IA_Rust_Documentation.md) details internal architecture, inference reasoning pipelines, numeric parity details, and continual learning lifecycles, with diagrams in [`docs/diagrams`](docs/diagrams).
 
+The [interactive diagrams](docs/diagrams/interactive/README.md#english) show the REST and gRPC transports, the service token and the model registry, in English and Spanish, with links to the exact source lines.
+
 ### License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
@@ -325,6 +327,8 @@ Docker Hub si el repositorio tiene credenciales).
 [`docs/SmartPot_IA_Rust_Documentation.md`](docs/SmartPot_IA_Rust_Documentation.md) explica la arquitectura, cómo razona
 una evaluación, la paridad numérica y el ciclo de los modelos aprendidos, con sus diagramas en
 [`docs/diagrams`](docs/diagrams).
+
+Los [diagramas interactivos](docs/diagrams/interactive/README.md#español) muestran los transportes REST y gRPC, el token de servicio y el registro de modelos, en español e inglés, con enlaces a las líneas exactas del código.
 
 ### Licencia
 
