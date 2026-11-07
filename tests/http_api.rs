@@ -2,6 +2,7 @@
 
 mod common;
 
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 use axum::body::Bytes;
@@ -137,6 +138,188 @@ async fn measured_at_derives_the_local_hour_and_explicit_hour_wins() {
 }
 
 #[tokio::test]
+async fn the_configured_timezone_changes_the_derived_local_hour() {
+    // 04:00 UTC es 23:00 del día anterior en Bogotá y 13:00 del mismo día en Tokio.
+    let at_utc_dawn = json!({
+        "cropType": "LETTUCE",
+        "measures": {"brightness": 0.0, "measuredAt": "2026-11-02T04:00:00Z"},
+        "actuators": ["UV_LIGHT"],
+    });
+    let bogota = router(state());
+    let (status, body) = call(
+        &bogota,
+        "POST",
+        "/v1/insights",
+        Some(&at_utc_dawn),
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["diagnosis"][0]["status"], "REST");
+    assert!(body["actions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|action| action["actuator"] != "UV_LIGHT"));
+
+    let tokyo = router(state_with(&[("AI_TIMEZONE", "Asia/Tokyo")]));
+    let (status, body) = call(
+        &tokyo,
+        "POST",
+        "/v1/insights",
+        Some(&at_utc_dawn),
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body["diagnosis"][0]["status"], "LOW");
+    assert!(body["actions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|action| action["actuator"] == "UV_LIGHT" && action["action"] == "ACTIVATE"));
+
+    // 15:30 UTC ya es la madrugada siguiente en Tokio: vuelve a ser descanso nocturno.
+    let after_tokyo_midnight = json!({
+        "cropType": "LETTUCE",
+        "measures": {"brightness": 0.0, "measuredAt": "2026-11-02T15:30:00Z"},
+        "actuators": ["UV_LIGHT"],
+    });
+    let (_, body) = call(
+        &tokyo,
+        "POST",
+        "/v1/insights",
+        Some(&after_tokyo_midnight),
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(body["diagnosis"][0]["status"], "REST");
+    assert!(body["actions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|action| action["actuator"] != "UV_LIGHT"));
+
+    // La hora explícita sigue mandando sobre measuredAt y sobre la zona configurada.
+    let explicit = json!({
+        "cropType": "LETTUCE",
+        "measures": {"brightness": 0.0, "measuredAt": "2026-11-02T04:00:00Z"},
+        "localHour": 23,
+        "actuators": ["UV_LIGHT"],
+    });
+    let (_, body) = call(&tokyo, "POST", "/v1/insights", Some(&explicit), Some(TOKEN)).await;
+    assert_eq!(body["diagnosis"][0]["status"], "REST");
+}
+
+#[tokio::test]
+async fn fleet_derives_the_local_hour_from_measured_at() {
+    let fleet = json!({
+        "crops": [{
+            "id": "66f5a1000000000000000101",
+            "name": "Lettuce",
+            "cropType": "LETTUCE",
+            "measures": {"brightness": 0.0, "measuredAt": "2026-11-02T04:00:00Z"},
+            "actuators": ["UV_LIGHT"],
+        }],
+    });
+    let bogota = router(state());
+    let (status, body) = call(&bogota, "POST", "/v1/fleet", Some(&fleet), Some(TOKEN)).await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(body["actions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|action| action["actuator"] != "UV_LIGHT"));
+
+    let tokyo = router(state_with(&[("AI_TIMEZONE", "Asia/Tokyo")]));
+    let (status, body) = call(&tokyo, "POST", "/v1/fleet", Some(&fleet), Some(TOKEN)).await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(body["actions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|action| action["actuator"] == "UV_LIGHT" && action["action"] == "ACTIVATE"));
+
+    let explicit = json!({
+        "localHour": 23,
+        "crops": [{
+            "id": "66f5a1000000000000000101",
+            "name": "Lettuce",
+            "cropType": "LETTUCE",
+            "measures": {"brightness": 0.0, "measuredAt": "2026-11-02T04:00:00Z"},
+            "actuators": ["UV_LIGHT"],
+        }],
+    });
+    let (_, body) = call(&tokyo, "POST", "/v1/fleet", Some(&explicit), Some(TOKEN)).await;
+    assert!(body["actions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|action| action["actuator"] != "UV_LIGHT"));
+}
+
+#[tokio::test]
+async fn a_failed_reload_keeps_the_previous_model() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("learned_native");
+    let key = std::fs::read_to_string(source.join("trusted_key.txt"))
+        .unwrap()
+        .trim()
+        .to_string();
+    let dir = tempfile::tempdir().unwrap();
+    for file in ["LETTUCE_inference.json", "LETTUCE_manifest.json"] {
+        std::fs::copy(source.join(file), dir.path().join(file)).unwrap();
+    }
+    let path = dir.path().to_string_lossy().to_string();
+    let state = state_with(&[
+        ("MODELS_DIR", path.as_str()),
+        ("TRUSTED_MODEL_PUBLIC_KEY_HEX", key.as_str()),
+    ]);
+    let app = router(state.clone());
+
+    let body = json!({"cropType": "LETTUCE"});
+    let (status, report) = call(
+        &app,
+        "POST",
+        "/v1/learning/reload",
+        Some(&body),
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{report}");
+    assert_eq!(report["reloaded"], json!(["LETTUCE"]));
+    let before = state.learned.get("LETTUCE").expect("the first bundle");
+
+    // Cualquier cambio en el archivo rompe el BLAKE2b del manifiesto y la recarga se rechaza.
+    let inference = dir.path().join("LETTUCE_inference.json");
+    let mut bytes = std::fs::read(&inference).unwrap();
+    bytes.push(b'\n');
+    std::fs::write(&inference, bytes).unwrap();
+
+    let (status, error) = call(
+        &app,
+        "POST",
+        "/v1/learning/reload",
+        Some(&body),
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{error}");
+    assert_eq!(error["rejected"][0]["cropType"], "LETTUCE");
+
+    // El paquete anterior sigue completo: ni la recarga fallida ni una carga parcial lo reemplazan.
+    let after = state.learned.get("LETTUCE").expect("the previous bundle");
+    assert_eq!(after.readings_at_training, before.readings_at_training);
+    assert_eq!(after.trained_at, before.trained_at);
+    assert_eq!(after.trained_cards(), before.trained_cards());
+    assert_eq!(after.crop_type, "LETTUCE");
+    let (_, health) = call(&app, "GET", "/health", None, None).await;
+    assert_eq!(health["learnedCropTypes"], json!(["LETTUCE"]));
+}
+
+#[tokio::test]
 async fn invalid_json_is_unprocessable() {
     let app = router(state());
     let request = axum::http::Request::builder()
@@ -194,6 +377,58 @@ async fn learning_without_trainer_answers_a_safe_disabled_state() {
     )
     .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
+    let (status, body) = call(&app, "POST", "/v1/learning/prune", None, Some(TOKEN)).await;
+    assert_eq!((status, body), (StatusCode::OK, json!({"removed": 0})));
+}
+
+#[tokio::test]
+async fn rest_keeps_401_404_405_and_422_distinct() {
+    let app = router(state());
+
+    // 401 sin token, con la cabecera que espera un cliente HTTP.
+    let request = axum::http::Request::builder()
+        .method("GET")
+        .uri("/v1/learning/status")
+        .body(axum::body::Body::empty())
+        .unwrap();
+    let response = tower::ServiceExt::oneshot(app.clone(), request)
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        response.headers().get("www-authenticate").unwrap(),
+        "Bearer"
+    );
+
+    // 404 de una ruta inexistente y 405 de un método incorrecto.
+    let (status, body) = call(&app, "GET", "/v1/learning/unknown", None, Some(TOKEN)).await;
+    assert_eq!(
+        (status, body["detail"].as_str()),
+        (StatusCode::NOT_FOUND, Some("Not Found"))
+    );
+    let (status, body) = call(&app, "PUT", "/v1/learning/status", None, Some(TOKEN)).await;
+    assert_eq!(
+        (status, body["detail"].as_str()),
+        (StatusCode::METHOD_NOT_ALLOWED, Some("Method Not Allowed"))
+    );
+    // El token se exige antes de revelar si la ruta o el método existen.
+    let (status, _) = call(&app, "PUT", "/v1/learning/status", None, None).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let (status, _) = call(&app, "GET", "/v1/learning/unknown", None, None).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+
+    // 422 con la ruta del campo inválido, no un 400 genérico.
+    let (status, body) = call(
+        &app,
+        "POST",
+        "/v1/insights",
+        Some(&json!({"cropType": "LETTUCE", "measures": {"temperature": 61}})),
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+    assert_eq!(body["detail"], "Invalid data");
+    assert_eq!(body["errors"][0]["field"], "measures.temperature");
 }
 
 /// Lo que recibió el Trainer simulado: método, ruta, cuerpo y cabecera de autorización.
@@ -242,6 +477,13 @@ async fn mock_trainer() -> (String, Seen) {
             post(|State(seen): State<Seen>, headers: HeaderMap, body: Bytes| async move {
                 record(&seen, "POST", "/v1/learning/train".into(), &body, &headers);
                 (StatusCode::NOT_FOUND, Json(json!({"detail": "No readings for BASIL"})))
+            }),
+        )
+        .route(
+            "/v1/learning/prune",
+            post(|State(seen): State<Seen>, headers: HeaderMap| async move {
+                record(&seen, "POST", "/v1/learning/prune".into(), b"", &headers);
+                Json(json!({"removed": 3}))
             }),
         )
         .with_state(Arc::clone(&seen));
@@ -309,6 +551,19 @@ async fn learning_routes_are_forwarded_to_the_trainer_byte_for_byte() {
         (status, body["detail"].as_str()),
         (StatusCode::NOT_FOUND, Some("No readings for BASIL"))
     );
+    let (status, body) = call(&app, "POST", "/v1/learning/prune", None, Some(TOKEN)).await;
+    assert_eq!((status, body), (StatusCode::OK, json!({"removed": 3})));
+
+    // La recarga es local: sin carpeta de modelos responde 400 y nunca viaja al Trainer.
+    let (status, body) = call(
+        &app,
+        "POST",
+        "/v1/learning/reload",
+        Some(&json!({"cropType": "LETTUCE"})),
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{body}");
 
     let seen = seen.lock().unwrap().clone();
     assert_eq!(
@@ -319,9 +574,22 @@ async fn learning_routes_are_forwarded_to_the_trainer_byte_for_byte() {
     assert!(seen
         .iter()
         .all(|(_, _, _, auth)| auth == "Bearer trainer-own-token-123"));
-    assert_eq!(seen.len(), 4);
-    assert_eq!(seen[2].1, "/v1/learning/crops/66f5a1000000000000000101");
+    assert_eq!(seen.len(), 5);
+    assert_eq!(
+        seen.iter()
+            .map(|(method, path, _, _)| (method.as_str(), path.as_str()))
+            .collect::<Vec<_>>(),
+        [
+            ("POST", "/v1/learning/readings"),
+            ("GET", "/v1/learning/status"),
+            ("DELETE", "/v1/learning/crops/66f5a1000000000000000101"),
+            ("POST", "/v1/learning/train"),
+            ("POST", "/v1/learning/prune"),
+        ]
+    );
+    assert_eq!(seen[2].2, "");
     assert_eq!(seen[3].2, r#"{"cropType":"BASIL"}"#);
+    assert_eq!(seen[4].2, "");
 
     // Con el estado del Trainer, la evaluación informa sus conteos.
     let insight = json!({"cropType": "LETTUCE", "measures": {"temperature": 18.0}});

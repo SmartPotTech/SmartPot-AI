@@ -66,7 +66,13 @@ pub fn router(state: AppState) -> Router {
         .route("/learning/train", post(train))
         .route("/learning/crops/{crop_id}", delete(forget))
         .route("/learning/prune", post(prune))
-        .route_layer(middleware::from_fn_with_state(state.clone(), require_token));
+        // Las rutas inexistentes y los métodos incorrectos también exigen el token antes de
+        // revelar si existen, igual que gRPC: `layer`, a diferencia de `route_layer`, cubre los fallbacks.
+        .fallback(|| async { detail(StatusCode::NOT_FOUND, "Not Found") })
+        .method_not_allowed_fallback(|| async {
+            detail(StatusCode::METHOD_NOT_ALLOWED, "Method Not Allowed")
+        })
+        .layer(middleware::from_fn_with_state(state.clone(), require_token));
     Router::new()
         .route("/health", get(health))
         .nest("/v1", protected)

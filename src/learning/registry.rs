@@ -213,9 +213,17 @@ impl Registry {
                 }
             }
         }
-        self.models.store(Arc::new(next));
-        if !report.reloaded.is_empty() {
-            info!("Learned models in memory: {}", report.reloaded.join(", "));
+        if report.rejected.is_empty() {
+            self.models.store(Arc::new(next));
+            if !report.reloaded.is_empty() {
+                info!("Learned models in memory: {}", report.reloaded.join(", "));
+            }
+        } else {
+            // Una recarga global es atómica: si una especie falla, ninguna se aplica y se conserva
+            // exactamente el estado anterior. El detalle del rechazo sigue disponible para el operador.
+            warn!("Reload rejected; the previous models remain active");
+            report.reloaded.clear();
+            report.disabled.clear();
         }
         report
     }

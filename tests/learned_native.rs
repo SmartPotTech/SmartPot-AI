@@ -7,7 +7,7 @@ mod common;
 
 use std::path::PathBuf;
 
-use serde_json::Value;
+use serde_json::{json, Value};
 
 use axum::http::StatusCode;
 use smartpot_ia::http::router;
@@ -78,6 +78,55 @@ async fn an_empty_control_list_is_not_loadable() {
     let report = state.learned.reload(Some("LETTUCE".into())).await;
     assert!(report.reloaded.is_empty(), "{report:?}");
     assert!(report.rejected[0].reason.contains("16"), "{report:?}");
+}
+
+#[tokio::test]
+async fn a_failed_global_reload_does_not_apply_valid_species_partially() {
+    let dir = tempfile::tempdir().unwrap();
+    let bundle: Value = serde_json::from_str(
+        &std::fs::read_to_string(learned_dir().join("LETTUCE_inference.json")).unwrap(),
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join("LETTUCE_inference.json"),
+        serde_json::to_vec(&bundle).unwrap(),
+    )
+    .unwrap();
+
+    let path = dir.path().to_string_lossy().to_string();
+    let state = state_with(&[("MODELS_DIR", path.as_str())]);
+    let report = state.learned.reload(Some("LETTUCE".into())).await;
+    assert_eq!(report.reloaded, ["LETTUCE"], "{report:?}");
+
+    // BASIL es válido, pero LETTUCE queda corrupto: la recarga global debe ser todo o nada.
+    let mut basil = bundle.clone();
+    basil["crop_type"] = json!("BASIL");
+    std::fs::write(
+        dir.path().join("BASIL_inference.json"),
+        serde_json::to_vec(&basil).unwrap(),
+    )
+    .unwrap();
+    std::fs::write(dir.path().join("LETTUCE_inference.json"), b"{not json").unwrap();
+
+    let app = router(state.clone());
+    let (status, body) = call(
+        &app,
+        "POST",
+        "/v1/learning/reload",
+        Some(&json!({})),
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST, "{body}");
+    assert!(body.get("reloaded").is_none(), "{body}");
+    assert!(body["rejected"]
+        .as_array()
+        .is_some_and(|items| !items.is_empty()));
+
+    // Se conserva exactamente el estado anterior: LETTUCE sigue activo y BASIL nunca se cargó.
+    assert_eq!(state.learned.crop_types(), ["LETTUCE"]);
+    assert!(state.learned.get("BASIL").is_none());
+    assert!(state.learned.get("LETTUCE").is_some());
 }
 
 #[tokio::test]
