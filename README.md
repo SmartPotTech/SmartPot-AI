@@ -21,6 +21,28 @@ SmartPot-AI is the **intelligent inference engine of SmartPot**, written in **Ru
 
 It implements **the exact same contract** as SmartPot-AI, field by field and text by text: the API switches transparently.
 
+```mermaid
+flowchart LR
+  api["SmartPot-API"]
+  trainer["SmartPot-Trainer"]
+  subgraph ai["SmartPot-AI · Rust 1.88+ · Axum + Tonic gRPC"]
+    direction TB
+    transport["Transport Layer<br/>gRPC :50051 & REST HTTP :8000"]
+    subgraph core["Inference Engine"]
+      direction TB
+      expert["Expert Rules<br/>thresholds & tolerances"]
+      fuzzy["Sugeno Fuzzy Logic<br/>continuous health index"]
+      nativeml["Native ML Models<br/>DecisionTree · MLP · Logistic"]
+      agent["Autonomous Agent<br/>action recommendations"]
+    end
+    store["Model Registry<br/>Atomic ArcSwap · Ed25519 verified"]
+  end
+  api -->|"gRPC (primary) / REST (fallback)"| transport
+  trainer -->|"POST /v1/models/reload<br/>signed JSON"| transport
+  transport --> core
+  store --> core
+```
+
 | Technique | Problem Addressed | Location |
 |---|---|---|
 | **Expert system** | 21 forward-chaining rules (thermal stress, fungi, nutrient lockout, sensor failure, rain, trends…) | `src/engine/rules.rs`, `expert.rs` |
@@ -175,6 +197,28 @@ de inferencia; el reentrenamiento y aprendizaje continuo lo ejecuta [SmartPot-Tr
 La implementación histórica en Python se conserva archivada en [SmartPot-AI-Python](https://github.com/SmartPotTech/SmartPot-AI-Python).
 
 Mantiene **paridad estricta** con el contrato de la plataforma, campo por campo y texto por texto: la API consume sus endpoints de manera transparente.
+
+```mermaid
+flowchart LR
+  api["SmartPot-API"]
+  trainer["SmartPot-Trainer"]
+  subgraph ai["SmartPot-AI · Rust 1.88+ · Axum + Tonic gRPC"]
+    direction TB
+    transport["Transport Layer<br/>gRPC :50051 & REST HTTP :8000"]
+    subgraph core["Inference Engine"]
+      direction TB
+      expert["Expert Rules<br/>thresholds & tolerances"]
+      fuzzy["Sugeno Fuzzy Logic<br/>continuous health index"]
+      nativeml["Native ML Models<br/>DecisionTree · MLP · Logistic"]
+      agent["Autonomous Agent<br/>action recommendations"]
+    end
+    store["Model Registry<br/>Atomic ArcSwap · Ed25519 verified"]
+  end
+  api -->|"gRPC (primary) / REST (fallback)"| transport
+  trainer -->|"POST /v1/models/reload<br/>signed JSON"| transport
+  transport --> core
+  store --> core
+```
 
 | Técnica | Qué resuelve | Dónde vive |
 |---|---|---|
