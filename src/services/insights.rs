@@ -4,7 +4,7 @@
 use std::collections::HashSet;
 use std::sync::OnceLock;
 
-use crate::domain::CropProfile;
+use crate::domain::{CropProfile, Parameter};
 use crate::engine::agent::{self, Facts, Predictions};
 use crate::engine::diagnosis::{diagnose, is_rest_hour, ParameterDiagnosis, Status};
 use crate::engine::expert::{ForecastFact, InferenceEngine, Memory};
@@ -31,10 +31,53 @@ fn seconds(micros: Micros) -> f64 {
     micros as f64 / 1e6
 }
 
+/// Obtiene el rango máximo de luz declarado en las capacidades de hardware del dispositivo.
+fn max_brightness_range(capabilities: &Option<serde_json::Value>) -> Option<f64> {
+    let caps = capabilities.as_ref()?;
+    let sensors = if let Some(arr) = caps.get("sensors").and_then(serde_json::Value::as_array) {
+        arr
+    } else {
+        caps.as_array()?
+    };
+
+    for sensor in sensors {
+        let key = sensor.get("key").and_then(serde_json::Value::as_str);
+        if key == Some("brightness") {
+            if let Some(range) = sensor.get("range").and_then(serde_json::Value::as_array) {
+                if let Some(max_val) = range.get(1).and_then(serde_json::Value::as_f64) {
+                    return Some(max_val);
+                }
+            }
+        }
+    }
+    None
+}
+
 /// Evalúa una lectura. `now` (segundos epoch) se usa cuando la lectura no trae su hora.
 pub fn analyze(state: &AppState, request: &InsightRequest, now: f64) -> InsightResponse {
     let profile = request.profile;
-    let values = &request.measures.values;
+
+    // Normalización de escala de lux si el dispositivo declara un rango físico superior a 2000 lx (ej. BH1750 [0, 200000]).
+    // Los perfiles agronómicos evalúan luz relativa [0, 2000] (FW-03, AGRO-02).
+    let mut normalized_measures = request.measures.clone();
+    let mut normalized_history = request.history.clone();
+
+    if let Some(max_lux) = max_brightness_range(&request.capabilities) {
+        if max_lux > 2000.0 {
+            let b_idx = Parameter::Brightness.index();
+            if let Some(raw_b) = normalized_measures.values[b_idx] {
+                normalized_measures.values[b_idx] =
+                    Some((raw_b / max_lux * 2000.0).clamp(0.0, 2000.0));
+            }
+            for point in &mut normalized_history {
+                if let Some(raw_b) = point.values[b_idx] {
+                    point.values[b_idx] = Some((raw_b / max_lux * 2000.0).clamp(0.0, 2000.0));
+                }
+            }
+        }
+    }
+
+    let values = &normalized_measures.values;
     // La hora explícita manda; si falta, se deriva de measuredAt con la zona configurada.
     let local_hour = request.local_hour.or_else(|| {
         request
@@ -44,8 +87,7 @@ pub fn analyze(state: &AppState, request: &InsightRequest, now: f64) -> InsightR
     });
     let diagnosis = diagnose(profile, values, local_hour);
 
-    let timed: Vec<(Micros, crate::domain::Values)> = request
-        .history
+    let timed: Vec<(Micros, crate::domain::Values)> = normalized_history
         .iter()
         .filter_map(|item| item.measured_at.map(|at| (at, item.values)))
         .collect();
@@ -67,8 +109,7 @@ pub fn analyze(state: &AppState, request: &InsightRequest, now: f64) -> InsightR
             .infer(profile, &reading, counts, state.settings.min_samples);
 
     let positions = normalize(profile, values);
-    let history: Vec<crate::domain::Values> = request
-        .history
+    let history: Vec<crate::domain::Values> = normalized_history
         .iter()
         .map(|item| normalize(profile, &item.values))
         .collect();

@@ -626,3 +626,62 @@ async fn an_unreachable_trainer_does_not_break_the_api() {
     let (status, _) = call(&app, "POST", "/v1/insights", Some(&insight), Some(TOKEN)).await;
     assert_eq!(status, StatusCode::OK);
 }
+
+#[tokio::test]
+async fn brightness_scale_normalizes_with_capabilities_and_preserves_without() {
+    let app = router(state());
+
+    // 1. Con capabilities [0, 200000] (BH1750 físico): 100000 lx se normaliza a 1000 lx relativo (óptimo para tomate [600, 1800])
+    let with_caps = json!({
+        "cropType": "TOMATO",
+        "localHour": 12,
+        "measures": {
+            "temperature": 22.0,
+            "humidity": 70.0,
+            "brightness": 100000.0,
+            "ph": 6.0,
+            "tds": 2000.0
+        },
+        "capabilities": {
+            "sensors": [
+                {"key": "brightness", "unit": "lux", "range": [0, 200000]}
+            ]
+        }
+    });
+    let (status, body) = call(&app, "POST", "/v1/insights", Some(&with_caps), Some(TOKEN)).await;
+    assert_eq!(status, StatusCode::OK);
+    let diag = body["diagnosis"].as_array().unwrap();
+    let b_diag = diag
+        .iter()
+        .find(|d| d["parameter"] == "brightness")
+        .unwrap();
+    assert_eq!(b_diag["status"], "OPTIMAL");
+
+    // 2. Sin capabilities: 100000 lx se evalúa en escala cruda y excede el perfil relativo [0, 2000]
+    let without_caps = json!({
+        "cropType": "TOMATO",
+        "localHour": 12,
+        "measures": {
+            "temperature": 22.0,
+            "humidity": 70.0,
+            "brightness": 100000.0,
+            "ph": 6.0,
+            "tds": 2000.0
+        }
+    });
+    let (status, body) = call(
+        &app,
+        "POST",
+        "/v1/insights",
+        Some(&without_caps),
+        Some(TOKEN),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let diag_raw = body["diagnosis"].as_array().unwrap();
+    let b_diag_raw = diag_raw
+        .iter()
+        .find(|d| d["parameter"] == "brightness")
+        .unwrap();
+    assert_eq!(b_diag_raw["status"], "HIGH");
+}

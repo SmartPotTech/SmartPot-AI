@@ -61,6 +61,7 @@ pub struct InsightRequest {
     pub local_hour: Option<u8>,
     pub placement: Option<Place>,
     pub weather: Option<Outside>,
+    pub capabilities: Option<Value>,
 }
 
 #[derive(Debug, Clone)]
@@ -483,6 +484,7 @@ pub fn parse_insight(body: &Value) -> Result<InsightRequest, Vec<FieldError>> {
     let local_hour = v.local_hour(object);
     let placement = field(object, "placement", "placement").and_then(|raw| v.place(raw));
     let weather = field(object, "weather", "weather").and_then(|raw| v.outside(raw));
+    let capabilities = field(object, "capabilities", "capabilities").cloned();
 
     if !v.errors.is_empty() {
         return Err(v.errors);
@@ -495,6 +497,7 @@ pub fn parse_insight(body: &Value) -> Result<InsightRequest, Vec<FieldError>> {
         local_hour,
         placement,
         weather,
+        capabilities,
     })
 }
 
