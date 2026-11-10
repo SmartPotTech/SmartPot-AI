@@ -24,7 +24,7 @@ use crate::schema::response::{CropProfileOut, Ordered};
 use crate::services::{self, Invalid};
 use crate::state::AppState;
 
-const BODY_LIMIT: usize = 4 * 1024 * 1024;
+const BODY_LIMIT: usize = 1024 * 1024;
 const TRAINER_TIMEOUT: Duration = Duration::from_secs(10);
 const TRAINING_TIMEOUT: Duration = Duration::from_secs(120);
 
@@ -123,16 +123,32 @@ async fn health(State(state): State<AppState>) -> Response {
 }
 
 async fn insights(State(state): State<AppState>, body: Bytes) -> Response {
-    match services::insight(&state, &body) {
-        Ok(bytes) => json_response(StatusCode::OK, bytes),
-        Err(error) => invalid(&error),
+    let result = tokio::task::spawn_blocking(move || services::insight(&state, &body)).await;
+    match result {
+        Ok(Ok(bytes)) => json_response(StatusCode::OK, bytes),
+        Ok(Err(error)) => invalid(&error),
+        Err(err) => {
+            tracing::error!("insights task panicked: {err}");
+            json_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                b"{\"error\":\"Internal error\"}".to_vec(),
+            )
+        }
     }
 }
 
 async fn fleet(State(state): State<AppState>, body: Bytes) -> Response {
-    match services::fleet(&state, &body) {
-        Ok(bytes) => json_response(StatusCode::OK, bytes),
-        Err(error) => invalid(&error),
+    let result = tokio::task::spawn_blocking(move || services::fleet(&state, &body)).await;
+    match result {
+        Ok(Ok(bytes)) => json_response(StatusCode::OK, bytes),
+        Ok(Err(error)) => invalid(&error),
+        Err(err) => {
+            tracing::error!("fleet task panicked: {err}");
+            json_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                b"{\"error\":\"Internal error\"}".to_vec(),
+            )
+        }
     }
 }
 
