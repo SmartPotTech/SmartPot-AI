@@ -312,4 +312,9 @@ mod tests {
             .collect();
         assert!(forecast(basil, &short_history).is_empty());
     }
+
+    #[test]
+    fn theil_sen_handles_empty_input_without_panicking() {
+        assert_eq!(theil_sen(&[], &[]), (0.0, 0.0, 0.0));
+    }
 }

@@ -76,6 +76,9 @@ pub fn std(values: &[f64]) -> f64 {
 /// `np.median` por selección parcial en O(n), sin ordenar todo el arreglo.
 pub fn median(values: &mut [f64]) -> f64 {
     let n = values.len();
+    if n == 0 {
+        return 0.0;
+    }
     let mid = n / 2;
     let (left, upper, _) = values.select_nth_unstable_by(mid, f64::total_cmp);
     let upper = *upper;
@@ -114,6 +117,7 @@ mod tests {
 
     #[test]
     fn median_matches_numpy() {
+        assert_eq!(median(&mut []), 0.0);
         assert_eq!(median(&mut [3.0, 1.0, 2.0, 4.0]), 2.5);
         assert_eq!(median(&mut [5.0, 1.0, 3.0]), 3.0);
         assert_eq!(median(&mut [7.0]), 7.0);
