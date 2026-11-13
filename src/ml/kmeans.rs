@@ -237,12 +237,18 @@ fn lloyd(data: &[Vec<f64>], mut centers: Vec<Vec<f64>>, tolerance: f64) -> Clust
                 .collect();
             let mut far: Vec<usize> = (0..data.len()).collect();
             far.sort_by(|a, b| distances[*b].total_cmp(&distances[*a]).then(a.cmp(b)));
-            for (&cluster, &point) in empty.iter().zip(&far) {
+            for &cluster in &empty {
+                // Solo dona un punto desde un grupo con >1 asignado, garantizando que
+                // ningun centro quede con peso 0 ni NaN al normalizar sums / weights.
+                let Some(&point) = far.iter().find(|&&p| weights[labels[p]] > 1.0) else {
+                    break;
+                };
                 let old = labels[point];
                 for d in 0..dims {
                     sums[old][d] -= data[point][d];
                     sums[cluster][d] = data[point][d];
                 }
+                labels[point] = cluster;
                 weights[cluster] = 1.0;
                 weights[old] -= 1.0;
             }
@@ -265,7 +271,7 @@ fn lloyd(data: &[Vec<f64>], mut centers: Vec<Vec<f64>>, tolerance: f64) -> Clust
             crate::numeric::pairwise_sum(&squares)
         };
         centers = sums;
-        if labels == labels_old {
+        if labels == labels_old && empty.is_empty() {
             strict = true;
             break;
         }
@@ -467,5 +473,23 @@ mod tests {
         assert!(silhouette(&data, &[0]).is_err());
         assert!(silhouette(&data, &vec![0; data.len()]).is_err());
         assert!(silhouette(&data, &vec![0; data.len() - 1]).is_err());
+    }
+
+    #[test]
+    fn empty_cluster_rescue_updates_labels_and_keeps_all_centers_finite() {
+        // Dos puntos muy cercanos y uno aislado pueden vaciar un cluster en la primera asignacion;
+        // al rescatar k == data.len(), ningun centro puede quedar vacio ni producir NaN.
+        let data = vec![vec![0.0, 0.0], vec![10.0, 10.0], vec![10.001, 10.001]];
+        let result = fit(&data, 3, 25, 1).unwrap();
+        assert_eq!(result.centers.len(), 3);
+        assert!(result
+            .centers
+            .iter()
+            .flatten()
+            .all(|value| value.is_finite()));
+        let mut unique = result.labels.clone();
+        unique.sort_unstable();
+        unique.dedup();
+        assert_eq!(unique.len(), 3);
     }
 }
